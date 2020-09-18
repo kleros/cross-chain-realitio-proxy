@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.6.12;
 
 import "@kleros/erc-792/contracts/IArbitrator.sol";

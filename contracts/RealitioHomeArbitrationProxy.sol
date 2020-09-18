@@ -23,7 +23,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
     enum Status {None, Pending, AwaitingRuling, Ruled, Failed}
 
-    struct ArbitrationRequest {
+    struct Request {
         Status status;
         address requester;
         bytes32 requesterAnswer;
@@ -31,7 +31,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /// @dev Associates an arbitration request with a question ID.
-    mapping(bytes32 => ArbitrationRequest) public arbitrationRequestsByQuestionID;
+    mapping(bytes32 => Request) public questionIDToRequest;
 
     /**
      * @dev To be emitted when arbitration request is received but remained pending.
@@ -150,19 +150,19 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes32 _requesterAnswer,
         address _requester
     ) external override onlyAmb onlyForeignProxy {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.None, "Request already exists");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.None, "Request already exists");
 
         bytes32 currentAnswer = realitio.getBestAnswer(_questionID);
 
         if (currentAnswer == _requesterAnswer) {
-            arbitrationRequest.status = Status.Pending;
-            arbitrationRequest.requester = _requester;
-            arbitrationRequest.requesterAnswer = _requesterAnswer;
+            request.status = Status.Pending;
+            request.requester = _requester;
+            request.requesterAnswer = _requesterAnswer;
 
             emit RequestPending(_questionID, _requesterAnswer, _requester);
         } else {
-            arbitrationRequest.status = Status.AwaitingRuling;
+            request.status = Status.AwaitingRuling;
 
             realitio.notifyOfArbitrationRequest(_questionID, _requester, 0);
 
@@ -176,8 +176,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      */
     function handleArbitrationRequestNotification(bytes32 _questionID) external {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.AwaitingRuling, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.AwaitingRuling, "Invalid request status");
 
         bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID);
@@ -192,17 +192,17 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      */
     function handleAnswerChanged(bytes32 _questionID) external {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.Pending, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Pending, "Invalid request status");
 
         bytes32 currentAnswer = realitio.getBestAnswer(_questionID);
-        require(arbitrationRequest.requesterAnswer != currentAnswer, "Answers are the same");
+        require(request.requesterAnswer != currentAnswer, "Answers are the same");
 
-        arbitrationRequest.status = Status.AwaitingRuling;
+        request.status = Status.AwaitingRuling;
 
-        realitio.notifyOfArbitrationRequest(_questionID, arbitrationRequest.requester, 0);
+        realitio.notifyOfArbitrationRequest(_questionID, request.requester, 0);
 
-        emit RequestNotified(_questionID, arbitrationRequest.requesterAnswer, arbitrationRequest.requester);
+        emit RequestNotified(_questionID, request.requesterAnswer, request.requester);
 
         bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID);
@@ -217,13 +217,13 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      */
     function handleQuestionFinalized(bytes32 _questionID) external {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.Pending, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Pending, "Invalid request status");
 
         bool isFinalized = realitio.isFinalized(_questionID);
         require(isFinalized, "Question not finalized");
 
-        delete arbitrationRequestsByQuestionID[_questionID];
+        delete questionIDToRequest[_questionID];
 
         bytes4 selector = IForeignArbitrationProxy(0).cancelArbitration.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID);
@@ -233,33 +233,14 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Recieves the new address of the requester if it changed.
-     * @param _questionID The ID of the question.
-     * @param _requester The address of the new requester.
-     */
-    function receiveRequesterChange(bytes32 _questionID, address _requester)
-        external
-        override
-        onlyAmb
-        onlyForeignProxy
-    {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.AwaitingRuling, "Invalid request status");
-
-        arbitrationRequest.requester = _requester;
-
-        emit RequesterChanged(_questionID, _requester);
-    }
-
-    /**
      * @dev Recieves a failed attempt to request arbitration.
      * @param _questionID The ID of the question.
      */
     function receiveArbitrationFailure(bytes32 _questionID) external override onlyAmb onlyForeignProxy {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.AwaitingRuling, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.AwaitingRuling, "Invalid request status");
 
-        arbitrationRequest.status = Status.Failed;
+        request.status = Status.Failed;
 
         emit ArbitrationFailed(_questionID);
     }
@@ -281,8 +262,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         address _lastAnswerer,
         bool _isCommitment
     ) external {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.Failed, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Failed, "Invalid request status");
 
         require(
             realitio.getHistoryHash(_questionID) ==
@@ -298,7 +279,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
             "Invalid question params"
         );
 
-        delete arbitrationRequestsByQuestionID[_questionID];
+        delete questionIDToRequest[_questionID];
 
         realitio.submitAnswerByArbitrator(_questionID, realitio.getBestAnswer(_questionID), _lastAnswerer);
     }
@@ -309,11 +290,11 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _answer The answer from the arbitratior.
      */
     function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyAmb onlyForeignProxy {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.AwaitingRuling, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.AwaitingRuling, "Invalid request status");
 
-        arbitrationRequest.status = Status.Ruled;
-        arbitrationRequest.arbitratorAnswer = _answer;
+        request.status = Status.Ruled;
+        request.arbitratorAnswer = _answer;
 
         emit ArbitratorAnswered(_questionID, _answer);
     }
@@ -335,8 +316,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         address _lastAnswerer,
         bool _isCommitment
     ) external {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.Ruled, "Arbitrator has not ruled yet");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Ruled, "Arbitrator has not ruled yet");
 
         require(
             realitio.getHistoryHash(_questionID) ==
@@ -354,11 +335,11 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         realitio.submitAnswerByArbitrator(
             _questionID,
-            arbitrationRequest.arbitratorAnswer,
+            request.arbitratorAnswer,
             computeWinner(_questionID, _lastAnswerOrCommitmentID, _lastBond, _lastAnswerer, _isCommitment)
         );
 
-        delete arbitrationRequestsByQuestionID[_questionID];
+        delete questionIDToRequest[_questionID];
     }
 
     /**
@@ -378,11 +359,11 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         address _lastAnswerer,
         bool _isCommitment
     ) private view returns (address) {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
+        Request storage request = questionIDToRequest[_questionID];
 
         // If the question hasn't been answered, then the arbitration requester wins.
         if (_lastBond == 0) {
-            return arbitrationRequest.requester;
+            return request.requester;
         }
 
         bytes32 lastAnswer;
@@ -404,9 +385,6 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
             isAnswered = true;
         }
 
-        return
-            isAnswered && lastAnswer == arbitrationRequest.arbitratorAnswer
-                ? _lastAnswerer
-                : arbitrationRequest.requester;
+        return isAnswered && lastAnswer == request.arbitratorAnswer ? _lastAnswerer : request.requester;
     }
 }

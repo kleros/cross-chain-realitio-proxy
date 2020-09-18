@@ -21,13 +21,6 @@ interface IHomeArbitrationProxy {
     function receiveArbitrationFailure(bytes32 _questionID) external;
 
     /**
-     * @dev Recieves the new address of the requester if it changed. TRUSTED.
-     * @param _questionID The ID of the question.
-     * @param _requester The address of the new requester.
-     */
-    function receiveRequesterChange(bytes32 _questionID, address _requester) external;
-
-    /**
      * @dev Recieves the answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitratior.

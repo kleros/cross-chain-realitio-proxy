@@ -453,10 +453,10 @@
     "@ethersproject/properties" "^5.0.3"
     "@ethersproject/strings" "^5.0.4"
 
-"@kleros/erc-792@^4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@kleros/erc-792/-/erc-792-4.0.1.tgz#e4c941ecda29e298a68fff88f880c3cdd8273c0c"
-  integrity sha512-nOoifnzSz62jiZ1CtM8NfXD3kb1gdgTWRZ4VoHLREs5HD33vHnmyrO6FgmQQf/aqQJktHXP9cOo3DUFWv1v/Lw==
+"@kleros/erc-792@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@kleros/erc-792/-/erc-792-6.0.0.tgz#40583c2ce07f43b41be6cc2d2b5d69ce27092330"
+  integrity sha512-zRzgMwVT1ri17jsKoajTFtj53IICswoc86Fibz8ENJFyXcZrStNcvqspiT7Jy8K8wmcp5H3nP4R7bFmr4+YD5g==
 
 "@kleros/ethereum-libraries@^2.0.1":
   version "2.0.1"

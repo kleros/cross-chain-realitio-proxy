@@ -20,7 +20,7 @@
     "test:watch": "mocha -r @nomiclabs/buidler/register --watch-files '**/*.js,**/*.sol' --watch"
   },
   "dependencies": {
-    "@kleros/erc-792": "^4.0.1",
+    "@kleros/erc-792": "^6.0.0",
     "@kleros/ethereum-libraries": "^2.0.1"
   },
   "devDependencies": {

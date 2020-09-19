@@ -242,6 +242,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         request.status = Status.Failed;
 
+        realitio.cancelArbitrationRequest(_questionID);
+
         emit ArbitrationFailed(_questionID);
     }
 

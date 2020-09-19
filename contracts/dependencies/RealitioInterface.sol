@@ -17,6 +17,13 @@ interface RealitioInterface {
     ) external;
 
     /**
+     * @notice Cancel a previously-requested arbitration and extend the timeout
+     * @dev Useful when doing arbitration across chains that can't be requested atomically
+     * @param question_id The ID of the question
+     */
+    function cancelArbitrationRequest(bytes32 question_id) external;
+
+    /**
      * @dev Doesn't require (or allow) a bond.
      * If the current final answer is correct, the account should be whoever submitted it.
      * If the current final answer is wrong, the account should be whoever paid for arbitration.

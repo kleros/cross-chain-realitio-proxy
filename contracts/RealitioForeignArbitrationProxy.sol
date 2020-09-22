@@ -47,6 +47,14 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     mapping(uint256 => bytes32) public disputeIDToQuestionID;
 
     /**
+     * @dev Should be emitted when the arbitration is requested.
+     * @param _questionID The ID of the question to be arbitrated.
+     * @param _answer The answer provided by the requester.
+     * @param _requester The requester.
+     */
+    event ArbitrationRequested(bytes32 indexed _questionID, bytes32 _answer, address indexed _requester);
+
+    /**
      * @dev Should be emitted when the dispute is created.
      * @param _questionID The ID of the question to be arbitrated.
      * @param _disputeID The ID of the dispute.
@@ -185,6 +193,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requesterAnswer, msg.sender);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+
+        emit ArbitrationRequested(_questionID, _requesterAnswer, msg.sender);
     }
 
     /**
@@ -227,11 +237,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.Requested, "Invalid request status");
 
-        uint256 deposit = request.deposit;
+        payable(request.requester).send(request.deposit);
 
         delete questionIDToRequest[_questionID];
-
-        payable(request.requester).send(deposit);
 
         emit ArbitrationCancelled(_questionID);
     }
@@ -240,19 +248,17 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @dev Cancels the arbitration request in case the dispute could not be created.
      * @param _questionID The ID of the question.
      */
-    function cancelFailedArbitration(bytes32 _questionID) external onlyIfInitialized {
+    function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.Failed, "Invalid request status");
-
-        uint256 deposit = request.deposit;
-
-        delete questionIDToRequest[_questionID];
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        payable(request.requester).send(deposit);
+        payable(request.requester).send(request.deposit);
+
+        delete questionIDToRequest[_questionID];
 
         emit ArbitrationCancelled(_questionID);
     }

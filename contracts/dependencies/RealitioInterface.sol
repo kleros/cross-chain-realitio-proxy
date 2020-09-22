@@ -24,19 +24,22 @@ interface RealitioInterface {
     function cancelArbitrationRequest(bytes32 question_id) external;
 
     /**
+     * @notice Submit the answer for a question, for use by the arbitrator, working out the appropriate winner based on the last answer details.
      * @dev Doesn't require (or allow) a bond.
-     * If the current final answer is correct, the account should be whoever submitted it.
-     * If the current final answer is wrong, the account should be whoever paid for arbitration.
-     * However, the answerer stipulations are not enforced by the contract.
-     * @notice Submit the answer for a question, for use by the arbitrator.
-     * @param question_id The ID of the question.
-     * @param answer The answer, encoded into bytes32.
-     * @param answerer The account credited with this answer for the purpose of bond claims.
+     * @param question_id The ID of the question
+     * @param answer The answer, encoded into bytes32
+     * @param payee_if_wrong The account to by credited as winner if the last answer given is wrong, usually the account that paid the arbitrator
+     * @param last_history_hash The history hash before the final one
+     * @param last_answer_or_commitment_id The last answer given, or the commitment ID if it was a commitment.
+     * @param last_answerer The address that supplied the last answer
      */
-    function submitAnswerByArbitrator(
+    function assignWinnerAndSubmitAnswerByArbitrator(
         bytes32 question_id,
         bytes32 answer,
-        address answerer
+        address payee_if_wrong,
+        bytes32 last_history_hash,
+        bytes32 last_answer_or_commitment_id,
+        address last_answerer
     ) external;
 
     /**
@@ -52,27 +55,4 @@ interface RealitioInterface {
      * @return The current best answer.
      */
     function getBestAnswer(bytes32 question_id) external view returns (bytes32);
-
-    /**
-     * @notice Returns the history hash of the question.
-     * @dev Updated on each answer, then rewound as each is claimed.
-     * @param question_id The ID of the question.
-     */
-    function getHistoryHash(bytes32 question_id) external view returns (bytes32);
-
-    /**
-     * @notice Returns the commitment info by its id.
-     * @param commitment_id The ID of the commitment.
-     * @return Time after which the committed answer can be revealed.
-     * @return Whether the commitment has already been revealed or not.
-     * @return The committed answer, encoded as bytes32.
-     */
-    function commitments(bytes32 commitment_id)
-        external
-        view
-        returns (
-            uint32,
-            bool,
-            bytes32
-        );
 }

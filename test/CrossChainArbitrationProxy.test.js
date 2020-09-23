@@ -5,7 +5,10 @@ const {use, expect} = require("chai");
 use(solidity);
 
 const {BigNumber} = ethers;
-const {formatBytes32String} = ethers.utils;
+const {hexZeroPad} = ethers.utils;
+
+const ZERO_HASH = hexZeroPad(0, 32);
+const ZERO_ADDRESS = hexZeroPad(0, 20);
 
 let arbitrator;
 let homeProxy;
@@ -24,8 +27,8 @@ const metaEvidence = "ipfs/X";
 
 let questionId;
 const question = "Whats the answer for everything in the universe?";
-const currentAnswer = formatBytes32String("42");
-const requesterAnswer = formatBytes32String("Yet another one");
+const currentAnswer = hexZeroPad(0, 32);
+const requesterAnswer = hexZeroPad(1, 32);
 
 describe("Cross-Chain Arbitration", () => {
   beforeEach("Setup contracts", async () => {
@@ -58,16 +61,16 @@ describe("Cross-Chain Arbitration", () => {
     await initializeTx.wait();
   });
 
-  beforeEach("Create question", async () => {
-    const askTx = await realitio.connect(asker).askQuestion(question);
-    const askTxReceipt = await askTx.wait();
-    questionId = getEventArgs("LogNewQuestion", askTxReceipt)._questionId;
-
-    await submitAnswer(questionId, currentAnswer);
-  });
-
   describe("Request Arbitration", () => {
-    describe("When requester answer is different than the current answer", () => {
+    beforeEach("Create question and submit answer", async () => {
+      const askTx = await realitio.connect(asker).askQuestion(question);
+      const askTxReceipt = await askTx.wait();
+      questionId = getEventArgs("LogNewQuestion", askTxReceipt)._questionId;
+
+      await submitAnswer(questionId, currentAnswer);
+    });
+
+    describe("When requester answer is different from the current answer", () => {
       it("should immediately notify Realitio of the arbitration request when the requester answer is different from the current one", async () => {
         const {txPromise} = await requestArbitration(questionId, requesterAnswer);
 
@@ -82,7 +85,7 @@ describe("Cross-Chain Arbitration", () => {
       it("should pass the message to create the dispute after notifying Realitio of the arbitration request", async () => {
         await requestArbitration(questionId, requesterAnswer);
 
-        const {txPromise} = await handleArbitrationRequestNotification(questionId);
+        const {txPromise} = await handleRequestNotification(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
@@ -152,7 +155,7 @@ describe("Cross-Chain Arbitration", () => {
         const newArbitrationFee = arbitrationFee.div(2);
         await setArbitrationCost(newArbitrationFee);
 
-        const {txPromise} = await handleArbitrationRequestNotification(questionId);
+        const {txPromise} = await handleRequestNotification(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
@@ -163,7 +166,7 @@ describe("Cross-Chain Arbitration", () => {
         await setArbitrationCost(newArbitrationFee);
 
         const balanceBefore = await requester.getBalance();
-        await handleArbitrationRequestNotification(questionId);
+        await handleRequestNotification(questionId);
         const balanceAfter = await requester.getBalance();
 
         const expectedBalance = balanceBefore.add(newArbitrationFee);
@@ -174,7 +177,7 @@ describe("Cross-Chain Arbitration", () => {
         const newArbitrationFee = arbitrationFee.mul(2);
         await setArbitrationCost(newArbitrationFee);
 
-        const {txPromise} = await handleArbitrationRequestNotification(questionId);
+        const {txPromise} = await handleRequestNotification(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationFailed").withArgs(questionId);
         await expect(txPromise).not.to.emit(arbitrator, "DisputeCreation");
@@ -183,7 +186,7 @@ describe("Cross-Chain Arbitration", () => {
       it("Should pass the message informing the dispute creation failed due to an increase in arbitration cost", async () => {
         const newArbitrationFee = arbitrationFee.mul(2);
         await setArbitrationCost(newArbitrationFee);
-        await handleArbitrationRequestNotification(questionId);
+        await handleRequestNotification(questionId);
 
         const {txPromise} = await handleFailedDisputeCreation(questionId);
 
@@ -194,7 +197,7 @@ describe("Cross-Chain Arbitration", () => {
       it("Should reimburse the requester when the dispute creation failed due to an increase in arbitration cost", async () => {
         const newArbitrationFee = arbitrationFee.mul(2);
         await setArbitrationCost(newArbitrationFee);
-        await handleArbitrationRequestNotification(questionId);
+        await handleRequestNotification(questionId);
 
         const balanceBefore = await requester.getBalance();
         await handleFailedDisputeCreation(questionId);
@@ -207,7 +210,30 @@ describe("Cross-Chain Arbitration", () => {
   });
 
   describe("Arbitrator provide ruling", () => {
-    it("Should notify Realitio of the answer given by the arbitrator");
+    beforeEach("Create question, submit answer and requet arbitration", async () => {
+      const askTx = await realitio.connect(asker).askQuestion(question);
+      const askTxReceipt = await askTx.wait();
+      questionId = getEventArgs("LogNewQuestion", askTxReceipt)._questionId;
+
+      await submitAnswer(questionId, currentAnswer);
+      await requestArbitration(questionId, requesterAnswer);
+      await handleRequestNotification(questionId);
+    });
+
+    it("Should pass the message with the ruling when the arbitrator rules", async () => {
+      const ruling = 2; // rules in favor of the requester
+      const {txPromise} = await rule(questionId, ruling);
+
+      await expect(txPromise).to.emit(homeProxy, "ArbitratorAnswered").withArgs(questionId, requesterAnswer);
+    });
+
+    it("Should notify Realitio of the answer given by the arbitrator when the home proxy reports the answer", async () => {
+      const ruling = 1; // rules in favor of the original answer
+      await rule(questionId, ruling);
+
+      const {txPromise} = await reportAnswer(questionId);
+      await expect(txPromise).to.emit(realitio, "LogFinalize").withArgs(questionId, currentAnswer);
+    });
   });
 
   async function submitAnswer(questionId, answer, signer = answerer) {
@@ -252,8 +278,8 @@ describe("Cross-Chain Arbitration", () => {
     return {txPromise, tx, receipt};
   }
 
-  async function handleArbitrationRequestNotification(questionId, signer = governor) {
-    const txPromise = homeProxy.connect(signer).handleArbitrationRequestNotification(questionId);
+  async function handleRequestNotification(questionId, signer = governor) {
+    const txPromise = homeProxy.connect(signer).handleRequestNotification(questionId);
     const tx = await txPromise;
     const receipt = await tx.wait();
 
@@ -268,10 +294,28 @@ describe("Cross-Chain Arbitration", () => {
     return {txPromise, tx, receipt};
   }
 
+  async function rule(questionId, ruling, signer = governor) {
+    const question = await foreignProxy.questionIDToRequest(questionId);
+
+    const txPromise = arbitrator.connect(signer).rule(question.disputeID, ruling);
+    const tx = await txPromise;
+    const receipt = await tx.wait();
+
+    return {txPromise, tx, receipt};
+  }
+
+  async function reportAnswer(questionId, signer = governor) {
+    const txPromise = homeProxy.connect(signer).reportAnswer(questionId, ZERO_HASH, ZERO_HASH, ZERO_ADDRESS);
+    const tx = await txPromise;
+    const receipt = await tx.wait();
+
+    return {txPromise, tx, receipt};
+  }
+
   function getEventArgs(eventName, receipt) {
     const event = receipt.events.find(({event}) => event === eventName);
     if (!event) {
-      throw new Error(`Event ${eventName} not emiited in tranaction`);
+      throw new Error(`Event ${eventName} not emiited in transaction`);
     }
 
     const omitIntegerKeysReducer = (acc, [key, value]) =>

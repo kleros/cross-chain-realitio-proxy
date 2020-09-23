@@ -38,6 +38,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         address requester;
         // The deposit paid by the requester at the time of the request.
         uint256 deposit;
+        // The dispute ID after it is created.
+        uint256 disputeID;
     }
 
     /// @dev Tracks arbitration requests for question ID.
@@ -221,6 +223,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
             );
             disputeIDToQuestionID[disputeID] = _questionID;
             request.status = Status.Created;
+            request.disputeID = disputeID;
             request.deposit = 0;
 
             payable(request.requester).send(remainder);
@@ -275,6 +278,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         require(request.status == Status.Created, "Invalid request status");
 
         delete questionIDToRequest[questionID];
+        delete disputeIDToQuestionID[_disputeID];
 
         bytes32 answer = bytes32(_ruling == 0 ? uint256(-1) : _ruling - 1);
 

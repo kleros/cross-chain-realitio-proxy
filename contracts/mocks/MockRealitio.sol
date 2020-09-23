@@ -75,7 +75,7 @@ contract MockRealitio is RealitioInterface {
         emit LogNotifyOfArbitrationRequest(_questionId, _requester);
     }
 
-    function cancelArbitrationRequest(bytes32 _questionId) external override {
+    function cancelArbitration(bytes32 _questionId) external override {
         Question storage question = questions[uint256(_questionId)];
         require(question.status == Status.PendingArbitration, "Invalid question status");
 

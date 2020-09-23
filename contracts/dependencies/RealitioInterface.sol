@@ -21,7 +21,7 @@ interface RealitioInterface {
      * @dev Useful when doing arbitration across chains that can't be requested atomically
      * @param question_id The ID of the question
      */
-    function cancelArbitrationRequest(bytes32 question_id) external;
+    function cancelArbitration(bytes32 question_id) external;
 
     /**
      * @notice Submit the answer for a question, for use by the arbitrator, working out the appropriate winner based on the last answer details.

@@ -172,7 +172,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @notice Sends the arbitration acknowledgement to the Foreign Chain.
      * @param _questionID The ID of the question.
      */
-    function handleArbitrationRequestNotification(bytes32 _questionID) external {
+    function handleRequestNotification(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -239,7 +239,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         delete questionIDToRequest[_questionID];
 
-        realitio.cancelArbitrationRequest(_questionID);
+        realitio.cancelArbitration(_questionID);
 
         emit ArbitrationFailed(_questionID);
     }

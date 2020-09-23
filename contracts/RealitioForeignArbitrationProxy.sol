@@ -4,13 +4,10 @@ pragma solidity ^0.6.12;
 import "@kleros/erc-792/contracts/IArbitrator.sol";
 import "@kleros/erc-792/contracts/IArbitrable.sol";
 import "@kleros/erc-792/contracts/erc-1497/IEvidence.sol";
-import "@kleros/ethereum-libraries/contracts/CappedMath.sol";
 import "./dependencies/IAMB.sol";
 import "./ArbitrationProxyInterfaces.sol";
 
 contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrable, IEvidence {
-    using CappedMath for uint256;
-
     /// @dev The contract governor. TRUSTED.
     address public governor = msg.sender;
 
@@ -26,55 +23,38 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     /// @dev The number of choices for the arbitrator.
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 2;
 
-    /**
-     * @dev Timeout for the requester to update the arbitration fee.
-     * @notice Required if there is a mismatch between the deposit and the arbitration fee.
-     * This will happen if the arbitration fee increases between the arbitration request
-     * and the notification of Realitio contract that an arbitration has been requested.
-     */
-    uint32 public updateFeeTimeoutForRequester = 1 days;
-
-    /**
-     * @dev Timeout for anyone to update the arbitration fee.
-     * @notice This will start only after the timeout for the requester is expired.
-     */
-    uint32 public updateFeeTimeoutForAnyone = 1 days;
-
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
     IAMB public amb;
 
     /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
     address public homeProxy;
 
-    enum Status {None, Requested, PendingFee, Created}
+    enum Status {None, Requested, Created, Failed}
 
-    struct ArbitrationRequest {
+    struct Request {
         // Status of the request.
         Status status;
         // Address that made the request or paid the remaining fee.
         address requester;
-        // Approximate time in which the arbitration request was acknowledged by the home chain.
-        // Because the asynchronous nature of cross-chain communication, the actual time the
-        // arbitration was acknowledged will be before registered here.
-        uint32 acknowledgedAt;
         // The deposit paid by the requester at the time of the request.
         uint256 deposit;
-        // The associated dispute ID after the dispute is created.
+        // The dispute ID after it is created.
         uint256 disputeID;
     }
 
     /// @dev Tracks arbitration requests for question ID.
-    mapping(bytes32 => ArbitrationRequest) public arbitrationRequestsByQuestionID;
+    mapping(bytes32 => Request) public questionIDToRequest;
 
     /// @dev Associates dispute IDs to question IDs.
-    mapping(uint256 => bytes32) public questionIDsByDisputeID;
+    mapping(uint256 => bytes32) public disputeIDToQuestionID;
 
     /**
-     * @dev Should be emitted when there is a mismatch between the deposit and the arbitration fee.
+     * @dev Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _requester The address of the original arbitration requester.
+     * @param _answer The answer provided by the requester.
+     * @param _requester The requester.
      */
-    event ArbitrationFeeUpdateRequired(bytes32 indexed _questionID, address indexed _requester);
+    event ArbitrationRequested(bytes32 indexed _questionID, bytes32 _answer, address indexed _requester);
 
     /**
      * @dev Should be emitted when the dispute is created.
@@ -84,7 +64,15 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     event ArbitrationCreated(bytes32 indexed _questionID, uint256 indexed _disputeID);
 
     /**
-     * @dev Should be emitted when the arbitration request is cancelled.
+     * @dev Should be emitted when the dispute could not be created.
+     * @notice This will happen if there is an increase in the arbitration fees
+     * between the time the request is made and the time it is acknowledged.
+     * @param _questionID The ID of the question to be arbitrated.
+     */
+    event ArbitrationFailed(bytes32 indexed _questionID);
+
+    /**
+     * @dev Should be emitted when the arbitration request is cancelled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
      */
     event ArbitrationCancelled(bytes32 indexed _questionID);
@@ -188,41 +176,27 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Sets the timeout for updating the arbitration fee for the requester.
-     * @param _updateFeeTimeoutForRequester The timeout for the requester.
-     */
-    function setUpdateFeeTimeoutForRequester(uint32 _updateFeeTimeoutForRequester) external onlyGovernor {
-        updateFeeTimeoutForRequester = _updateFeeTimeoutForRequester;
-    }
-
-    /**
-     * @dev Sets the timeout for updating the arbitration fee for anyone else.
-     * @param _updateFeeTimeoutForAnyone The timeout for the anyone else.
-     */
-    function setUpdateFeeTimeoutForAnyone(uint32 _updateFeeTimeoutForAnyone) external onlyGovernor {
-        updateFeeTimeoutForAnyone = _updateFeeTimeoutForAnyone;
-    }
-
-    /**
      * @dev Requests arbitration for given question ID.
      * @notice Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _requesterAnswer The answer the requester deem to be correct.
      */
     function requestArbitration(bytes32 _questionID, bytes32 _requesterAnswer) external payable onlyIfInitialized {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.None, "Arbitration already requested");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
-        arbitrationRequest.status = Status.Requested;
-        arbitrationRequest.requester = msg.sender;
-        arbitrationRequest.deposit = msg.value;
+        request.status = Status.Requested;
+        request.requester = msg.sender;
+        request.deposit = msg.value;
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requesterAnswer, msg.sender);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+
+        emit ArbitrationRequested(_questionID, _requesterAnswer, msg.sender);
     }
 
     /**
@@ -230,84 +204,32 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _questionID The ID of the question.
      */
     function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.Requested, "Invalid request status");
-
-        arbitrationRequest.acknowledgedAt = uint32(block.timestamp);
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Requested, "Invalid request status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-        if (arbitrationRequest.deposit < arbitrationCost) {
-            arbitrationRequest.status = Status.PendingFee;
 
-            emit ArbitrationFeeUpdateRequired(_questionID, arbitrationRequest.requester);
+        if (request.deposit < arbitrationCost) {
+            request.status = Status.Failed;
 
-            return;
+            emit ArbitrationFailed(_questionID);
+        } else {
+            // At this point, request.deposit is guaranteed to be greater than or equal arbitration cost.
+            uint256 remainder = request.deposit - arbitrationCost;
+
+            uint256 disputeID = arbitrator.createDispute{value: arbitrationCost}(
+                NUMBER_OF_CHOICES_FOR_ARBITRATOR,
+                arbitratorExtraData
+            );
+            disputeIDToQuestionID[disputeID] = _questionID;
+            request.status = Status.Created;
+            request.disputeID = disputeID;
+            request.deposit = 0;
+
+            payable(request.requester).send(remainder);
+
+            emit ArbitrationCreated(_questionID, disputeID);
         }
-
-        // At this point, arbitrationRequest.deposit is guaranteed to be greater than or equal arbitration cost.
-        uint256 remainder = arbitrationRequest.deposit - arbitrationCost;
-
-        uint256 disputeID = arbitrator.createDispute{value: arbitrationCost}(
-            NUMBER_OF_CHOICES_FOR_ARBITRATOR,
-            arbitratorExtraData
-        );
-        questionIDsByDisputeID[disputeID] = _questionID;
-        arbitrationRequest.status = Status.Created;
-        arbitrationRequest.disputeID = disputeID;
-        arbitrationRequest.deposit = 0;
-
-        payable(arbitrationRequest.requester).send(remainder);
-
-        emit ArbitrationCreated(_questionID, disputeID);
-    }
-
-    /**
-     * @dev Updates the arbitration fee for to allow the dispute creation.
-     * @param _questionID The ID of the question.
-     */
-    function updateArbitrationFee(bytes32 _questionID) external payable {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.PendingFee, "Invalid request status");
-        require(
-            block.timestamp <=
-                arbitrationRequest.acknowledgedAt + updateFeeTimeoutForRequester + updateFeeTimeoutForAnyone,
-            "Request already expired"
-        );
-
-        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-        uint256 requiredDeposit = arbitrationCost.subCap(arbitrationRequest.deposit);
-        require(msg.value >= requiredDeposit, "Deposit value too low");
-
-        // Window for the original requester to pay remaining fee
-        if (block.timestamp <= arbitrationRequest.acknowledgedAt + updateFeeTimeoutForRequester) {
-            require(arbitrationRequest.requester == msg.sender, "Only requester is allowed");
-        } else if (arbitrationRequest.requester != msg.sender) {
-            // If the original requester fails to pay the remaining fee within
-            // updateFeeTimeoutForRequester, anyone can provide the value and become the requester.
-            // Notice that the requester can still be the one updating the fee,
-            // so we only execute this block if it did change.
-            arbitrationRequest.requester = msg.sender;
-
-            bytes4 methodSelector = IHomeArbitrationProxy(0).receiveRequesterChange.selector;
-            bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender);
-            amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
-        }
-
-        // At this point, msg.value is guaranteed to be greater than or equal arbitration cost.
-        uint256 remainder = msg.value - requiredDeposit;
-
-        uint256 disputeID = arbitrator.createDispute{value: arbitrationCost}(
-            NUMBER_OF_CHOICES_FOR_ARBITRATOR,
-            arbitratorExtraData
-        );
-        questionIDsByDisputeID[disputeID] = _questionID;
-        arbitrationRequest.status = Status.Created;
-        arbitrationRequest.disputeID = disputeID;
-        arbitrationRequest.deposit = 0;
-
-        payable(arbitrationRequest.requester).send(remainder);
-
-        emit ArbitrationCreated(_questionID, disputeID);
     }
 
     /**
@@ -315,76 +237,55 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.Requested, "Invalid request status");
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Requested, "Invalid request status");
 
-        uint256 deposit = arbitrationRequest.deposit;
+        payable(request.requester).send(request.deposit);
 
-        delete arbitrationRequestsByQuestionID[_questionID];
-
-        payable(arbitrationRequest.requester).send(deposit);
+        delete questionIDToRequest[_questionID];
 
         emit ArbitrationCancelled(_questionID);
     }
 
     /**
-     * @dev Cancels the arbitration request in case it has pending fees.
+     * @dev Cancels the arbitration request in case the dispute could not be created.
      * @param _questionID The ID of the question.
      */
-    function cancelArbitrationWithPendingFee(bytes32 _questionID) external onlyIfInitialized {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-        require(arbitrationRequest.status == Status.PendingFee, "Invalid request status");
-        require(
-            block.timestamp >
-                arbitrationRequest.acknowledgedAt + updateFeeTimeoutForRequester + updateFeeTimeoutForAnyone,
-            "Request not expired yet"
-        );
-
-        uint256 deposit = arbitrationRequest.deposit;
-
-        delete arbitrationRequestsByQuestionID[_questionID];
+    function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
+        Request storage request = questionIDToRequest[_questionID];
+        require(request.status == Status.Failed, "Invalid request status");
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        payable(arbitrationRequest.requester).send(deposit);
+        payable(request.requester).send(request.deposit);
+
+        delete questionIDToRequest[_questionID];
 
         emit ArbitrationCancelled(_questionID);
     }
 
     /**
-     * @dev Execute the ruling of a specified dispute.
+     * @dev Rules a specified dispute.
      * @notice Note that 0 is reserved for "Unable/refused to arbitrate" and we map it to `bytes32(-1)` which has a similar connotation in Realitio.
      * @param _disputeID The ID of the dispute in the ERC792 arbitrator.
      * @param _ruling The ruling given by the arbitrator.
      */
     function rule(uint256 _disputeID, uint256 _ruling) external override onlyArbitrator {
-        bytes32 questionID = questionIDsByDisputeID[_disputeID];
-        bytes32 answer = bytes32(_ruling == 0 ? uint256(-1) : _ruling - 1);
+        bytes32 questionID = disputeIDToQuestionID[_disputeID];
+        Request storage request = questionIDToRequest[questionID];
+        require(request.status == Status.Created, "Invalid request status");
 
-        delete arbitrationRequestsByQuestionID[questionID];
+        delete questionIDToRequest[questionID];
+        delete disputeIDToQuestionID[_disputeID];
+
+        bytes32 answer = bytes32(_ruling == 0 ? uint256(-1) : _ruling - 1);
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, questionID, answer);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
         emit Ruling(arbitrator, _disputeID, _ruling);
-    }
-
-    /**
-     * @dev Gets the remaining arbitration fee.
-     * @param _questionID The ID of the question.
-     * @return The remaining arbitration fee in case there is one or 0 otherwise.
-     */
-    function getRemainingArbitrationFee(bytes32 _questionID) external view onlyIfInitialized returns (uint256) {
-        ArbitrationRequest storage arbitrationRequest = arbitrationRequestsByQuestionID[_questionID];
-
-        if (arbitrationRequest.status != Status.PendingFee) {
-            return 0;
-        }
-
-        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-        return arbitrationCost.subCap(arbitrationRequest.deposit);
     }
 }

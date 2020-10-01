@@ -295,7 +295,7 @@ describe("Cross-Chain Arbitration", () => {
   }
 
   async function rule(questionId, ruling, signer = governor) {
-    const question = await foreignProxy.questionIDToRequest(questionId);
+    const question = await foreignProxy.arbitrations(questionId);
 
     const txPromise = arbitrator.connect(signer).rule(question.disputeID, ruling);
     const tx = await txPromise;

@@ -31,19 +31,19 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
 
     enum Status {None, Requested, Created, Failed}
 
-    struct Request {
-        // Status of the request.
+    struct Arbitration {
+        // Status of the arbitration.
         Status status;
-        // Address that made the request or paid the remaining fee.
+        // Address that made the arbitration or paid the remaining fee.
         address requester;
-        // The deposit paid by the requester at the time of the request.
+        // The deposit paid by the requester at the time of the arbitration.
         uint256 deposit;
         // The dispute ID after it is created.
         uint256 disputeID;
     }
 
     /// @dev Tracks arbitration requests for question ID.
-    mapping(bytes32 => Request) public questionIDToRequest;
+    mapping(bytes32 => Arbitration) public arbitrations;
 
     /// @dev Associates dispute IDs to question IDs.
     mapping(uint256 => bytes32) public disputeIDToQuestionID;
@@ -66,13 +66,13 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     /**
      * @dev Should be emitted when the dispute could not be created.
      * @notice This will happen if there is an increase in the arbitration fees
-     * between the time the request is made and the time it is acknowledged.
+     * between the time the arbitration is made and the time it is acknowledged.
      * @param _questionID The ID of the question to be arbitrated.
      */
     event ArbitrationFailed(bytes32 indexed _questionID);
 
     /**
-     * @dev Should be emitted when the arbitration request is cancelled by the Home Chain.
+     * @dev Should be emitted when the arbitration arbitration is cancelled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
      */
     event ArbitrationCancelled(bytes32 indexed _questionID);
@@ -182,15 +182,15 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _requesterAnswer The answer the requester deem to be correct.
      */
     function requestArbitration(bytes32 _questionID, bytes32 _requesterAnswer) external payable onlyIfInitialized {
-        Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.None, "Arbitration already requested");
+        Arbitration storage arbitration = arbitrations[_questionID];
+        require(arbitration.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
-        request.status = Status.Requested;
-        request.requester = msg.sender;
-        request.deposit = msg.value;
+        arbitration.status = Status.Requested;
+        arbitration.requester = msg.sender;
+        arbitration.deposit = msg.value;
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requesterAnswer, msg.sender);
@@ -204,64 +204,64 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _questionID The ID of the question.
      */
     function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
-        Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.Requested, "Invalid request status");
+        Arbitration storage arbitration = arbitrations[_questionID];
+        require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
 
-        if (request.deposit < arbitrationCost) {
-            request.status = Status.Failed;
+        if (arbitration.deposit < arbitrationCost) {
+            arbitration.status = Status.Failed;
 
             emit ArbitrationFailed(_questionID);
         } else {
-            // At this point, request.deposit is guaranteed to be greater than or equal arbitration cost.
-            uint256 remainder = request.deposit - arbitrationCost;
+            // At this point, arbitration.deposit is guaranteed to be greater than or equal arbitration cost.
+            uint256 remainder = arbitration.deposit - arbitrationCost;
 
             uint256 disputeID = arbitrator.createDispute{value: arbitrationCost}(
                 NUMBER_OF_CHOICES_FOR_ARBITRATOR,
                 arbitratorExtraData
             );
             disputeIDToQuestionID[disputeID] = _questionID;
-            request.status = Status.Created;
-            request.disputeID = disputeID;
-            request.deposit = 0;
+            arbitration.status = Status.Created;
+            arbitration.disputeID = disputeID;
+            arbitration.deposit = 0;
 
-            payable(request.requester).send(remainder);
+            payable(arbitration.requester).send(remainder);
 
             emit ArbitrationCreated(_questionID, disputeID);
         }
     }
 
     /**
-     * @dev Cancels the arbitration request.
+     * @dev Cancels the arbitration arbitration.
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
-        Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.Requested, "Invalid request status");
+        Arbitration storage arbitration = arbitrations[_questionID];
+        require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
-        payable(request.requester).send(request.deposit);
+        payable(arbitration.requester).send(arbitration.deposit);
 
-        delete questionIDToRequest[_questionID];
+        delete arbitrations[_questionID];
 
         emit ArbitrationCancelled(_questionID);
     }
 
     /**
-     * @dev Cancels the arbitration request in case the dispute could not be created.
+     * @dev Cancels the arbitration arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
      */
     function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
-        Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.Failed, "Invalid request status");
+        Arbitration storage arbitration = arbitrations[_questionID];
+        require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        payable(request.requester).send(request.deposit);
+        payable(arbitration.requester).send(arbitration.deposit);
 
-        delete questionIDToRequest[_questionID];
+        delete arbitrations[_questionID];
 
         emit ArbitrationCancelled(_questionID);
     }
@@ -274,10 +274,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      */
     function rule(uint256 _disputeID, uint256 _ruling) external override onlyArbitrator {
         bytes32 questionID = disputeIDToQuestionID[_disputeID];
-        Request storage request = questionIDToRequest[questionID];
-        require(request.status == Status.Created, "Invalid request status");
+        Arbitration storage arbitration = arbitrations[questionID];
+        require(arbitration.status == Status.Created, "Invalid arbitration status");
 
-        delete questionIDToRequest[questionID];
+        delete arbitrations[questionID];
         delete disputeIDToQuestionID[_disputeID];
 
         bytes32 answer = bytes32(_ruling == 0 ? uint256(-1) : _ruling - 1);

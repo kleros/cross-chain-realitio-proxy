@@ -453,15 +453,15 @@
     "@ethersproject/properties" "^5.0.3"
     "@ethersproject/strings" "^5.0.4"
 
-"@kleros/erc-792@^6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@kleros/erc-792/-/erc-792-6.0.0.tgz#40583c2ce07f43b41be6cc2d2b5d69ce27092330"
-  integrity sha512-zRzgMwVT1ri17jsKoajTFtj53IICswoc86Fibz8ENJFyXcZrStNcvqspiT7Jy8K8wmcp5H3nP4R7bFmr4+YD5g==
+"@kleros/erc-792@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@kleros/erc-792/-/erc-792-7.0.0.tgz#dcd3efeebf04813f1be3edcb9a8d151b907ca171"
+  integrity sha512-TAPGILx/sXwfXH0tiHjgfPa4PCTIyiqmUYXzHBlyTcRRKiSTUmXR13Er2PUiHeHhV7njZrSR1oav+rKasexdSQ==
 
-"@kleros/ethereum-libraries@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@kleros/ethereum-libraries/-/ethereum-libraries-2.0.1.tgz#aabbc8b3c0c334f3a529654388a4dfe7eda1d447"
-  integrity sha512-WzDRRkrkGA3pBN3aQ4/YhogvNqd0KhhCZH0Go+TU7jZMHsXI2hYvvR2RYxqu41Kroeihr99U4qErfQnshwOLMQ==
+"@kleros/ethereum-libraries@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@kleros/ethereum-libraries/-/ethereum-libraries-7.0.0.tgz#5cc115e984612bd8bd338e1c73d70640fae143ea"
+  integrity sha512-wpKv70rQJi7uwF+yMYBlFVOvcvp/EY6SwIQXsE3ppAsnhIzAuKgr89UjuJU59ZtKZgrhOD1rBkKBu33jDwQ8kw==
 
 "@kleros/kleros-interaction@^0.10.0":
   version "0.10.0"

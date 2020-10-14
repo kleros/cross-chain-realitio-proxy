@@ -1,3 +1,6 @@
+#Buidler files
+cache
+artifacts
 
 # Created by https://www.toptal.com/developers/gitignore/api/vim,node,visualstudiocode,yarn
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,node,visualstudiocode,yarn
@@ -76,11 +79,9 @@ typings/
 # dotenv environment variables file
 .env
 .env.test
-.env*.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
-.parcel-cache
 
 # Next.js build output
 .next
@@ -145,22 +146,20 @@ tags
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
 .history
-.ionide
 
 ### yarn ###
 # https://yarnpkg.com/advanced/qa#which-files-should-be-gitignored
 
-.yarn/*
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
+# .yarn/unplugged and .yarn/build-state.yml should likely always be ignored since
+# they typically hold machine-specific build artifacts. Ignoring them might however
+# prevent Zero-Installs from working (to prevent this, set enableScripts to false).
+.yarn/unplugged
+.yarn/build-state.yml
 
-# if you are NOT using Zero-installs, then:
-# comment the following lines
-!.yarn/cache
-
-# and uncomment the following lines
+# .yarn/cache and .pnp.* may be safely ignored, but you'll need to run yarn install
+# to regenerate them between each branch switch.
+# Uncomment the following lines if you're not using Zero-Installs:
+# .yarn/cache
 # .pnp.*
 
 # End of https://www.toptal.com/developers/gitignore/api/vim,node,visualstudiocode,yarn

@@ -1,0 +1,155 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: cross-chain-realitio-bot
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+plugins:
+  - serverless-webpack
+  - serverless-dotenv-plugin
+  - serverless-plugin-ifelse
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  webpack:
+    webpackConfig: 'webpack.config.js'   # Name of webpack configuration file
+    includeModules: # enable auto-packing of external modules
+      forceExclude:
+        - aws-sdk
+    packager: 'yarn'   # Packager that will be used to package your external modules
+
+  dynamodb:
+    stages:
+      - test
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      migrate: true
+      seed: true
+      convertEmptyValues: true
+    # Uncomment only if you already have a DynamoDB running locally
+    # noStart: true
+
+  currentStage: ${opt:stage, self:provider.stage}
+  serverlessIfElse:
+    - If: '"${self:custom.currentStage}" == "test"'
+      Set:
+        provider.environment.CHAIN_ID: 42
+      ElseSet:
+        provider.environment.CHAIN_ID: 1
+
+  prune:
+    automatic: true
+    number: 4
+
+provider:
+  name: aws
+  region: ${env:AWS_REGION,'us-east-2'}
+  stage: test
+  runtime: nodejs12.x
+  environment:
+    CHAIN_METADATA_TABLE_NAME: XChainRealitioProxy_ChainMetadata_${self:custom.currentStage}
+
+# you can add statements to the Lambda function's IAM Role here
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource: arn:aws:s3:::kleros-bots-private-keys
+    - Effect: "Allow"
+      Action:
+        - "s3:GetObject"
+      Resource:
+        Fn::Join:
+          - ""
+          - - arn:aws:s3:::kleros-bots-private-keys
+            - "/cross-chain-realitio-proxy.json"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource:
+        - Fn::GetAtt: [ ChainMetadataTable, Arn ]
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+#package:
+#  include:
+#    - include-me.js
+#    - include-me-dir/**
+#  exclude:
+#    - exclude-me.js
+#    - exclude-me-dir/**
+
+functions:
+  checkNotifiedRequests:
+    handler: src/handler.checkNotifiedRequests
+    timeout: 300
+    events:
+      - schedule:
+        rate: cron(0 * * * ? *) # every 1 hour at hh:00
+
+  checkChangedAnswers:
+    handler: src/handler.checkChangedAnswers
+    timeout: 300
+    events:
+      - schedule:
+        rate: cron(15 * * * ? *) # every 1 hour at hh:00
+
+  checkFinalizedQuestions:
+    handler: src/handler.checkFinalizedQuestions
+    timeout: 300
+    events:
+      - schedule:
+        rate: cron(30 * * * ? *) # every 1 hour at hh:00
+
+  checkFailedDisputeCreations:
+    handler: src/handler.checkFailedDisputeCreations
+    timeout: 300
+    events:
+      - schedule:
+          rate: cron(0 0 * * ? *) # every day at 00:00
+
+# you can add CloudFormation resource templates here
+resources:
+  Resources:
+    ChainMetadataTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.CHAIN_METADATA_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: key
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+  # Outputs:
+  #    NewOutput:
+  #      Description: "Description for the output"
+  #      Value: "Some output value"
+

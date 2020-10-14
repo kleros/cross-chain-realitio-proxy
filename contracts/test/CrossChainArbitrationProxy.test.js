@@ -85,7 +85,7 @@ describe("Cross-Chain Arbitration", () => {
       it("should pass the message to create the dispute after notifying Realitio of the arbitration request", async () => {
         await requestArbitration(questionId, requesterAnswer);
 
-        const {txPromise} = await handleRequestNotification(questionId);
+        const {txPromise} = await handleNotifiedRequest(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
@@ -109,7 +109,7 @@ describe("Cross-Chain Arbitration", () => {
         await requestArbitration(questionId, requesterAnswer);
         await submitAnswer(questionId, currentAnswer);
 
-        const txPromise = homeProxy.handleAnswerChanged(questionId);
+        const txPromise = homeProxy.handleChangedAnswer(questionId);
 
         await expect(txPromise)
           .to.emit(realitio, "LogNotifyOfArbitrationRequest")
@@ -124,7 +124,7 @@ describe("Cross-Chain Arbitration", () => {
         await submitAnswer(questionId, currentAnswer);
         await finalizeQuestion(questionId);
 
-        const {txPromise} = await handleQuestionFinalized(questionId);
+        const {txPromise} = await handleFinalizedQuestion(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCancelled");
         await expect(txPromise).not.to.emit(realitio, "LogNotifyOfArbitrationRequest");
@@ -138,7 +138,7 @@ describe("Cross-Chain Arbitration", () => {
         await finalizeQuestion(questionId);
 
         const balanceBefore = await requester.getBalance();
-        await handleQuestionFinalized(questionId);
+        await handleFinalizedQuestion(questionId);
         const balanceAfter = await requester.getBalance();
 
         const expectedBalance = balanceBefore.add(arbitrationFee);
@@ -155,7 +155,7 @@ describe("Cross-Chain Arbitration", () => {
         const newArbitrationFee = arbitrationFee.div(2);
         await setArbitrationCost(newArbitrationFee);
 
-        const {txPromise} = await handleRequestNotification(questionId);
+        const {txPromise} = await handleNotifiedRequest(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
@@ -166,7 +166,7 @@ describe("Cross-Chain Arbitration", () => {
         await setArbitrationCost(newArbitrationFee);
 
         const balanceBefore = await requester.getBalance();
-        await handleRequestNotification(questionId);
+        await handleNotifiedRequest(questionId);
         const balanceAfter = await requester.getBalance();
 
         const expectedBalance = balanceBefore.add(newArbitrationFee);
@@ -177,7 +177,7 @@ describe("Cross-Chain Arbitration", () => {
         const newArbitrationFee = arbitrationFee.mul(2);
         await setArbitrationCost(newArbitrationFee);
 
-        const {txPromise} = await handleRequestNotification(questionId);
+        const {txPromise} = await handleNotifiedRequest(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationFailed").withArgs(questionId);
         await expect(txPromise).not.to.emit(arbitrator, "DisputeCreation");
@@ -186,7 +186,7 @@ describe("Cross-Chain Arbitration", () => {
       it("Should pass the message informing the dispute creation failed due to an increase in arbitration cost", async () => {
         const newArbitrationFee = arbitrationFee.mul(2);
         await setArbitrationCost(newArbitrationFee);
-        await handleRequestNotification(questionId);
+        await handleNotifiedRequest(questionId);
 
         const {txPromise} = await handleFailedDisputeCreation(questionId);
 
@@ -197,7 +197,7 @@ describe("Cross-Chain Arbitration", () => {
       it("Should reimburse the requester when the dispute creation failed due to an increase in arbitration cost", async () => {
         const newArbitrationFee = arbitrationFee.mul(2);
         await setArbitrationCost(newArbitrationFee);
-        await handleRequestNotification(questionId);
+        await handleNotifiedRequest(questionId);
 
         const balanceBefore = await requester.getBalance();
         await handleFailedDisputeCreation(questionId);
@@ -219,7 +219,7 @@ describe("Cross-Chain Arbitration", () => {
 
       await submitAnswer(questionId, currentAnswer);
       await requestArbitration(questionId, requesterAnswer);
-      await handleRequestNotification(questionId);
+      await handleNotifiedRequest(questionId);
 
       disputeId = getEventArgs(
         "ArbitrationCreated",
@@ -277,16 +277,16 @@ describe("Cross-Chain Arbitration", () => {
     return {txPromise, tx, receipt};
   }
 
-  async function handleQuestionFinalized(questionId, signer = governor) {
-    const txPromise = homeProxy.connect(signer).handleQuestionFinalized(questionId);
+  async function handleFinalizedQuestion(questionId, signer = governor) {
+    const txPromise = homeProxy.connect(signer).handleFinalizedQuestion(questionId);
     const tx = await txPromise;
     const receipt = await tx.wait();
 
     return {txPromise, tx, receipt};
   }
 
-  async function handleRequestNotification(questionId, signer = governor) {
-    const txPromise = homeProxy.connect(signer).handleRequestNotification(questionId);
+  async function handleNotifiedRequest(questionId, signer = governor) {
+    const txPromise = homeProxy.connect(signer).handleNotifiedRequest(questionId);
     const tx = await txPromise;
     const receipt = await tx.wait();
 

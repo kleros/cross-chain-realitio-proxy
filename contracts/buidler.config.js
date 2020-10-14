@@ -28,6 +28,6 @@ module.exports = {
     },
   },
   paths: {
-    sources: "./contracts",
+    sources: "./src",
   },
 };

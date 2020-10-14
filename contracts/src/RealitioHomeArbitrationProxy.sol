@@ -168,11 +168,11 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Handles the notification of arbitration request to Realitio for a given question.
+     * @dev Handles arbitration request after it has been notified to Realitio for a given question.
      * @notice Sends the arbitration acknowledgement to the Foreign Chain.
      * @param _questionID The ID of the question.
      */
-    function handleRequestNotification(bytes32 _questionID) external {
+    function handleNotifiedRequest(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.Accepted, "Invalid request status");
 
@@ -190,7 +190,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @notice Sends the arbitration acknowledgement to the Foreign Chain.
      * @param _questionID The ID of the question.
      */
-    function handleAnswerChanged(bytes32 _questionID) external {
+    function handleChangedAnswer(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.Pending, "Invalid request status");
 
@@ -215,7 +215,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @notice Sends the arbitration cancellation to the Foreign Chain.
      * @param _questionID The ID of the question.
      */
-    function handleQuestionFinalized(bytes32 _questionID) external {
+    function handleFinalizedQuestion(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.Pending, "Invalid request status");
 

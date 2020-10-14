@@ -35,11 +35,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         // Status of the arbitration.
         Status status;
         // Address that made the arbitration or paid the remaining fee.
-        address requester;
+        address payable requester;
         // The deposit paid by the requester at the time of the arbitration.
         uint256 deposit;
-        // The dispute ID after it is created.
-        uint256 disputeID;
     }
 
     /// @dev Tracks arbitration requests for question ID.
@@ -72,7 +70,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     event ArbitrationFailed(bytes32 indexed _questionID);
 
     /**
-     * @dev Should be emitted when the arbitration arbitration is cancelled by the Home Chain.
+     * @dev Should be emitted when the arbitration is cancelled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
      */
     event ArbitrationCancelled(bytes32 indexed _questionID);
@@ -223,24 +221,25 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
             );
             disputeIDToQuestionID[disputeID] = _questionID;
             arbitration.status = Status.Created;
-            arbitration.disputeID = disputeID;
             arbitration.deposit = 0;
 
-            payable(arbitration.requester).send(remainder);
+            if (remainder > 0) {
+                arbitration.requester.send(remainder);
+            }
 
             emit ArbitrationCreated(_questionID, disputeID);
         }
     }
 
     /**
-     * @dev Cancels the arbitration arbitration.
+     * @dev Cancels the arbitration.
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
         Arbitration storage arbitration = arbitrations[_questionID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
-        payable(arbitration.requester).send(arbitration.deposit);
+        arbitration.requester.send(arbitration.deposit);
 
         delete arbitrations[_questionID];
 
@@ -248,7 +247,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Cancels the arbitration arbitration in case the dispute could not be created.
+     * @dev Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
      */
     function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
@@ -259,7 +258,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        payable(arbitration.requester).send(arbitration.deposit);
+        arbitration.requester.send(arbitration.deposit);
 
         delete arbitrations[_questionID];
 
@@ -280,7 +279,12 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         delete arbitrations[questionID];
         delete disputeIDToQuestionID[_disputeID];
 
-        bytes32 answer = bytes32(_ruling == 0 ? uint256(-1) : _ruling - 1);
+        // Realitio ruling is shifted by 1 compared to Kleros.
+        // For example, jurors refusing to rule is `0` on Kleros, but uint(-1) on Realitio.
+        // The line below could be written more explicitly as:
+        //     bytes32(_ruling == 0 ? uint256(-1) : _ruling - 1)
+        // But the way it is written saves some gas.
+        bytes32 answer = bytes32(_ruling - 1);
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, questionID, answer);

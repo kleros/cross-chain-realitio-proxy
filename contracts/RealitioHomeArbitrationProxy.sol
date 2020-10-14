@@ -21,7 +21,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
     address public foreignProxy;
 
-    enum Status {None, Pending, AwaitingRuling, Ruled}
+    enum Status {None, Pending, Accepted, AwaitingRuling, Ruled}
 
     struct Request {
         Status status;
@@ -159,7 +159,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
             emit RequestPending(_questionID, _requesterAnswer, _requester);
         } else {
-            request.status = Status.AwaitingRuling;
+            request.status = Status.Accepted;
 
             realitio.notifyOfArbitrationRequest(_questionID, _requester, 0);
 
@@ -174,7 +174,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      */
     function handleRequestNotification(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.AwaitingRuling, "Invalid request status");
+        require(request.status == Status.Accepted, "Invalid request status");
+
+        request.status = Status.AwaitingRuling;
 
         bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID);

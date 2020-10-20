@@ -38,6 +38,13 @@ module.exports = (async () => {
         },
       ],
     },
-    externals: [nodeExternals()],
+    externals: [
+      nodeExternals({
+        allowlist: ["@kleros/cross-chain-realitio-contracts"],
+      }),
+      // nodeExternals({
+      //   modulesDir: path.resolve(__dirname, "../node_modules"),
+      // }),
+    ],
   };
 })();

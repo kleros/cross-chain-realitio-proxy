@@ -15,10 +15,7 @@
       "settings": {
         "import/resolver": {
           "parcel": {
-            "rootDir": "src",
-            "extensions": [
-              ".js"
-            ]
+            "rootDir": "bots/src"
           }
         }
       }

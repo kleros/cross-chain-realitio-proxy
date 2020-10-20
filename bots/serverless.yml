@@ -53,9 +53,11 @@ custom:
   serverlessIfElse:
     - If: '"${self:custom.currentStage}" == "test"'
       Set:
-        provider.environment.CHAIN_ID: 42
+        provider.environment.HOME_CHAIN_ID: 77
+        provider.environment.FOREIGN_CHAIN_ID: 42
       ElseSet:
-        provider.environment.CHAIN_ID: 1
+        provider.environment.HOME_CHAIN_ID: 100
+        provider.environment.FOREIGN_CHAIN_ID: 1
 
   prune:
     automatic: true
@@ -68,6 +70,7 @@ provider:
   runtime: nodejs12.x
   environment:
     CHAIN_METADATA_TABLE_NAME: XChainRealitioProxy_ChainMetadata_${self:custom.currentStage}
+    REQUESTS_TABLE_NAME: XChainRealitioProxy_Requests_${self:custom.currentStage}
 
 # you can add statements to the Lambda function's IAM Role here
   iamRoleStatements:
@@ -88,6 +91,11 @@ provider:
         - "dynamodb:*"
       Resource:
         - Fn::GetAtt: [ ChainMetadataTable, Arn ]
+        - Fn::GetAtt: [ RequestsTable, Arn ]
+        - Fn::Join:
+          - ""
+          - - Fn::GetAtt: [ RequestsTable, Arn ]
+            - "/index/byChainIdAndStatus"
 
 # you can define service wide environment variables here
 #  environment:
@@ -108,28 +116,28 @@ functions:
     timeout: 300
     events:
       - schedule:
-        rate: cron(0 * * * ? *) # every 1 hour at hh:00
+          rate: cron(0 * * * ? *) # every 1 hour at hh:00
 
-  checkChangedAnswers:
-    handler: src/handler.checkChangedAnswers
+  checkPendingRequests:
+    handler: src/handler.checkPendingRequests
     timeout: 300
     events:
       - schedule:
-        rate: cron(15 * * * ? *) # every 1 hour at hh:00
+          rate: cron(15 * * * ? *) # every 1 hour at hh:00
 
-  checkFinalizedQuestions:
-    handler: src/handler.checkFinalizedQuestions
+  checkRequestedArbitrations:
+    handler: src/handler.checkRequestedArbitrations
     timeout: 300
     events:
       - schedule:
-        rate: cron(30 * * * ? *) # every 1 hour at hh:00
+          rate: cron(30 * * * ? *) # every hour at hh:45
 
-  checkFailedDisputeCreations:
-    handler: src/handler.checkFailedDisputeCreations
+  checkArbitrationAnswers:
+    handler: src/handler.checkArbitrationAnswers
     timeout: 300
     events:
       - schedule:
-          rate: cron(0 0 * * ? *) # every day at 00:00
+          rate: cron(45 * * * ? *) # every hour at hh:45
 
 # you can add CloudFormation resource templates here
 resources:
@@ -148,6 +156,37 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
 
+    RequestsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.REQUESTS_TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: chainId
+            AttributeType: N
+          - AttributeName: questionId
+            AttributeType: S
+          - AttributeName: status
+            AttributeType: N
+        KeySchema:
+          - AttributeName: questionId
+            KeyType: HASH
+          - AttributeName: chainId
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        GlobalSecondaryIndexes:
+          - IndexName: byChainIdAndStatus
+            KeySchema:
+              - AttributeName: chainId
+                KeyType: HASH
+              - AttributeName: status
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
   # Outputs:
   #    NewOutput:
   #      Description: "Description for the output"

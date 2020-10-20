@@ -10,9 +10,6 @@
 
 pragma solidity ^0.7.2;
 
-import "@kleros/erc-792/contracts/IArbitrator.sol";
-import "@kleros/erc-792/contracts/IArbitrable.sol";
-import "@kleros/ethereum-libraries/contracts/CappedMath.sol";
 import "./dependencies/IAMB.sol";
 import "./dependencies/RealitioInterface.sol";
 import "./ArbitrationProxyInterfaces.sol";
@@ -30,7 +27,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
     address public foreignProxy;
 
-    enum Status {None, Pending, Accepted, AwaitingRuling, Ruled}
+    enum Status {None, Pending, Notified, AwaitingRuling, Ruled}
 
     struct Request {
         Status status;
@@ -71,7 +68,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     event RequestAcknowledged(bytes32 indexed _questionID);
 
     /**
-     * @dev To be emitted when there arbitration request is cancelled.
+     * @dev To be emitted when there arbitration request is canceled.
      * @param _questionID The ID of the question.
      */
     event RequestCancelled(bytes32 indexed _questionID);
@@ -116,7 +113,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _amb ArbitraryMessageBridge contract address.
      * @param _realitio Realitio contract address.
      */
-    constructor(IAMB _amb, RealitioInterface _realitio) public {
+    constructor(IAMB _amb, RealitioInterface _realitio) {
         amb = _amb;
         realitio = _realitio;
     }
@@ -168,7 +165,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
             emit RequestPending(_questionID, _requesterAnswer, _requester);
         } else {
-            request.status = Status.Accepted;
+            request.status = Status.Notified;
 
             realitio.notifyOfArbitrationRequest(_questionID, _requester, 0);
 
@@ -183,7 +180,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      */
     function handleNotifiedRequest(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.Accepted, "Invalid request status");
+        require(request.status == Status.Notified, "Invalid request status");
 
         request.status = Status.AwaitingRuling;
 
@@ -277,7 +274,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.
      * @param _lastAnswerer The last answerer to the question in the Realitio contract.
      */
-    function reportAnswer(
+    function reportArbitrationAnswer(
         bytes32 _questionID,
         bytes32 _lastHistoryHash,
         bytes32 _lastAnswerOrCommitmentID,

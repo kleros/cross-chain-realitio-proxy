@@ -79,10 +79,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     event ArbitrationFailed(bytes32 indexed _questionID);
 
     /**
-     * @dev Should be emitted when the arbitration is cancelled by the Home Chain.
+     * @dev Should be emitted when the arbitration is canceled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
      */
-    event ArbitrationCancelled(bytes32 indexed _questionID);
+    event ArbitrationCanceled(bytes32 indexed _questionID);
 
     modifier onlyArbitrator() {
         require(msg.sender == address(arbitrator), "Only arbitrator allowed");
@@ -120,7 +120,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         IAMB _amb,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData
-    ) public {
+    ) {
         amb = _amb;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
@@ -252,7 +252,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
 
         delete arbitrations[_questionID];
 
-        emit ArbitrationCancelled(_questionID);
+        emit ArbitrationCanceled(_questionID);
     }
 
     /**
@@ -271,7 +271,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
 
         delete arbitrations[_questionID];
 
-        emit ArbitrationCancelled(_questionID);
+        emit ArbitrationCanceled(_questionID);
     }
 
     /**

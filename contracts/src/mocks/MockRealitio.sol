@@ -23,7 +23,6 @@ contract MockRealitio is RealitioInterface {
     Question[] public questions;
 
     event LogNewQuestion(bytes32 indexed _questionId, string _description, address indexed _asker);
-    event LogNewAnswer(bytes32 indexed _questionId, bytes32 _answer, address indexed _answerer);
     event LogFinalize(bytes32 indexed _questionId, bytes32 _finalAnswer);
     event LogNotifyOfArbitrationRequest(bytes32 indexed _questionId, address indexed _requester);
     event LogCancelArbitrationRequest(bytes32 indexed _questionId);
@@ -52,7 +51,7 @@ contract MockRealitio is RealitioInterface {
         question.answer = _answer;
         question.answerer = msg.sender;
 
-        emit LogNewAnswer(_questionId, _answer, msg.sender);
+        emit LogNewAnswer(_answer, _questionId, bytes32(0), msg.sender, 0, block.timestamp, false);
     }
 
     function finalizeQuestion(bytes32 _questionId) external {

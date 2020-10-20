@@ -126,7 +126,7 @@ describe("Cross-Chain Arbitration", () => {
 
         const {txPromise} = await handleFinalizedQuestion(questionId);
 
-        await expect(txPromise).to.emit(foreignProxy, "ArbitrationCancelled");
+        await expect(txPromise).to.emit(foreignProxy, "ArbitrationCanceled");
         await expect(txPromise).not.to.emit(realitio, "LogNotifyOfArbitrationRequest");
         await expect(txPromise).not.to.emit(arbitrator, "DisputeCreation");
       });
@@ -238,7 +238,7 @@ describe("Cross-Chain Arbitration", () => {
       const ruling = 1; // rules in favor of the original answer
       await rule(disputeId, ruling);
 
-      const {txPromise} = await reportAnswer(questionId);
+      const {txPromise} = await reportArbitrationAnswer(questionId);
       await expect(txPromise).to.emit(realitio, "LogFinalize").withArgs(questionId, currentAnswer);
     });
   });
@@ -309,8 +309,8 @@ describe("Cross-Chain Arbitration", () => {
     return {txPromise, tx, receipt};
   }
 
-  async function reportAnswer(questionId, signer = governor) {
-    const txPromise = homeProxy.connect(signer).reportAnswer(questionId, ZERO_HASH, ZERO_HASH, ZERO_ADDRESS);
+  async function reportArbitrationAnswer(questionId, signer = governor) {
+    const txPromise = homeProxy.connect(signer).reportArbitrationAnswer(questionId, ZERO_HASH, ZERO_HASH, ZERO_ADDRESS);
     const tx = await txPromise;
     const receipt = await tx.wait();
 

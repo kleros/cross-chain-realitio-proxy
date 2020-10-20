@@ -7,6 +7,14 @@
   "author": "Kleros",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "lint": "run-p -s lint:*",
+    "lint:js": "eslint .",
+    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "fix": "run-p -s fix:*",
+    "fix:js": "eslint --fix '**/*.js'",
+    "fix:sol": "prettier --write 'contracts/**/*.sol'"
+  },
   "workspaces": [
     "contracts",
     "bots"

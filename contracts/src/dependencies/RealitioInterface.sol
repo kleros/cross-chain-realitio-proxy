@@ -3,6 +3,16 @@ pragma solidity ^0.7.2;
 
 /* solhint-disable var-name-mixedcase */
 interface RealitioInterface {
+    event LogNewAnswer(
+        bytes32 answer,
+        bytes32 indexed question_id,
+        bytes32 history_hash,
+        address indexed user,
+        uint256 bond,
+        uint256 ts,
+        bool is_commitment
+    );
+
     /**
      * @dev The arbitrator contract is trusted to only call this if they've been paid, and tell us who paid them.
      * @notice Notify the contract that the arbitrator has been paid for a question, freezing it pending their decision.

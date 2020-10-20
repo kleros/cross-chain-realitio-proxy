@@ -7,12 +7,6 @@
   "scripts": {
     "build": "buidler compile",
     "clean": "buidler clean",
-    "lint": "run-p -s lint:*",
-    "lint:js": "eslint .",
-    "lint:sol": "solhint 'contracts/**/*.sol'",
-    "fix": "run-p -s fix:*",
-    "fix:js": "eslint --fix '**/*.js'",
-    "fix:sol": "prettier --write 'contracts/**/*.sol'",
     "b:test": "buidler test",
     "pretest": "run-s -s build",
     "test": "mocha -r @nomiclabs/buidler/register",

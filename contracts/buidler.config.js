@@ -1,4 +1,6 @@
+require("dotenv/config");
 const {usePlugin, task} = require("@nomiclabs/buidler/config");
+require("./tasks/deploy");
 
 usePlugin("@nomiclabs/buidler-waffle");
 usePlugin("@nomiclabs/buidler-ethers");
@@ -29,5 +31,18 @@ module.exports = {
   },
   paths: {
     sources: "./src",
+  },
+  networks: {
+    buidlerevm: {},
+    sokol: {
+      chainId: 77,
+      url: "https://sokol.poa.network/",
+      accounts: [process.env.PRIVATE_KEY],
+    },
+    kovan: {
+      chainId: 42,
+      url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+    },
   },
 };

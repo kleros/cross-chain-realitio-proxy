@@ -158,10 +158,11 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         bytes32 currentAnswer = realitio.getBestAnswer(_questionID);
 
+        request.requester = _requester;
+        request.requesterAnswer = _requesterAnswer;
+
         if (currentAnswer == _requesterAnswer) {
             request.status = Status.Pending;
-            request.requester = _requester;
-            request.requesterAnswer = _requesterAnswer;
 
             emit RequestPending(_questionID, _requesterAnswer, _requester);
         } else {

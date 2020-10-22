@@ -82,6 +82,14 @@ describe("Cross-Chain Arbitration", () => {
           .withArgs(questionId, await requester.getAddress());
       });
 
+      it("should set the requester and the requester answer on the Home Proxy #regression", async () => {
+        await requestArbitration(questionId, requesterAnswer);
+
+        const request = await homeProxy.questionIDToRequest(questionId);
+        expect(request.requester).to.equal(await requester.getAddress());
+        expect(request.requesterAnswer).to.equal(requesterAnswer);
+      });
+
       it("should pass the message to create the dispute after notifying Realitio of the arbitration request", async () => {
         await requestArbitration(questionId, requesterAnswer);
 

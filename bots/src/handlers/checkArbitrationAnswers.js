@@ -1,5 +1,5 @@
 import {andThen, cond, map, pipeWith, prop, reduceBy} from "ramda";
-import {fetchRequestsByChainIdAndStatus, removeRequest} from "~/off-chain-storage/requests";
+import {fetchRequestsByChainId, updateRequest, removeRequest} from "~/off-chain-storage/requests";
 import {Status} from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
@@ -16,7 +16,7 @@ export default async function checkArbitrationAnswers({homeChainApi}) {
     return [offChainRequest, onChainRequest];
   }
 
-  const requestRemoved = ([_, onChainRequest]) => onChainRequest.status == Status.None;
+  const requestRemoved = ([_, onChainRequest]) => onChainRequest.status === Status.None;
   const removeOffChainRequest = asyncPipe([
     ([_, onChainRequest]) => onChainRequest,
     removeRequest,
@@ -26,6 +26,7 @@ export default async function checkArbitrationAnswers({homeChainApi}) {
     }),
   ]);
 
+  const requestStatusChanged = ([_, onChainArbitration]) => onChainArbitration.status === Status.Ruled;
   const reportArbitrationAnswer = asyncPipe([
     ([_, onChainRequest]) => onChainRequest,
     homeChainApi.reportArbitrationAnswer,
@@ -35,20 +36,41 @@ export default async function checkArbitrationAnswers({homeChainApi}) {
     }),
   ]);
 
-  const requestsWithRuling = await fetchRequestsByChainIdAndStatus({status: Status.Ruled, chainId});
-
-  const pipeline = asyncPipe([
-    fetchOnChainCounterpart,
-    cond([
-      [requestRemoved, removeOffChainRequest],
-      [() => true, reportArbitrationAnswer],
-    ]),
+  const requestRuled = ([offChainArbitration, onChainArbitration]) =>
+    offChainArbitration.status != onChainArbitration.status;
+  const updateOffChainRequest = asyncPipe([
+    ([_, onChainArbitration]) => onChainArbitration,
+    updateRequest,
+    (arbitration) => ({
+      action: "STATUS_CHANGED",
+      payload: arbitration,
+    }),
   ]);
+
+  const noop = asyncPipe([
+    ([_, onChainArbitration]) => onChainArbitration,
+    (arbtration) => ({
+      action: "NO_OP",
+      payload: arbtration,
+    }),
+  ]);
+
+  const requestsWithRuling = await fetchRequestsByChainId({status: Status.Ruled, chainId});
 
   console.info(
     {data: map(prop("questionId"), requestsWithRuling)},
     "Fetched requests which received the arbitration ruling"
   );
+
+  const pipeline = asyncPipe([
+    fetchOnChainCounterpart,
+    cond([
+      [requestRemoved, removeOffChainRequest],
+      [requestRuled, reportArbitrationAnswer],
+      [requestStatusChanged, updateOffChainRequest],
+      [() => true, noop],
+    ]),
+  ]);
 
   const results = await P.allSettled(map(pipeline, requestsWithRuling));
 

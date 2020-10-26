@@ -125,8 +125,8 @@ functions:
       - schedule:
           rate: cron(15 * * * ? *) # every 1 hour at hh:00
 
-  checkRequestedArbitrations:
-    handler: src/handler.checkRequestedArbitrations
+  checkAcceptedArbitrationRequests:
+    handler: src/handler.checkAcceptedArbitrationRequests
     timeout: 300
     events:
       - schedule:

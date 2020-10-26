@@ -6,7 +6,7 @@ import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 
-export default async function checkRequestedArbitrations({foreignChainApi}) {
+export default async function checkAcceptedArbitrationRequests({foreignChainApi}) {
   const chainId = await foreignChainApi.getChainId();
 
   await checkNewRequestedArbitrations();
@@ -14,7 +14,7 @@ export default async function checkRequestedArbitrations({foreignChainApi}) {
 
   async function checkNewRequestedArbitrations() {
     const [fromBlock, toBlock] = await P.all([
-      getBlockHeight("REQUESTED_ARBITRATIONS"),
+      getBlockHeight("ACCEPTED_ARBITRATION_REQUESTS"),
       foreignChainApi.getBlockNumber(),
     ]);
 
@@ -23,8 +23,8 @@ export default async function checkRequestedArbitrations({foreignChainApi}) {
     await saveRequests(newArbitrationRequests);
 
     const blockHeight = toBlock + 1;
-    await updateBlockHeight({key: "REQUESTED_ARBITRATIONS", blockHeight});
-    console.info({blockHeight}, "Set REQUESTED_ARBITRATIONS block height");
+    await updateBlockHeight({key: "ACCEPTED_ARBITRATION_REQUESTS", blockHeight});
+    console.info({blockHeight}, "Set ACCEPTED_ARBITRATION_REQUESTS block height");
 
     const stats = {
       data: map(pick(["questionId", "chainId", "status"]), newArbitrationRequests),
@@ -38,7 +38,7 @@ export default async function checkRequestedArbitrations({foreignChainApi}) {
   }
 
   async function processArbitrationRequests() {
-    const requestRemoved = ([_, onChainArbitration]) => onChainArbitration.status == Status.None;
+    const requestRemoved = ([_, onChainArbitration]) => onChainArbitration.status === Status.None;
     const removeOffChainRequest = asyncPipe([
       ([_, onChainArbitration]) => onChainArbitration,
       removeRequest,
@@ -48,7 +48,7 @@ export default async function checkRequestedArbitrations({foreignChainApi}) {
       }),
     ]);
 
-    const disputeCreationFailed = ([_, onChainArbitration]) => onChainArbitration.status == Status.Failed;
+    const disputeCreationFailed = ([_, onChainArbitration]) => onChainArbitration.status === Status.Failed;
     const handleFailedDisputeCreation = asyncPipe([
       ([_, onChainArbitration]) => onChainArbitration,
       foreignChainApi.handleFailedDisputeCreation,
@@ -112,7 +112,7 @@ export default async function checkRequestedArbitrations({foreignChainApi}) {
   async function fetchOnChainCounterpart(offChainArbitration) {
     const {questionId} = offChainArbitration;
 
-    const onChainArbitration = await foreignChainApi.getRequestByQuestionId(questionId);
+    const onChainArbitration = await foreignChainApi.getArbitrationByQuestionId(questionId);
 
     return [offChainArbitration, onChainArbitration];
   }

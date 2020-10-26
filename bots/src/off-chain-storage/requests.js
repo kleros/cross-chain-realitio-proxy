@@ -6,11 +6,11 @@ const {client, batchWrite} = createEnhancedClient();
 const requestsTable = process.env.REQUESTS_TABLE_NAME;
 
 const extractStoredData = pick([
+  "chainId",
   "questionId",
   "status",
   "requesterAnswer",
   "arbitratorAnswer",
-  "question",
   "latestAnswer",
 ]);
 

@@ -5,7 +5,6 @@ import {getContract} from "~/shared/contract";
 import {getPastEvents} from "~/shared/events";
 import * as P from "~/shared/promise";
 import {foreignWeb3 as web3} from "~/shared/web3";
-import {Status} from "./entities";
 
 const FOREIGN_TX_BATCHER_CONTRACT_ADDRESS = process.env.FOREIGN_TX_BATCHER_CONTRACT_ADDRESS;
 
@@ -40,21 +39,18 @@ export default async function createApiInstance() {
     const allNotifiedRequests = await P.allSettled(
       map(compose(getArbitrationByQuestionId, path(["returnValues", "_questionID"])), events)
     );
-    const onlyFulfilledAndRequested = compose(
-      filter(propEq("status", "fulfilled")),
-      map(prop("value")),
-      filter(({status}) => Number(status) === Status.Requested)
-    );
+    const onlyFulfilled = compose(filter(propEq("status", "fulfilled")), map(prop("value")));
 
-    return into([], onlyFulfilledAndRequested, allNotifiedRequests);
+    return into([], onlyFulfilled, allNotifiedRequests);
   }
 
   async function handleFailedDisputeCreation(arbitration) {
-    return batchSend({
+    await batchSend({
       args: [arbitration.questionId],
       method: foreignProxy.methods.handleFailedDisputeCreation,
       to: foreignProxy.options.address,
     });
+    return arbitration;
   }
 
   return {

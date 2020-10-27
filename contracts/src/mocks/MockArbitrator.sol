@@ -28,8 +28,8 @@ contract MockArbitrator is IArbitrator {
 
     function createDispute(uint256 _choices, bytes calldata _extraData)
         external
-        override
         payable
+        override
         returns (uint256 disputeID)
     {
         Dispute storage dispute = disputes.push();
@@ -45,28 +45,28 @@ contract MockArbitrator is IArbitrator {
         arbitrationFee = _arbitrationFee;
     }
 
-    function arbitrationCost(bytes calldata _extraData) external override view returns (uint256 cost) {
+    function arbitrationCost(bytes calldata _extraData) external view override returns (uint256 cost) {
         return arbitrationFee;
     }
 
-    function appeal(uint256 _disputeID, bytes calldata _extraData) external override payable {
+    function appeal(uint256 _disputeID, bytes calldata _extraData) external payable override {
         revert("Not implemented");
     }
 
-    function appealCost(uint256 _disputeID, bytes calldata _extraData) external override view returns (uint256 cost) {
+    function appealCost(uint256 _disputeID, bytes calldata _extraData) external view override returns (uint256 cost) {
         return NON_PAYABLE_VALUE;
     }
 
-    function appealPeriod(uint256 _disputeID) external override view returns (uint256 start, uint256 end) {
+    function appealPeriod(uint256 _disputeID) external view override returns (uint256 start, uint256 end) {
         return (0, 0);
     }
 
-    function disputeStatus(uint256 _disputeID) external override view returns (DisputeStatus status) {
+    function disputeStatus(uint256 _disputeID) external view override returns (DisputeStatus status) {
         Dispute storage dispute = disputes[_disputeID];
         return dispute.status;
     }
 
-    function currentRuling(uint256 _disputeID) external override view returns (uint256 ruling) {
+    function currentRuling(uint256 _disputeID) external view override returns (uint256 ruling) {
         Dispute storage dispute = disputes[_disputeID];
         return dispute.ruling;
     }

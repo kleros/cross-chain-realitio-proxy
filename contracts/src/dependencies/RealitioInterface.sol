@@ -13,6 +13,25 @@ interface RealitioInterface {
         bool is_commitment
     );
 
+    event LogNewTemplate(
+        uint256 indexed template_id,
+        address indexed user,
+        string question_text
+    );
+
+    event LogNewQuestion(
+        bytes32 indexed question_id,
+        address indexed user,
+        uint256 template_id,
+        string question,
+        bytes32 indexed content_hash,
+        address arbitrator,
+        uint32 timeout,
+        uint32 opening_ts,
+        uint256 nonce,
+        uint256 created
+    );
+
     /**
      * @dev The arbitrator contract is trusted to only call this if they've been paid, and tell us who paid them.
      * @notice Notify the contract that the arbitrator has been paid for a question, freezing it pending their decision.

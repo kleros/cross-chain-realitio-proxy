@@ -24,7 +24,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     bool public initialized;
 
     /// @dev The address of the arbitrator. TRUSTED.
-    IArbitrator public arbitrator;
+    IArbitrator public immutable arbitrator;
 
     /// @dev The extra data used to raise a dispute in the arbitrator.
     bytes public arbitratorExtraData;
@@ -33,7 +33,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 2;
 
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public amb;
+    IAMB public immutable amb;
 
     /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
     address public homeProxy;
@@ -56,7 +56,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     mapping(uint256 => bytes32) public disputeIDToQuestionID;
 
     /**
-     * @dev Should be emitted when the arbitration is requested.
+     * @notice Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question to be arbitrated.
      * @param _answer The answer provided by the requester.
      * @param _requester The requester.
@@ -64,22 +64,22 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     event ArbitrationRequested(bytes32 indexed _questionID, bytes32 _answer, address indexed _requester);
 
     /**
-     * @dev Should be emitted when the dispute is created.
+     * @notice Should be emitted when the dispute is created.
      * @param _questionID The ID of the question to be arbitrated.
      * @param _disputeID The ID of the dispute.
      */
     event ArbitrationCreated(bytes32 indexed _questionID, uint256 indexed _disputeID);
 
     /**
-     * @dev Should be emitted when the dispute could not be created.
-     * @notice This will happen if there is an increase in the arbitration fees
+     * @notice Should be emitted when the dispute could not be created.
+     * @dev This will happen if there is an increase in the arbitration fees
      * between the time the arbitration is made and the time it is acknowledged.
      * @param _questionID The ID of the question to be arbitrated.
      */
     event ArbitrationFailed(bytes32 indexed _questionID);
 
     /**
-     * @dev Should be emitted when the arbitration is canceled by the Home Chain.
+     * @notice Should be emitted when the arbitration is canceled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
      */
     event ArbitrationCanceled(bytes32 indexed _questionID);
@@ -110,8 +110,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Creates an arbitration proxy on the foreign chain.
-     * @notice Contract will still require initialization before being usable.
+     * @notice Creates an arbitration proxy on the foreign chain.
+     * @dev Contract will still require initialization before being usable.
      * @param _amb ArbitraryMessageBridge contract address.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
@@ -127,8 +127,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Initializes the contract so it can start receiving arbitration requests.
-     * @notice This function can only be called once, after `homeProxy` has already been set for the first time.
+     * @notice Initializes the contract so it can start receiving arbitration requests.
+     * @dev This function can only be called once, after `homeProxy` has already been set for the first time.
      * Since there is a circular dependency between `RealitioForeignArbitrationProxy` and `RealitioHomeArbitrationProxy`,
      * it is not possible to require the home proxy to be a constructor param.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -143,7 +143,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Sets the address of a new governor.
+     * @notice Sets the address of a new governor.
      * @param _governor The address of the new governor.
      */
     function setGovernor(address _governor) external onlyGovernor {
@@ -151,23 +151,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Sets the address of the ArbitraryMessageBridge.
-     * @param _amb The address of the new ArbitraryMessageBridge.
-     */
-    function setAmb(IAMB _amb) external onlyGovernor {
-        amb = _amb;
-    }
-
-    /**
-     * @dev Sets the address of the arbitrator.
-     * @param _arbitrator The address of the new arbitrator.
-     */
-    function setArbitrator(IArbitrator _arbitrator) external onlyGovernor {
-        arbitrator = _arbitrator;
-    }
-
-    /**
-     * @dev Sets the address of the arbitration proxy on the Home Chain.
+     * @notice Sets the address of the arbitration proxy on the Home Chain.
      * @param _homeProxy The address of the proxy.
      */
     function setHomeProxy(address _homeProxy) external onlyGovernor {
@@ -175,16 +159,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Sets the extra data for disputes.
-     * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
-     */
-    function setArbitratorExtraData(bytes calldata _arbitratorExtraData) external onlyGovernor {
-        arbitratorExtraData = _arbitratorExtraData;
-    }
-
-    /**
-     * @dev Requests arbitration for given question ID.
-     * @notice Can be executed only if the contract has been initialized.
+     * @notice Requests arbitration for given question ID.
+     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _requesterAnswer The answer the requester deem to be correct.
      */
@@ -207,7 +183,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Requests arbitration for given question ID.
+     * @notice Requests arbitration for given question ID.
      * @param _questionID The ID of the question.
      */
     function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
@@ -241,7 +217,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Cancels the arbitration.
+     * @notice Cancels the arbitration.
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
@@ -256,7 +232,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Cancels the arbitration in case the dispute could not be created.
+     * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
      */
     function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
@@ -275,8 +251,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
-     * @dev Rules a specified dispute.
-     * @notice Note that 0 is reserved for "Unable/refused to arbitrate" and we map it to `bytes32(-1)` which has a similar connotation in Realitio.
+     * @notice Rules a specified dispute.
+     * @dev Note that 0 is reserved for "Unable/refused to arbitrate" and we map it to `bytes32(-1)` which has a similar connotation in Realitio.
      * @param _disputeID The ID of the dispute in the ERC792 arbitrator.
      * @param _ruling The ruling given by the arbitrator.
      */
@@ -300,5 +276,13 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
         emit Ruling(arbitrator, _disputeID, _ruling);
+    }
+
+    /**
+     * @notice Gets the fee to create a dispute.
+     * @return The fee to create a dispute.
+     */
+    function getDisputeFee(bytes32 questionID) external view override returns (uint256) {
+        return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 }

@@ -40,4 +40,10 @@ interface IForeignArbitrationProxy {
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external;
+
+    /**
+     * @notice Gets the fee to create a dispute.
+     * @return The fee to create a dispute.
+     */
+    function getDisputeFee(bytes32 questionID) external view returns (uint256);
 }

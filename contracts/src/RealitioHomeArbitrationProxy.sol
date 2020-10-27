@@ -19,13 +19,16 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     address public governor = msg.sender;
 
     /// @dev The address of the Realitio contract. TRUSTED.
-    RealitioInterface public realitio;
+    RealitioInterface public immutable realitio;
 
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public amb;
+    IAMB public immutable amb;
 
     /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
     address public foreignProxy;
+
+    /// @dev Metadata for Realitio interface.
+    string public constant metadata = '{"foreignProxy":true,"foreignChainId":1}';
 
     enum Status {None, Pending, Notified, AwaitingRuling, Ruled}
 
@@ -124,14 +127,6 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      */
     function setGovernor(address _governor) external onlyGovernor {
         governor = _governor;
-    }
-
-    /**
-     * @dev Sets the address of the ArbitraryMessageBridge.
-     * @param _amb The address of the new ArbitraryMessageBridge.
-     */
-    function setAmb(IAMB _amb) external onlyGovernor {
-        amb = _amb;
     }
 
     /**

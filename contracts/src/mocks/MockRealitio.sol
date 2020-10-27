@@ -22,10 +22,20 @@ contract MockRealitio is RealitioInterface {
 
     Question[] public questions;
 
-    event LogNewQuestion(bytes32 indexed _questionId, string _description, address indexed _asker);
-    event LogFinalize(bytes32 indexed _questionId, bytes32 _finalAnswer);
-    event LogNotifyOfArbitrationRequest(bytes32 indexed _questionId, address indexed _requester);
-    event LogCancelArbitrationRequest(bytes32 indexed _questionId);
+    event MockNewAnswer(
+        bytes32 _answer,
+        bytes32 indexed _questionId,
+        bytes32 _lastHistoryHash,
+        address _answerer,
+        uint256 _bond,
+        uint256 _ts,
+        bool _isCommitment
+    );
+
+    event MockNewQuestion(bytes32 indexed _questionId, string _description, address indexed _asker);
+    event MockFinalize(bytes32 indexed _questionId, bytes32 _finalAnswer);
+    event MockNotifyOfArbitrationRequest(bytes32 indexed _questionId, address indexed _requester);
+    event MockCancelArbitrationRequest(bytes32 indexed _questionId);
 
     function setArbitrator(address _arbitrator) external {
         arbitrator = _arbitrator;
@@ -37,7 +47,7 @@ contract MockRealitio is RealitioInterface {
         question.status = Status.Open;
         question.description = _description;
 
-        emit LogNewQuestion(questionId, _description, msg.sender);
+        emit MockNewQuestion(questionId, _description, msg.sender);
     }
 
     function submitAnswer(
@@ -51,14 +61,14 @@ contract MockRealitio is RealitioInterface {
         question.answer = _answer;
         question.answerer = msg.sender;
 
-        emit LogNewAnswer(_answer, _questionId, bytes32(0), msg.sender, 0, block.timestamp, false);
+        emit MockNewAnswer(_answer, _questionId, bytes32(0), msg.sender, 0, block.timestamp, false);
     }
 
     function finalizeQuestion(bytes32 _questionId) external {
         Question storage question = questions[uint256(_questionId)];
         question.status = Status.Finalized;
 
-        emit LogFinalize(_questionId, question.answer);
+        emit MockFinalize(_questionId, question.answer);
     }
 
     function notifyOfArbitrationRequest(
@@ -71,7 +81,7 @@ contract MockRealitio is RealitioInterface {
 
         question.status = Status.PendingArbitration;
 
-        emit LogNotifyOfArbitrationRequest(_questionId, _requester);
+        emit MockNotifyOfArbitrationRequest(_questionId, _requester);
     }
 
     function cancelArbitration(bytes32 _questionId) external override {
@@ -80,7 +90,7 @@ contract MockRealitio is RealitioInterface {
 
         question.status = Status.Open;
 
-        emit LogCancelArbitrationRequest(_questionId);
+        emit MockCancelArbitrationRequest(_questionId);
     }
 
     function assignWinnerAndSubmitAnswerByArbitrator(
@@ -101,14 +111,14 @@ contract MockRealitio is RealitioInterface {
             question.answerer = _payeeIfWrong;
         }
 
-        emit LogFinalize(_questionId, _answer);
+        emit MockFinalize(_questionId, _answer);
     }
 
-    function isFinalized(bytes32 _questionId) external override view returns (bool) {
+    function isFinalized(bytes32 _questionId) external view override returns (bool) {
         return questions[uint256(_questionId)].status == Status.Finalized;
     }
 
-    function getBestAnswer(bytes32 _questionId) external override view returns (bytes32) {
+    function getBestAnswer(bytes32 _questionId) external view override returns (bytes32) {
         return questions[uint256(_questionId)].answer;
     }
 }

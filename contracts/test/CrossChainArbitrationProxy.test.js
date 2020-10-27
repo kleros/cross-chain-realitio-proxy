@@ -65,7 +65,7 @@ describe("Cross-Chain Arbitration", () => {
     beforeEach("Create question and submit answer", async () => {
       const askTx = await realitio.connect(asker).askQuestion(question);
       const askTxReceipt = await askTx.wait();
-      questionId = getEventArgs("LogNewQuestion", askTxReceipt.events)._questionId;
+      questionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
 
       await submitAnswer(questionId, currentAnswer);
     });
@@ -78,7 +78,7 @@ describe("Cross-Chain Arbitration", () => {
           .to.emit(homeProxy, "RequestNotified")
           .withArgs(questionId, requesterAnswer, await requester.getAddress());
         await expect(txPromise)
-          .to.emit(realitio, "LogNotifyOfArbitrationRequest")
+          .to.emit(realitio, "MockNotifyOfArbitrationRequest")
           .withArgs(questionId, await requester.getAddress());
       });
 
@@ -109,7 +109,7 @@ describe("Cross-Chain Arbitration", () => {
         await expect(txPromise)
           .to.emit(homeProxy, "RequestPending")
           .withArgs(questionId, requesterAnswer, await requester.getAddress());
-        await expect(txPromise).not.to.emit(realitio, "LogNotifyOfArbitrationRequest");
+        await expect(txPromise).not.to.emit(realitio, "MockNotifyOfArbitrationRequest");
       });
 
       it("should notify Realitio of the arbitration request and pass the message to create the dispute when current answer becomes different from the requester one", async () => {
@@ -120,7 +120,7 @@ describe("Cross-Chain Arbitration", () => {
         const txPromise = homeProxy.handleChangedAnswer(questionId);
 
         await expect(txPromise)
-          .to.emit(realitio, "LogNotifyOfArbitrationRequest")
+          .to.emit(realitio, "MockNotifyOfArbitrationRequest")
           .withArgs(questionId, await requester.getAddress());
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
@@ -135,7 +135,7 @@ describe("Cross-Chain Arbitration", () => {
         const {txPromise} = await handleFinalizedQuestion(questionId);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCanceled");
-        await expect(txPromise).not.to.emit(realitio, "LogNotifyOfArbitrationRequest");
+        await expect(txPromise).not.to.emit(realitio, "MockNotifyOfArbitrationRequest");
         await expect(txPromise).not.to.emit(arbitrator, "DisputeCreation");
       });
 
@@ -199,7 +199,7 @@ describe("Cross-Chain Arbitration", () => {
         const {txPromise} = await handleFailedDisputeCreation(questionId);
 
         await expect(txPromise).to.emit(homeProxy, "ArbitrationFailed").withArgs(questionId);
-        await expect(txPromise).to.emit(realitio, "LogCancelArbitrationRequest").withArgs(questionId);
+        await expect(txPromise).to.emit(realitio, "MockCancelArbitrationRequest").withArgs(questionId);
       });
 
       it("Should reimburse the requester when the dispute creation failed due to an increase in arbitration cost", async () => {
@@ -223,7 +223,7 @@ describe("Cross-Chain Arbitration", () => {
     beforeEach("Create question, submit answer and requet arbitration", async () => {
       const askTx = await realitio.connect(asker).askQuestion(question);
       const askTxReceipt = await askTx.wait();
-      questionId = getEventArgs("LogNewQuestion", askTxReceipt.events)._questionId;
+      questionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
 
       await submitAnswer(questionId, currentAnswer);
       await requestArbitration(questionId, requesterAnswer);
@@ -247,7 +247,7 @@ describe("Cross-Chain Arbitration", () => {
       await rule(disputeId, ruling);
 
       const {txPromise} = await reportArbitrationAnswer(questionId);
-      await expect(txPromise).to.emit(realitio, "LogFinalize").withArgs(questionId, currentAnswer);
+      await expect(txPromise).to.emit(realitio, "MockFinalize").withArgs(questionId, currentAnswer);
     });
   });
 

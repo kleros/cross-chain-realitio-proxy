@@ -30,15 +30,15 @@ contract MockAMB is IAMB {
         return bytes32(currentMessageId);
     }
 
-    function maxGasPerTx() external override view returns (uint256) {
+    function maxGasPerTx() external view override returns (uint256) {
         return 8000000;
     }
 
-    function messageSender() external override view returns (address) {
+    function messageSender() external view override returns (address) {
         return currentMessageSender;
     }
 
-    function messageId() external override view returns (bytes32) {
+    function messageId() external view override returns (bytes32) {
         return bytes32(currentMessageId);
     }
 }

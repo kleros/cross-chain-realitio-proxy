@@ -16,16 +16,19 @@
     "fix:sol": "prettier --write 'contracts/**/*.sol'"
   },
   "workspaces": [
+    "bots",
     "contracts",
-    "bots"
+    "dynamic-script",
+    "evidence-display"
   ],
   "devDependencies": {
     "eslint": "^7.7.0",
-    "eslint-config-prettier": "^6.11.0",
+    "eslint-config-prettier": "^6.14.0",
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^4.3.0",
     "lint-staged": "^10.4.2",
+    "prettier": "^2.1.2",
     "prettier-plugin-solidity": "^1.0.0-alpha.56",
     "solhint": "^3.2.0",
     "solhint-plugin-prettier": "^0.0.4"

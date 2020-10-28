@@ -1,0 +1,17 @@
+<script src='/Users/samvitello/kleros/realitio-script/dist/bundle.js'></script>
+<script type='text/javascript'>
+    const scriptParameters = {}
+    let resolveScript
+    let rejectScript
+    const returnPromise = new Promise((resolve, reject) => {
+      resolveScript = resolve
+      rejectScript = reject
+    })
+
+    const evaluator = () => {
+      getRulingOptions()
+    }
+    evaluator()
+
+    returnPromise.then(result => {console.log(result)})
+</script>

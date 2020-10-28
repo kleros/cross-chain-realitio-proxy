@@ -38,6 +38,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
     address public homeProxy;
 
+    /// @dev The path for the Terms of Service for Kleros as an arbitrator for Realitio.
+    string public termsOfService;
+
     enum Status {None, Requested, Created, Failed}
 
     struct Arbitration {
@@ -132,12 +135,14 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * Since there is a circular dependency between `RealitioForeignArbitrationProxy` and `RealitioHomeArbitrationProxy`,
      * it is not possible to require the home proxy to be a constructor param.
      * @param _metaEvidence The URI of the meta evidence file.
+     * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
      */
-    function initialize(string calldata _metaEvidence) external onlyGovernor {
+    function initialize(string calldata _metaEvidence, string calldata _termsOfService) external onlyGovernor {
         require(!initialized, "Proxy already initialized");
         require(homeProxy != address(0), "Home proxy not set");
 
         initialized = true;
+        termsOfService = _termsOfService;
 
         emit MetaEvidence(0, _metaEvidence);
     }

@@ -24,6 +24,7 @@ let requester;
 const arbitrationFee = BigNumber.from(BigInt(1e18));
 const arbitratorExtraData = "0x00";
 const metaEvidence = "ipfs/X";
+const termsOfService = "ipfs/Y";
 
 let questionId;
 const question = "Whats the answer for everything in the universe?";
@@ -57,7 +58,7 @@ describe("Cross-Chain Arbitration", () => {
 
     const setHomeProxyTx = await foreignProxy.setHomeProxy(homeProxy.address);
     await setHomeProxyTx.wait();
-    const initializeTx = await foreignProxy.initialize(metaEvidence);
+    const initializeTx = await foreignProxy.initialize(metaEvidence, termsOfService);
     await initializeTx.wait();
   });
 

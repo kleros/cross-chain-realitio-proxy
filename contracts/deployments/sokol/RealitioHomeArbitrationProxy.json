@@ -1,0 +1,671 @@
+{
+  "address": "0xFE083F7B16B26582D74Deb57Cf63d755b597eA05",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IAMB",
+          "name": "_amb",
+          "type": "address"
+        },
+        {
+          "internalType": "contract RealitioInterface",
+          "name": "_realitio",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ArbitrationCompleted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ArbitrationFailed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "_answer",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ArbitratorAnswered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RequestAcknowledged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "RequestCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "_requesterAnswer",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "RequestNotified",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "_requesterAnswer",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "RequestPending",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "amb",
+      "outputs": [
+        {
+          "internalType": "contract IAMB",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "foreignProxy",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "governor",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "handleChangedAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "handleFinalizedQuestion",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "handleNotifiedRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "metadata",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "questionIDToRequest",
+      "outputs": [
+        {
+          "internalType": "enum RealitioHomeArbitrationProxy.Status",
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "internalType": "address",
+          "name": "requester",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "requesterAnswer",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "arbitratorAnswer",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "realitio",
+      "outputs": [
+        {
+          "internalType": "contract RealitioInterface",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_answer",
+          "type": "bytes32"
+        }
+      ],
+      "name": "receiveArbitrationAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "receiveArbitrationFailure",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_requesterAnswer",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "receiveArbitrationRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_lastHistoryHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_lastAnswerOrCommitmentID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_lastAnswerer",
+          "type": "address"
+        }
+      ],
+      "name": "reportArbitrationAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_foreignProxy",
+          "type": "address"
+        }
+      ],
+      "name": "setForeignProxy",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_governor",
+          "type": "address"
+        }
+      ],
+      "name": "setGovernor",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x329434425284213522ce645c728acea90f780dc12b75189f2fb121034da14fdc",
+  "receipt": {
+    "to": null,
+    "from": "0xceB4c079Dd21494E0bc99DA732EAdf220b727389",
+    "contractAddress": "0xFE083F7B16B26582D74Deb57Cf63d755b597eA05",
+    "transactionIndex": 0,
+    "gasUsed": "1468127",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x64dec02abac4861df403afc53cdbf8012e34a0fa33df5fd94d7168fd9cc9d3c8",
+    "transactionHash": "0x329434425284213522ce645c728acea90f780dc12b75189f2fb121034da14fdc",
+    "logs": [],
+    "blockNumber": 17540255,
+    "cumulativeGasUsed": "1468127",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xFe446bEF1DbF7AFE24E81e05BC8B271C1BA9a560",
+    "0x63975d9e7CF434dCd04bD808d8c79d03EF69100B"
+  ],
+  "solcInputHash": "0f42f7e93fb4228c83ceb9fa1c33a4c6",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.4+commit.3f05b770\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IAMB\",\"name\":\"_amb\",\"type\":\"address\"},{\"internalType\":\"contract RealitioInterface\",\"name\":\"_realitio\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"ArbitrationCompleted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"ArbitrationFailed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_answer\",\"type\":\"bytes32\"}],\"name\":\"ArbitratorAnswered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"RequestAcknowledged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"RequestCancelled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_requesterAnswer\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"RequestNotified\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_requesterAnswer\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"RequestPending\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"amb\",\"outputs\":[{\"internalType\":\"contract IAMB\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"foreignProxy\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"governor\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"handleChangedAnswer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"handleFinalizedQuestion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"handleNotifiedRequest\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"metadata\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"questionIDToRequest\",\"outputs\":[{\"internalType\":\"enum RealitioHomeArbitrationProxy.Status\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"requester\",\"type\":\"address\"},{\"internalType\":\"bytes32\",\"name\":\"requesterAnswer\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"arbitratorAnswer\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"realitio\",\"outputs\":[{\"internalType\":\"contract RealitioInterface\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_answer\",\"type\":\"bytes32\"}],\"name\":\"receiveArbitrationAnswer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"receiveArbitrationFailure\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_requesterAnswer\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"receiveArbitrationRequest\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_lastHistoryHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_lastAnswerOrCommitmentID\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_lastAnswerer\",\"type\":\"address\"}],\"name\":\"reportArbitrationAnswer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_foreignProxy\",\"type\":\"address\"}],\"name\":\"setForeignProxy\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_governor\",\"type\":\"address\"}],\"name\":\"setGovernor\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"events\":{\"ArbitrationCompleted(bytes32)\":{\"details\":\"To be emitted when reporting the arbitrator answer to Realitio.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"ArbitrationFailed(bytes32)\":{\"details\":\"To be emitted when the dispute could not be created on the Foreign Chain.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"ArbitratorAnswered(bytes32,bytes32)\":{\"details\":\"To be emitted when receiving the answer from the arbitrator.\",\"params\":{\"_answer\":\"The answer from the arbitrator.\",\"_questionID\":\"The ID of the question.\"}},\"RequestAcknowledged(bytes32)\":{\"details\":\"To be emitted when there arbitration request acknowledgement is sent to the Foreign Chain.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"RequestCancelled(bytes32)\":{\"details\":\"To be emitted when there arbitration request is canceled.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"RequestNotified(bytes32,bytes32,address)\":{\"details\":\"To be emitted when the Realitio contract has been notified of an arbitration request.\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\",\"_requesterAnswer\":\"The answer the requester deem to be correct.\"}},\"RequestPending(bytes32,bytes32,address)\":{\"details\":\"To be emitted when arbitration request is received but remained pending.\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\",\"_requesterAnswer\":\"The answer the requester deem to be correct.\"}}},\"kind\":\"dev\",\"methods\":{\"constructor\":{\"details\":\"Creates an arbitration proxy on the home chain.\",\"params\":{\"_amb\":\"ArbitraryMessageBridge contract address.\",\"_realitio\":\"Realitio contract address.\"}},\"handleChangedAnswer(bytes32)\":{\"details\":\"Handles changed answer for a given question.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"handleFinalizedQuestion(bytes32)\":{\"details\":\"Handles a given question being finalized.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"handleNotifiedRequest(bytes32)\":{\"details\":\"Handles arbitration request after it has been notified to Realitio for a given question.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"receiveArbitrationAnswer(bytes32,bytes32)\":{\"details\":\"Recieves the answer to a specified question.\",\"params\":{\"_answer\":\"The answer from the arbitratior.\",\"_questionID\":\"The ID of the question.\"}},\"receiveArbitrationFailure(bytes32)\":{\"details\":\"Recieves a failed attempt to request arbitration.\",\"params\":{\"_questionID\":\"The ID of the question.\"}},\"receiveArbitrationRequest(bytes32,bytes32,address)\":{\"details\":\"Recieves the requested arbitration for a question.\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\",\"_requesterAnswer\":\"The answer the requester deem to be correct.\"}},\"reportArbitrationAnswer(bytes32,bytes32,bytes32,address)\":{\"details\":\"Report the answer provided by the arbitrator to a specified question.\",\"params\":{\"_lastAnswerOrCommitmentID\":\"The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.\",\"_lastAnswerer\":\"The last answerer to the question in the Realitio contract.\",\"_lastHistoryHash\":\"The history hash given with the last answer to the question in the Realitio contract.\",\"_questionID\":\"The ID of the question.\"}},\"setForeignProxy(address)\":{\"details\":\"Sets the address of the arbitration proxy on the Foreign Chain.\",\"params\":{\"_foreignProxy\":\"The address of the proxy.\"}},\"setGovernor(address)\":{\"details\":\"Sets the address of a new governor.\",\"params\":{\"_governor\":\"The address of the new governor.\"}}},\"stateVariables\":{\"amb\":{\"details\":\"ArbitraryMessageBridge contract address. TRUSTED.\"},\"foreignProxy\":{\"details\":\"Address of the counter-party proxy on the Foreign Chain. TRUSTED.\"},\"governor\":{\"details\":\"The contract governor. TRUSTED.\"},\"metadata\":{\"details\":\"Metadata for Realitio interface.\"},\"questionIDToRequest\":{\"details\":\"Associates an arbitration request with a question ID.\"},\"realitio\":{\"details\":\"The address of the Realitio contract. TRUSTED.\"}},\"version\":1},\"userdoc\":{\"events\":{\"ArbitrationFailed(bytes32)\":{\"notice\":\"This will happen if there is a remaining arbitration fee users fail to pay.\"},\"RequestNotified(bytes32,bytes32,address)\":{\"notice\":\"This will happen if the best answer for a given question changes between the arbitration is requested on the Foreign Chain and the cross-chain message reaches the home chain and becomes the same answer as the one from requester.\"},\"RequestPending(bytes32,bytes32,address)\":{\"notice\":\"This will happen if the best answer for a given question changes between the arbitration is requested on the Foreign Chain and the cross-chain message reaches the home chain and becomes the same answer as the one from requester.\"}},\"kind\":\"user\",\"methods\":{\"handleChangedAnswer(bytes32)\":{\"notice\":\"Sends the arbitration acknowledgement to the Foreign Chain.\"},\"handleFinalizedQuestion(bytes32)\":{\"notice\":\"Sends the arbitration cancellation to the Foreign Chain.\"},\"handleNotifiedRequest(bytes32)\":{\"notice\":\"Sends the arbitration acknowledgement to the Foreign Chain.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/RealitioHomeArbitrationProxy.sol\":\"RealitioHomeArbitrationProxy\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"src/ArbitrationProxyInterfaces.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.2;\\n\\ninterface IHomeArbitrationProxy {\\n    /**\\n     * @dev Recieves the requested arbitration for a question. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _requesterAnswer The answer the requester deem to be correct.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    function receiveArbitrationRequest(\\n        bytes32 _questionID,\\n        bytes32 _requesterAnswer,\\n        address _requester\\n    ) external;\\n\\n    /**\\n     * @dev Recieves a failed attempt to request arbitration. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     */\\n    function receiveArbitrationFailure(bytes32 _questionID) external;\\n\\n    /**\\n     * @dev Recieves the answer to a specified question. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _answer The answer from the arbitratior.\\n     */\\n    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external;\\n}\\n\\ninterface IForeignArbitrationProxy {\\n    /**\\n     * @dev Requests arbitration for given question ID. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     */\\n    function acknowledgeArbitration(bytes32 _questionID) external;\\n\\n    /**\\n     * @dev Cancels the arbitration request. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     */\\n    function cancelArbitration(bytes32 _questionID) external;\\n\\n    /**\\n     * @notice Gets the fee to create a dispute.\\n     * @return The fee to create a dispute.\\n     */\\n    function getDisputeFee(bytes32 questionID) external view returns (uint256);\\n}\\n\",\"keccak256\":\"0x73a6a51b5a414e76d9641e0377154f368c0296846cd9285f9c5706e5eb752c17\",\"license\":\"MIT\"},\"src/RealitioHomeArbitrationProxy.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\n/**\\n *  @authors: [@hbarcelos]\\n *  @reviewers: [@ferittuncer*]\\n *  @auditors: []\\n *  @bounties: []\\n *  @deployments: []\\n */\\n\\npragma solidity ^0.7.2;\\n\\nimport \\\"./dependencies/IAMB.sol\\\";\\nimport \\\"./dependencies/RealitioInterface.sol\\\";\\nimport \\\"./ArbitrationProxyInterfaces.sol\\\";\\n\\ncontract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {\\n    /// @dev The contract governor. TRUSTED.\\n    address public governor = msg.sender;\\n\\n    /// @dev The address of the Realitio contract. TRUSTED.\\n    RealitioInterface public immutable realitio;\\n\\n    /// @dev ArbitraryMessageBridge contract address. TRUSTED.\\n    IAMB public immutable amb;\\n\\n    /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.\\n    address public foreignProxy;\\n\\n    /// @dev Metadata for Realitio interface.\\n    string public constant metadata = '{\\\"foreignProxy\\\":true,\\\"foreignChainId\\\":1}';\\n\\n    enum Status {None, Pending, Notified, AwaitingRuling, Ruled}\\n\\n    struct Request {\\n        Status status;\\n        address requester;\\n        bytes32 requesterAnswer;\\n        bytes32 arbitratorAnswer;\\n    }\\n\\n    /// @dev Associates an arbitration request with a question ID.\\n    mapping(bytes32 => Request) public questionIDToRequest;\\n\\n    /**\\n     * @dev To be emitted when arbitration request is received but remained pending.\\n     * @notice This will happen if the best answer for a given question changes between\\n     * the arbitration is requested on the Foreign Chain and the cross-chain message\\n     * reaches the home chain and becomes the same answer as the one from requester.\\n     * @param _questionID The ID of the question.\\n     * @param _requesterAnswer The answer the requester deem to be correct.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    event RequestPending(bytes32 indexed _questionID, bytes32 _requesterAnswer, address indexed _requester);\\n\\n    /**\\n     * @dev To be emitted when the Realitio contract has been notified of an arbitration request.\\n     * @notice This will happen if the best answer for a given question changes between\\n     * the arbitration is requested on the Foreign Chain and the cross-chain message\\n     * reaches the home chain and becomes the same answer as the one from requester.\\n     * @param _questionID The ID of the question.\\n     * @param _requesterAnswer The answer the requester deem to be correct.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    event RequestNotified(bytes32 indexed _questionID, bytes32 _requesterAnswer, address indexed _requester);\\n\\n    /**\\n     * @dev To be emitted when there arbitration request acknowledgement is sent to the Foreign Chain.\\n     * @param _questionID The ID of the question.\\n     */\\n    event RequestAcknowledged(bytes32 indexed _questionID);\\n\\n    /**\\n     * @dev To be emitted when there arbitration request is canceled.\\n     * @param _questionID The ID of the question.\\n     */\\n    event RequestCancelled(bytes32 indexed _questionID);\\n\\n    /**\\n     * @dev To be emitted when the dispute could not be created on the Foreign Chain.\\n     * @notice This will happen if there is a remaining arbitration fee users fail to pay.\\n     * @param _questionID The ID of the question.\\n     */\\n    event ArbitrationFailed(bytes32 indexed _questionID);\\n\\n    /**\\n     * @dev To be emitted when receiving the answer from the arbitrator.\\n     * @param _questionID The ID of the question.\\n     * @param _answer The answer from the arbitrator.\\n     */\\n    event ArbitratorAnswered(bytes32 indexed _questionID, bytes32 _answer);\\n\\n    /**\\n     * @dev To be emitted when reporting the arbitrator answer to Realitio.\\n     * @param _questionID The ID of the question.\\n     */\\n    event ArbitrationCompleted(bytes32 indexed _questionID);\\n\\n    modifier onlyGovernor() {\\n        require(msg.sender == governor, \\\"Only governor allowed\\\");\\n        _;\\n    }\\n\\n    modifier onlyAmb() {\\n        require(msg.sender == address(amb), \\\"Only AMB allowed\\\");\\n        _;\\n    }\\n\\n    modifier onlyForeignProxy() {\\n        require(amb.messageSender() == foreignProxy, \\\"Only foreign proxy allowed\\\");\\n        _;\\n    }\\n\\n    /**\\n     * @dev Creates an arbitration proxy on the home chain.\\n     * @param _amb ArbitraryMessageBridge contract address.\\n     * @param _realitio Realitio contract address.\\n     */\\n    constructor(IAMB _amb, RealitioInterface _realitio) {\\n        amb = _amb;\\n        realitio = _realitio;\\n    }\\n\\n    /**\\n     * @dev Sets the address of a new governor.\\n     * @param _governor The address of the new governor.\\n     */\\n    function setGovernor(address _governor) external onlyGovernor {\\n        governor = _governor;\\n    }\\n\\n    /**\\n     * @dev Sets the address of the arbitration proxy on the Foreign Chain.\\n     * @param _foreignProxy The address of the proxy.\\n     */\\n    function setForeignProxy(address _foreignProxy) external onlyGovernor {\\n        foreignProxy = _foreignProxy;\\n    }\\n\\n    /**\\n     * @dev Recieves the requested arbitration for a question.\\n     * @param _questionID The ID of the question.\\n     * @param _requesterAnswer The answer the requester deem to be correct.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    function receiveArbitrationRequest(\\n        bytes32 _questionID,\\n        bytes32 _requesterAnswer,\\n        address _requester\\n    ) external override onlyAmb onlyForeignProxy {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.None, \\\"Request already exists\\\");\\n\\n        bytes32 currentAnswer = realitio.getBestAnswer(_questionID);\\n\\n        request.requester = _requester;\\n        request.requesterAnswer = _requesterAnswer;\\n\\n        if (currentAnswer == _requesterAnswer) {\\n            request.status = Status.Pending;\\n\\n            emit RequestPending(_questionID, _requesterAnswer, _requester);\\n        } else {\\n            request.status = Status.Notified;\\n\\n            realitio.notifyOfArbitrationRequest(_questionID, _requester, 0);\\n\\n            emit RequestNotified(_questionID, _requesterAnswer, _requester);\\n        }\\n    }\\n\\n    /**\\n     * @dev Handles arbitration request after it has been notified to Realitio for a given question.\\n     * @notice Sends the arbitration acknowledgement to the Foreign Chain.\\n     * @param _questionID The ID of the question.\\n     */\\n    function handleNotifiedRequest(bytes32 _questionID) external {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.Notified, \\\"Invalid request status\\\");\\n\\n        request.status = Status.AwaitingRuling;\\n\\n        bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;\\n        bytes memory data = abi.encodeWithSelector(selector, _questionID);\\n        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());\\n\\n        emit RequestAcknowledged(_questionID);\\n    }\\n\\n    /**\\n     * @dev Handles changed answer for a given question.\\n     * @notice Sends the arbitration acknowledgement to the Foreign Chain.\\n     * @param _questionID The ID of the question.\\n     */\\n    function handleChangedAnswer(bytes32 _questionID) external {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.Pending, \\\"Invalid request status\\\");\\n\\n        bytes32 currentAnswer = realitio.getBestAnswer(_questionID);\\n        require(request.requesterAnswer != currentAnswer, \\\"Answers are the same\\\");\\n\\n        request.status = Status.AwaitingRuling;\\n\\n        realitio.notifyOfArbitrationRequest(_questionID, request.requester, 0);\\n\\n        emit RequestNotified(_questionID, request.requesterAnswer, request.requester);\\n\\n        bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;\\n        bytes memory data = abi.encodeWithSelector(selector, _questionID);\\n        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());\\n\\n        emit RequestAcknowledged(_questionID);\\n    }\\n\\n    /**\\n     * @dev Handles a given question being finalized.\\n     * @notice Sends the arbitration cancellation to the Foreign Chain.\\n     * @param _questionID The ID of the question.\\n     */\\n    function handleFinalizedQuestion(bytes32 _questionID) external {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.Pending, \\\"Invalid request status\\\");\\n\\n        bool isFinalized = realitio.isFinalized(_questionID);\\n        require(isFinalized, \\\"Question not finalized\\\");\\n\\n        delete questionIDToRequest[_questionID];\\n\\n        bytes4 selector = IForeignArbitrationProxy(0).cancelArbitration.selector;\\n        bytes memory data = abi.encodeWithSelector(selector, _questionID);\\n        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());\\n\\n        emit RequestCancelled(_questionID);\\n    }\\n\\n    /**\\n     * @dev Recieves a failed attempt to request arbitration.\\n     * @param _questionID The ID of the question.\\n     */\\n    function receiveArbitrationFailure(bytes32 _questionID) external override onlyAmb onlyForeignProxy {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.AwaitingRuling, \\\"Invalid request status\\\");\\n\\n        delete questionIDToRequest[_questionID];\\n\\n        realitio.cancelArbitration(_questionID);\\n\\n        emit ArbitrationFailed(_questionID);\\n    }\\n\\n    /**\\n     * @dev Recieves the answer to a specified question.\\n     * @param _questionID The ID of the question.\\n     * @param _answer The answer from the arbitratior.\\n     */\\n    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyAmb onlyForeignProxy {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.AwaitingRuling, \\\"Invalid request status\\\");\\n\\n        request.status = Status.Ruled;\\n        request.arbitratorAnswer = _answer;\\n\\n        emit ArbitratorAnswered(_questionID, _answer);\\n    }\\n\\n    /**\\n     * @dev Report the answer provided by the arbitrator to a specified question.\\n     * @param _questionID The ID of the question.\\n     * @param _lastHistoryHash The history hash given with the last answer to the question in the Realitio contract.\\n     * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.\\n     * @param _lastAnswerer The last answerer to the question in the Realitio contract.\\n     */\\n    function reportArbitrationAnswer(\\n        bytes32 _questionID,\\n        bytes32 _lastHistoryHash,\\n        bytes32 _lastAnswerOrCommitmentID,\\n        address _lastAnswerer\\n    ) external {\\n        Request storage request = questionIDToRequest[_questionID];\\n        require(request.status == Status.Ruled, \\\"Arbitrator has not ruled yet\\\");\\n\\n        realitio.assignWinnerAndSubmitAnswerByArbitrator(\\n            _questionID,\\n            request.arbitratorAnswer,\\n            request.requester,\\n            _lastHistoryHash,\\n            _lastAnswerOrCommitmentID,\\n            _lastAnswerer\\n        );\\n\\n        delete questionIDToRequest[_questionID];\\n\\n        emit ArbitrationCompleted(_questionID);\\n    }\\n}\\n\",\"keccak256\":\"0x6f5134cc703b77338fde77fb4dd7c4ac2fb435ff841144b057d213853064641c\",\"license\":\"MIT\"},\"src/dependencies/IAMB.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.2;\\n\\ninterface IAMB {\\n    function requireToPassMessage(\\n        address _contract,\\n        bytes memory _data,\\n        uint256 _gas\\n    ) external returns (bytes32);\\n\\n    function maxGasPerTx() external view returns (uint256);\\n\\n    function messageSender() external view returns (address);\\n\\n    function messageId() external view returns (bytes32);\\n}\\n\",\"keccak256\":\"0x4ca4c5e8cdeb7f7000df35225ecf65be953326293917a33a00122ac74663f4e6\",\"license\":\"MIT\"},\"src/dependencies/RealitioInterface.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity ^0.7.2;\\n\\n/* solhint-disable var-name-mixedcase */\\ninterface RealitioInterface {\\n    event LogNewAnswer(\\n        bytes32 answer,\\n        bytes32 indexed question_id,\\n        bytes32 history_hash,\\n        address indexed user,\\n        uint256 bond,\\n        uint256 ts,\\n        bool is_commitment\\n    );\\n\\n    event LogNewTemplate(\\n        uint256 indexed template_id,\\n        address indexed user,\\n        string question_text\\n    );\\n\\n    event LogNewQuestion(\\n        bytes32 indexed question_id,\\n        address indexed user,\\n        uint256 template_id,\\n        string question,\\n        bytes32 indexed content_hash,\\n        address arbitrator,\\n        uint32 timeout,\\n        uint32 opening_ts,\\n        uint256 nonce,\\n        uint256 created\\n    );\\n\\n    /**\\n     * @dev The arbitrator contract is trusted to only call this if they've been paid, and tell us who paid them.\\n     * @notice Notify the contract that the arbitrator has been paid for a question, freezing it pending their decision.\\n     * @param question_id The ID of the question.\\n     * @param requester The account that requested arbitration.\\n     * @param max_previous If specified, reverts if a bond higher than this was submitted after you sent your transaction.\\n     */\\n    function notifyOfArbitrationRequest(\\n        bytes32 question_id,\\n        address requester,\\n        uint256 max_previous\\n    ) external;\\n\\n    /**\\n     * @notice Cancel a previously-requested arbitration and extend the timeout\\n     * @dev Useful when doing arbitration across chains that can't be requested atomically\\n     * @param question_id The ID of the question\\n     */\\n    function cancelArbitration(bytes32 question_id) external;\\n\\n    /**\\n     * @notice Submit the answer for a question, for use by the arbitrator, working out the appropriate winner based on the last answer details.\\n     * @dev Doesn't require (or allow) a bond.\\n     * @param question_id The ID of the question\\n     * @param answer The answer, encoded into bytes32\\n     * @param payee_if_wrong The account to by credited as winner if the last answer given is wrong, usually the account that paid the arbitrator\\n     * @param last_history_hash The history hash before the final one\\n     * @param last_answer_or_commitment_id The last answer given, or the commitment ID if it was a commitment.\\n     * @param last_answerer The address that supplied the last answer\\n     */\\n    function assignWinnerAndSubmitAnswerByArbitrator(\\n        bytes32 question_id,\\n        bytes32 answer,\\n        address payee_if_wrong,\\n        bytes32 last_history_hash,\\n        bytes32 last_answer_or_commitment_id,\\n        address last_answerer\\n    ) external;\\n\\n    /**\\n     * @notice Report whether the answer to the specified question is finalized\\n     * @param question_id The ID of the question\\n     * @return Return true if finalized\\n     */\\n    function isFinalized(bytes32 question_id) external view returns (bool);\\n\\n    /**\\n     * @notice Returns the current best answer.\\n     * @param question_id The ID of the question.\\n     * @return The current best answer.\\n     */\\n    function getBestAnswer(bytes32 question_id) external view returns (bytes32);\\n}\\n\",\"keccak256\":\"0x91de64030d550640c5efedeb497befdfbba0e0bad203fdcc8f79b56af09da103\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60c0604052600080546001600160a01b0319163317905534801561002257600080fd5b50604051611a23380380611a238339818101604052604081101561004557600080fd5b5080516020909101516001600160601b0319606092831b811660a052911b1660805260805160601c60a05160601c6119436100e06000398061036d528061056a52806105f052806109e25280610dcd5280611228528061144052806114c6528061165552806116db525080610488528061072852806108735280610c785280610f6d5280610ffe5280611123528061185352506119436000f3fe608060405234801561001057600080fd5b50600436106100f55760003560e01c80635246fff911610097578063bf5596dd11610066578063bf5596dd146102d9578063c42cf535146102f6578063d75a86e01461031c578063e6e1b3b61461033f576100f5565b80635246fff9146102865780636e190f17146102ac578063972ab1c0146102b4578063bc8802a2146102d1576100f5565b8063241a9f82116100d3578063241a9f8214610180578063392f37e9146101ba5780634d274aee1461023757806350101ed314610269576100f5565b80630c340a24146100fa5780631062b39a1461011e57806322d8abf314610126575b600080fd5b61010261035c565b604080516001600160a01b039092168252519081900360200190f35b61010261036b565b6101436004803603602081101561013c57600080fd5b503561038f565b6040518085600481111561015357fe5b81526001600160a01b03909416602085015250604080840192909252606083015251908190036080019150f35b6101b86004803603608081101561019657600080fd5b50803590602081013590604081013590606001356001600160a01b03166103c4565b005b6101c2610543565b6040805160208082528351818301528351919283929083019185019080838360005b838110156101fc5781810151838201526020016101e4565b50505050905090810190601f1680156102295780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6101b86004803603606081101561024d57600080fd5b50803590602081013590604001356001600160a01b031661055f565b6101b86004803603602081101561027f57600080fd5b5035610919565b6101b86004803603602081101561029c57600080fd5b50356001600160a01b0316610b81565b610102610bfa565b6101b8600480360360208110156102ca57600080fd5b5035610c09565b610102610f6b565b6101b8600480360360208110156102ef57600080fd5b5035610f8f565b6101b86004803603602081101561030c57600080fd5b50356001600160a01b03166113bc565b6101b86004803603604081101561033257600080fd5b5080359060200135611435565b6101b86004803603602081101561035557600080fd5b503561164a565b6000546001600160a01b031681565b7f000000000000000000000000000000000000000000000000000000000000000081565b600260208190526000918252604090912080546001820154919092015460ff83169261010090046001600160a01b0316919084565b60008481526002602052604090206004815460ff1660048111156103e457fe5b14610436576040805162461bcd60e51b815260206004820152601c60248201527f41726269747261746f7220686173206e6f742072756c65642079657400000000604482015290519081900360640190fd5b60028101548154604080516335138a4f60e21b81526004810189905260248101939093526001600160a01b0361010090920482166044840152606483018790526084830186905284821660a4840152517f00000000000000000000000000000000000000000000000000000000000000009091169163d44e293c9160c480830192600092919082900301818387803b1580156104d157600080fd5b505af11580156104e5573d6000803e3d6000fd5b505050600086815260026020819052604080832080546001600160a81b031916815560018101849055909101829055518792507fed3e4b5eff9493ac70f063ff7964ab6eb3619cafe41506857741b2e48e924c3b9190a25050505050565b6040518060600160405280602881526020016118e66028913981565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146105cf576040805162461bcd60e51b815260206004820152601060248201526f13db9b1e4810535088185b1b1bddd95960821b604482015290519081900360640190fd5b6001546040805163d67bdd2560e01b815290516001600160a01b03928316927f0000000000000000000000000000000000000000000000000000000000000000169163d67bdd25916004808301926020929190829003018186803b15801561063657600080fd5b505afa15801561064a573d6000803e3d6000fd5b505050506040513d602081101561066057600080fd5b50516001600160a01b0316146106ba576040805162461bcd60e51b815260206004820152601a60248201527913db9b1e48199bdc995a59db881c1c9bde1e48185b1b1bddd95960321b604482015290519081900360640190fd5b600083815260026020526040812090815460ff1660048111156106d957fe5b14610724576040805162461bcd60e51b81526020600482015260166024820152755265717565737420616c72656164792065786973747360501b604482015290519081900360640190fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316638d552d46866040518263ffffffff1660e01b81526004018082815260200191505060206040518083038186803b15801561078a57600080fd5b505afa15801561079e573d6000803e3d6000fd5b505050506040513d60208110156107b457600080fd5b50518254610100600160a81b0319166101006001600160a01b038616021783556001830185905590508381141561083657815460ff191660011782556040805185815290516001600160a01b0385169187917f04567568312dc1725b226e92d11d8bdf775edcd43af112d709ac2dc6bf41bf2d916020908290030190a3610912565b815460ff191660021782556040805163f6a94ecb60e01b8152600481018790526001600160a01b03858116602483015260006044830181905292517f0000000000000000000000000000000000000000000000000000000000000000919091169263f6a94ecb926064808201939182900301818387803b1580156108b957600080fd5b505af11580156108cd573d6000803e3d6000fd5b50506040805187815290516001600160a01b03871693508892507f6f066f0a8c7c11806be5f3b5b04dd89e76a1b67a44fd8762a27916c3742fecd49181900360200190a35b5050505050565b600081815260026020819052604090912090815460ff16600481111561093b57fe5b14610986576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b805460ff19166003178155604080516024808201859052825180830390910181526044909101825260208082018051633e58db4560e21b6001600160e01b039091168117909152600154845163e5789d0360e01b8152945191947f00000000000000000000000000000000000000000000000000000000000000006001600160a01b039081169463dc8601b39491909316928692869263e5789d0392600480840193919291829003018186803b158015610a3f57600080fd5b505afa158015610a53573d6000803e3d6000fd5b505050506040513d6020811015610a6957600080fd5b50516040516001600160e01b031960e086901b1681526001600160a01b038416600482019081526044820183905260606024830190815284516064840152845191929091608490910190602086019080838360005b83811015610ad6578181015183820152602001610abe565b50505050905090810190601f168015610b035780820380516001836020036101000a031916815260200191505b50945050505050602060405180830381600087803b158015610b2457600080fd5b505af1158015610b38573d6000803e3d6000fd5b505050506040513d6020811015610b4e57600080fd5b505060405184907fdc27e462533b1501e51699f0029f54dc934b0c4afdc1d3dfdaab131a8de5288e90600090a250505050565b6000546001600160a01b03163314610bd8576040805162461bcd60e51b815260206004820152601560248201527413db9b1e4819dbdd995c9b9bdc88185b1b1bddd959605a1b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031681565b60008181526002602052604090206001815460ff166004811115610c2957fe5b14610c74576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637f8d429e846040518263ffffffff1660e01b81526004018082815260200191505060206040518083038186803b158015610cda57600080fd5b505afa158015610cee573d6000803e3d6000fd5b505050506040513d6020811015610d0457600080fd5b5051905080610d53576040805162461bcd60e51b8152602060048201526016602482015275145d595cdd1a5bdb881b9bdd08199a5b985b1a5e995960521b604482015290519081900360640190fd5b600083815260026020818152604080842080546001600160a81b0319168155600180820186905593019390935582516024808201889052845180830390910181526044909101845280820180516001600160e01b0316630ebbdd2b60e41b9081179091529254845163e5789d0360e01b81529451939491937f00000000000000000000000000000000000000000000000000000000000000006001600160a01b039081169463dc8601b39493909116928692869263e5789d039260048082019391829003018186803b158015610e2857600080fd5b505afa158015610e3c573d6000803e3d6000fd5b505050506040513d6020811015610e5257600080fd5b50516040516001600160e01b031960e086901b1681526001600160a01b038416600482019081526044820183905260606024830190815284516064840152845191929091608490910190602086019080838360005b83811015610ebf578181015183820152602001610ea7565b50505050905090810190601f168015610eec5780820380516001836020036101000a031916815260200191505b50945050505050602060405180830381600087803b158015610f0d57600080fd5b505af1158015610f21573d6000803e3d6000fd5b505050506040513d6020811015610f3757600080fd5b505060405185907ff903f4774c7bd27355f9d7fcbc382b079b164a697a44ac5d95267a4c3cb3bb2290600090a25050505050565b7f000000000000000000000000000000000000000000000000000000000000000081565b60008181526002602052604090206001815460ff166004811115610faf57fe5b14610ffa576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316638d552d46846040518263ffffffff1660e01b81526004018082815260200191505060206040518083038186803b15801561106057600080fd5b505afa158015611074573d6000803e3d6000fd5b505050506040513d602081101561108a57600080fd5b505160018301549091508114156110df576040805162461bcd60e51b8152602060048201526014602482015273416e737765727320617265207468652073616d6560601b604482015290519081900360640190fd5b815460ff19166003178083556040805163f6a94ecb60e01b8152600481018690526101009092046001600160a01b03908116602484015260006044840181905291517f00000000000000000000000000000000000000000000000000000000000000009091169263f6a94ecb92606480830193919282900301818387803b15801561116957600080fd5b505af115801561117d573d6000803e3d6000fd5b50508354600185015460408051918252516001600160a01b036101009093049290921693508692507f6f066f0a8c7c11806be5f3b5b04dd89e76a1b67a44fd8762a27916c3742fecd4919081900360200190a36040805160248082018690528251808303909101815260449091018252602081810180516001600160e01b0316633e58db4560e21b908117909152600154845163e5789d0360e01b8152945191946001600160a01b037f000000000000000000000000000000000000000000000000000000000000000081169463dc8601b39493909116928692869263e5789d0392600480840193829003018186803b15801561127957600080fd5b505afa15801561128d573d6000803e3d6000fd5b505050506040513d60208110156112a357600080fd5b50516040516001600160e01b031960e086901b1681526001600160a01b038416600482019081526044820183905260606024830190815284516064840152845191929091608490910190602086019080838360005b838110156113105781810151838201526020016112f8565b50505050905090810190601f16801561133d5780820380516001836020036101000a031916815260200191505b50945050505050602060405180830381600087803b15801561135e57600080fd5b505af1158015611372573d6000803e3d6000fd5b505050506040513d602081101561138857600080fd5b505060405185907fdc27e462533b1501e51699f0029f54dc934b0c4afdc1d3dfdaab131a8de5288e90600090a25050505050565b6000546001600160a01b03163314611413576040805162461bcd60e51b815260206004820152601560248201527413db9b1e4819dbdd995c9b9bdc88185b1b1bddd959605a1b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b0392909216919091179055565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146114a5576040805162461bcd60e51b815260206004820152601060248201526f13db9b1e4810535088185b1b1bddd95960821b604482015290519081900360640190fd5b6001546040805163d67bdd2560e01b815290516001600160a01b03928316927f0000000000000000000000000000000000000000000000000000000000000000169163d67bdd25916004808301926020929190829003018186803b15801561150c57600080fd5b505afa158015611520573d6000803e3d6000fd5b505050506040513d602081101561153657600080fd5b50516001600160a01b031614611590576040805162461bcd60e51b815260206004820152601a60248201527913db9b1e48199bdc995a59db881c1c9bde1e48185b1b1bddd95960321b604482015290519081900360640190fd5b60008281526002602052604090206003815460ff1660048111156115b057fe5b146115fb576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b8054600460ff199091161781556002810182905560408051838152905184917f1813d15d8cef51cff8bbd419a8e13e0655c1babea320dea4174d5e7bc40c4294919081900360200190a2505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146116ba576040805162461bcd60e51b815260206004820152601060248201526f13db9b1e4810535088185b1b1bddd95960821b604482015290519081900360640190fd5b6001546040805163d67bdd2560e01b815290516001600160a01b03928316927f0000000000000000000000000000000000000000000000000000000000000000169163d67bdd25916004808301926020929190829003018186803b15801561172157600080fd5b505afa158015611735573d6000803e3d6000fd5b505050506040513d602081101561174b57600080fd5b50516001600160a01b0316146117a5576040805162461bcd60e51b815260206004820152601a60248201527913db9b1e48199bdc995a59db881c1c9bde1e48185b1b1bddd95960321b604482015290519081900360640190fd5b60008181526002602052604090206003815460ff1660048111156117c557fe5b14611810576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b600082815260026020819052604080832080546001600160a81b0319168155600181018490559091018290558051630ebbdd2b60e41b81526004810185905290517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03169263ebbdd2b0926024808201939182900301818387803b15801561189e57600080fd5b505af11580156118b2573d6000803e3d6000fd5b50506040518492507f771bd0f0f064339da626238870be0bd3b8729b56b36a969926004c77065c95879150600090a2505056fe7b22666f726569676e50726f7879223a747275652c22666f726569676e436861696e4964223a317da2646970667358221220d241b57b9475a05fc6da582143a957866dbcd4a78553cee713cfd94b31f3a23464736f6c63430007040033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100f55760003560e01c80635246fff911610097578063bf5596dd11610066578063bf5596dd146102d9578063c42cf535146102f6578063d75a86e01461031c578063e6e1b3b61461033f576100f5565b80635246fff9146102865780636e190f17146102ac578063972ab1c0146102b4578063bc8802a2146102d1576100f5565b8063241a9f82116100d3578063241a9f8214610180578063392f37e9146101ba5780634d274aee1461023757806350101ed314610269576100f5565b80630c340a24146100fa5780631062b39a1461011e57806322d8abf314610126575b600080fd5b61010261035c565b604080516001600160a01b039092168252519081900360200190f35b61010261036b565b6101436004803603602081101561013c57600080fd5b503561038f565b6040518085600481111561015357fe5b81526001600160a01b03909416602085015250604080840192909252606083015251908190036080019150f35b6101b86004803603608081101561019657600080fd5b50803590602081013590604081013590606001356001600160a01b03166103c4565b005b6101c2610543565b6040805160208082528351818301528351919283929083019185019080838360005b838110156101fc5781810151838201526020016101e4565b50505050905090810190601f1680156102295780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b6101b86004803603606081101561024d57600080fd5b50803590602081013590604001356001600160a01b031661055f565b6101b86004803603602081101561027f57600080fd5b5035610919565b6101b86004803603602081101561029c57600080fd5b50356001600160a01b0316610b81565b610102610bfa565b6101b8600480360360208110156102ca57600080fd5b5035610c09565b610102610f6b565b6101b8600480360360208110156102ef57600080fd5b5035610f8f565b6101b86004803603602081101561030c57600080fd5b50356001600160a01b03166113bc565b6101b86004803603604081101561033257600080fd5b5080359060200135611435565b6101b86004803603602081101561035557600080fd5b503561164a565b6000546001600160a01b031681565b7f000000000000000000000000000000000000000000000000000000000000000081565b600260208190526000918252604090912080546001820154919092015460ff83169261010090046001600160a01b0316919084565b60008481526002602052604090206004815460ff1660048111156103e457fe5b14610436576040805162461bcd60e51b815260206004820152601c60248201527f41726269747261746f7220686173206e6f742072756c65642079657400000000604482015290519081900360640190fd5b60028101548154604080516335138a4f60e21b81526004810189905260248101939093526001600160a01b0361010090920482166044840152606483018790526084830186905284821660a4840152517f00000000000000000000000000000000000000000000000000000000000000009091169163d44e293c9160c480830192600092919082900301818387803b1580156104d157600080fd5b505af11580156104e5573d6000803e3d6000fd5b505050600086815260026020819052604080832080546001600160a81b031916815560018101849055909101829055518792507fed3e4b5eff9493ac70f063ff7964ab6eb3619cafe41506857741b2e48e924c3b9190a25050505050565b6040518060600160405280602881526020016118e66028913981565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146105cf576040805162461bcd60e51b815260206004820152601060248201526f13db9b1e4810535088185b1b1bddd95960821b604482015290519081900360640190fd5b6001546040805163d67bdd2560e01b815290516001600160a01b03928316927f0000000000000000000000000000000000000000000000000000000000000000169163d67bdd25916004808301926020929190829003018186803b15801561063657600080fd5b505afa15801561064a573d6000803e3d6000fd5b505050506040513d602081101561066057600080fd5b50516001600160a01b0316146106ba576040805162461bcd60e51b815260206004820152601a60248201527913db9b1e48199bdc995a59db881c1c9bde1e48185b1b1bddd95960321b604482015290519081900360640190fd5b600083815260026020526040812090815460ff1660048111156106d957fe5b14610724576040805162461bcd60e51b81526020600482015260166024820152755265717565737420616c72656164792065786973747360501b604482015290519081900360640190fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316638d552d46866040518263ffffffff1660e01b81526004018082815260200191505060206040518083038186803b15801561078a57600080fd5b505afa15801561079e573d6000803e3d6000fd5b505050506040513d60208110156107b457600080fd5b50518254610100600160a81b0319166101006001600160a01b038616021783556001830185905590508381141561083657815460ff191660011782556040805185815290516001600160a01b0385169187917f04567568312dc1725b226e92d11d8bdf775edcd43af112d709ac2dc6bf41bf2d916020908290030190a3610912565b815460ff191660021782556040805163f6a94ecb60e01b8152600481018790526001600160a01b03858116602483015260006044830181905292517f0000000000000000000000000000000000000000000000000000000000000000919091169263f6a94ecb926064808201939182900301818387803b1580156108b957600080fd5b505af11580156108cd573d6000803e3d6000fd5b50506040805187815290516001600160a01b03871693508892507f6f066f0a8c7c11806be5f3b5b04dd89e76a1b67a44fd8762a27916c3742fecd49181900360200190a35b5050505050565b600081815260026020819052604090912090815460ff16600481111561093b57fe5b14610986576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b805460ff19166003178155604080516024808201859052825180830390910181526044909101825260208082018051633e58db4560e21b6001600160e01b039091168117909152600154845163e5789d0360e01b8152945191947f00000000000000000000000000000000000000000000000000000000000000006001600160a01b039081169463dc8601b39491909316928692869263e5789d0392600480840193919291829003018186803b158015610a3f57600080fd5b505afa158015610a53573d6000803e3d6000fd5b505050506040513d6020811015610a6957600080fd5b50516040516001600160e01b031960e086901b1681526001600160a01b038416600482019081526044820183905260606024830190815284516064840152845191929091608490910190602086019080838360005b83811015610ad6578181015183820152602001610abe565b50505050905090810190601f168015610b035780820380516001836020036101000a031916815260200191505b50945050505050602060405180830381600087803b158015610b2457600080fd5b505af1158015610b38573d6000803e3d6000fd5b505050506040513d6020811015610b4e57600080fd5b505060405184907fdc27e462533b1501e51699f0029f54dc934b0c4afdc1d3dfdaab131a8de5288e90600090a250505050565b6000546001600160a01b03163314610bd8576040805162461bcd60e51b815260206004820152601560248201527413db9b1e4819dbdd995c9b9bdc88185b1b1bddd959605a1b604482015290519081900360640190fd5b600180546001600160a01b0319166001600160a01b0392909216919091179055565b6001546001600160a01b031681565b60008181526002602052604090206001815460ff166004811115610c2957fe5b14610c74576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637f8d429e846040518263ffffffff1660e01b81526004018082815260200191505060206040518083038186803b158015610cda57600080fd5b505afa158015610cee573d6000803e3d6000fd5b505050506040513d6020811015610d0457600080fd5b5051905080610d53576040805162461bcd60e51b8152602060048201526016602482015275145d595cdd1a5bdb881b9bdd08199a5b985b1a5e995960521b604482015290519081900360640190fd5b600083815260026020818152604080842080546001600160a81b0319168155600180820186905593019390935582516024808201889052845180830390910181526044909101845280820180516001600160e01b0316630ebbdd2b60e41b9081179091529254845163e5789d0360e01b81529451939491937f00000000000000000000000000000000000000000000000000000000000000006001600160a01b039081169463dc8601b39493909116928692869263e5789d039260048082019391829003018186803b158015610e2857600080fd5b505afa158015610e3c573d6000803e3d6000fd5b505050506040513d6020811015610e5257600080fd5b50516040516001600160e01b031960e086901b1681526001600160a01b038416600482019081526044820183905260606024830190815284516064840152845191929091608490910190602086019080838360005b83811015610ebf578181015183820152602001610ea7565b50505050905090810190601f168015610eec5780820380516001836020036101000a031916815260200191505b50945050505050602060405180830381600087803b158015610f0d57600080fd5b505af1158015610f21573d6000803e3d6000fd5b505050506040513d6020811015610f3757600080fd5b505060405185907ff903f4774c7bd27355f9d7fcbc382b079b164a697a44ac5d95267a4c3cb3bb2290600090a25050505050565b7f000000000000000000000000000000000000000000000000000000000000000081565b60008181526002602052604090206001815460ff166004811115610faf57fe5b14610ffa576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316638d552d46846040518263ffffffff1660e01b81526004018082815260200191505060206040518083038186803b15801561106057600080fd5b505afa158015611074573d6000803e3d6000fd5b505050506040513d602081101561108a57600080fd5b505160018301549091508114156110df576040805162461bcd60e51b8152602060048201526014602482015273416e737765727320617265207468652073616d6560601b604482015290519081900360640190fd5b815460ff19166003178083556040805163f6a94ecb60e01b8152600481018690526101009092046001600160a01b03908116602484015260006044840181905291517f00000000000000000000000000000000000000000000000000000000000000009091169263f6a94ecb92606480830193919282900301818387803b15801561116957600080fd5b505af115801561117d573d6000803e3d6000fd5b50508354600185015460408051918252516001600160a01b036101009093049290921693508692507f6f066f0a8c7c11806be5f3b5b04dd89e76a1b67a44fd8762a27916c3742fecd4919081900360200190a36040805160248082018690528251808303909101815260449091018252602081810180516001600160e01b0316633e58db4560e21b908117909152600154845163e5789d0360e01b8152945191946001600160a01b037f000000000000000000000000000000000000000000000000000000000000000081169463dc8601b39493909116928692869263e5789d0392600480840193829003018186803b15801561127957600080fd5b505afa15801561128d573d6000803e3d6000fd5b505050506040513d60208110156112a357600080fd5b50516040516001600160e01b031960e086901b1681526001600160a01b038416600482019081526044820183905260606024830190815284516064840152845191929091608490910190602086019080838360005b838110156113105781810151838201526020016112f8565b50505050905090810190601f16801561133d5780820380516001836020036101000a031916815260200191505b50945050505050602060405180830381600087803b15801561135e57600080fd5b505af1158015611372573d6000803e3d6000fd5b505050506040513d602081101561138857600080fd5b505060405185907fdc27e462533b1501e51699f0029f54dc934b0c4afdc1d3dfdaab131a8de5288e90600090a25050505050565b6000546001600160a01b03163314611413576040805162461bcd60e51b815260206004820152601560248201527413db9b1e4819dbdd995c9b9bdc88185b1b1bddd959605a1b604482015290519081900360640190fd5b600080546001600160a01b0319166001600160a01b0392909216919091179055565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146114a5576040805162461bcd60e51b815260206004820152601060248201526f13db9b1e4810535088185b1b1bddd95960821b604482015290519081900360640190fd5b6001546040805163d67bdd2560e01b815290516001600160a01b03928316927f0000000000000000000000000000000000000000000000000000000000000000169163d67bdd25916004808301926020929190829003018186803b15801561150c57600080fd5b505afa158015611520573d6000803e3d6000fd5b505050506040513d602081101561153657600080fd5b50516001600160a01b031614611590576040805162461bcd60e51b815260206004820152601a60248201527913db9b1e48199bdc995a59db881c1c9bde1e48185b1b1bddd95960321b604482015290519081900360640190fd5b60008281526002602052604090206003815460ff1660048111156115b057fe5b146115fb576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b8054600460ff199091161781556002810182905560408051838152905184917f1813d15d8cef51cff8bbd419a8e13e0655c1babea320dea4174d5e7bc40c4294919081900360200190a2505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000016146116ba576040805162461bcd60e51b815260206004820152601060248201526f13db9b1e4810535088185b1b1bddd95960821b604482015290519081900360640190fd5b6001546040805163d67bdd2560e01b815290516001600160a01b03928316927f0000000000000000000000000000000000000000000000000000000000000000169163d67bdd25916004808301926020929190829003018186803b15801561172157600080fd5b505afa158015611735573d6000803e3d6000fd5b505050506040513d602081101561174b57600080fd5b50516001600160a01b0316146117a5576040805162461bcd60e51b815260206004820152601a60248201527913db9b1e48199bdc995a59db881c1c9bde1e48185b1b1bddd95960321b604482015290519081900360640190fd5b60008181526002602052604090206003815460ff1660048111156117c557fe5b14611810576040805162461bcd60e51b8152602060048201526016602482015275496e76616c696420726571756573742073746174757360501b604482015290519081900360640190fd5b600082815260026020819052604080832080546001600160a81b0319168155600181018490559091018290558051630ebbdd2b60e41b81526004810185905290517f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03169263ebbdd2b0926024808201939182900301818387803b15801561189e57600080fd5b505af11580156118b2573d6000803e3d6000fd5b50506040518492507f771bd0f0f064339da626238870be0bd3b8729b56b36a969926004c77065c95879150600090a2505056fe7b22666f726569676e50726f7879223a747275652c22666f726569676e436861696e4964223a317da2646970667358221220d241b57b9475a05fc6da582143a957866dbcd4a78553cee713cfd94b31f3a23464736f6c63430007040033",
+  "devdoc": {
+    "events": {
+      "ArbitrationCompleted(bytes32)": {
+        "details": "To be emitted when reporting the arbitrator answer to Realitio.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "ArbitrationFailed(bytes32)": {
+        "details": "To be emitted when the dispute could not be created on the Foreign Chain.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "ArbitratorAnswered(bytes32,bytes32)": {
+        "details": "To be emitted when receiving the answer from the arbitrator.",
+        "params": {
+          "_answer": "The answer from the arbitrator.",
+          "_questionID": "The ID of the question."
+        }
+      },
+      "RequestAcknowledged(bytes32)": {
+        "details": "To be emitted when there arbitration request acknowledgement is sent to the Foreign Chain.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "RequestCancelled(bytes32)": {
+        "details": "To be emitted when there arbitration request is canceled.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "RequestNotified(bytes32,bytes32,address)": {
+        "details": "To be emitted when the Realitio contract has been notified of an arbitration request.",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration.",
+          "_requesterAnswer": "The answer the requester deem to be correct."
+        }
+      },
+      "RequestPending(bytes32,bytes32,address)": {
+        "details": "To be emitted when arbitration request is received but remained pending.",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration.",
+          "_requesterAnswer": "The answer the requester deem to be correct."
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "details": "Creates an arbitration proxy on the home chain.",
+        "params": {
+          "_amb": "ArbitraryMessageBridge contract address.",
+          "_realitio": "Realitio contract address."
+        }
+      },
+      "handleChangedAnswer(bytes32)": {
+        "details": "Handles changed answer for a given question.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "handleFinalizedQuestion(bytes32)": {
+        "details": "Handles a given question being finalized.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "handleNotifiedRequest(bytes32)": {
+        "details": "Handles arbitration request after it has been notified to Realitio for a given question.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "receiveArbitrationAnswer(bytes32,bytes32)": {
+        "details": "Recieves the answer to a specified question.",
+        "params": {
+          "_answer": "The answer from the arbitratior.",
+          "_questionID": "The ID of the question."
+        }
+      },
+      "receiveArbitrationFailure(bytes32)": {
+        "details": "Recieves a failed attempt to request arbitration.",
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "receiveArbitrationRequest(bytes32,bytes32,address)": {
+        "details": "Recieves the requested arbitration for a question.",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration.",
+          "_requesterAnswer": "The answer the requester deem to be correct."
+        }
+      },
+      "reportArbitrationAnswer(bytes32,bytes32,bytes32,address)": {
+        "details": "Report the answer provided by the arbitrator to a specified question.",
+        "params": {
+          "_lastAnswerOrCommitmentID": "The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.",
+          "_lastAnswerer": "The last answerer to the question in the Realitio contract.",
+          "_lastHistoryHash": "The history hash given with the last answer to the question in the Realitio contract.",
+          "_questionID": "The ID of the question."
+        }
+      },
+      "setForeignProxy(address)": {
+        "details": "Sets the address of the arbitration proxy on the Foreign Chain.",
+        "params": {
+          "_foreignProxy": "The address of the proxy."
+        }
+      },
+      "setGovernor(address)": {
+        "details": "Sets the address of a new governor.",
+        "params": {
+          "_governor": "The address of the new governor."
+        }
+      }
+    },
+    "stateVariables": {
+      "amb": {
+        "details": "ArbitraryMessageBridge contract address. TRUSTED."
+      },
+      "foreignProxy": {
+        "details": "Address of the counter-party proxy on the Foreign Chain. TRUSTED."
+      },
+      "governor": {
+        "details": "The contract governor. TRUSTED."
+      },
+      "metadata": {
+        "details": "Metadata for Realitio interface."
+      },
+      "questionIDToRequest": {
+        "details": "Associates an arbitration request with a question ID."
+      },
+      "realitio": {
+        "details": "The address of the Realitio contract. TRUSTED."
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ArbitrationFailed(bytes32)": {
+        "notice": "This will happen if there is a remaining arbitration fee users fail to pay."
+      },
+      "RequestNotified(bytes32,bytes32,address)": {
+        "notice": "This will happen if the best answer for a given question changes between the arbitration is requested on the Foreign Chain and the cross-chain message reaches the home chain and becomes the same answer as the one from requester."
+      },
+      "RequestPending(bytes32,bytes32,address)": {
+        "notice": "This will happen if the best answer for a given question changes between the arbitration is requested on the Foreign Chain and the cross-chain message reaches the home chain and becomes the same answer as the one from requester."
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "handleChangedAnswer(bytes32)": {
+        "notice": "Sends the arbitration acknowledgement to the Foreign Chain."
+      },
+      "handleFinalizedQuestion(bytes32)": {
+        "notice": "Sends the arbitration cancellation to the Foreign Chain."
+      },
+      "handleNotifiedRequest(bytes32)": {
+        "notice": "Sends the arbitration acknowledgement to the Foreign Chain."
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 871,
+        "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+        "label": "governor",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 880,
+        "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+        "label": "foreignProxy",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 904,
+        "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+        "label": "questionIDToRequest",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes32,t_struct(Request)899_storage)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(Status)890": {
+        "encoding": "inplace",
+        "label": "enum RealitioHomeArbitrationProxy.Status",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_bytes32,t_struct(Request)899_storage)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => struct RealitioHomeArbitrationProxy.Request)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Request)899_storage"
+      },
+      "t_struct(Request)899_storage": {
+        "encoding": "inplace",
+        "label": "struct RealitioHomeArbitrationProxy.Request",
+        "members": [
+          {
+            "astId": 892,
+            "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+            "label": "status",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_enum(Status)890"
+          },
+          {
+            "astId": 894,
+            "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+            "label": "requester",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 896,
+            "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+            "label": "requesterAnswer",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          },
+          {
+            "astId": 898,
+            "contract": "src/RealitioHomeArbitrationProxy.sol:RealitioHomeArbitrationProxy",
+            "label": "arbitratorAnswer",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "96"
+      }
+    }
+  }
+}

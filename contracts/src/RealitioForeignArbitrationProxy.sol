@@ -167,9 +167,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @notice Requests arbitration for given question ID.
      * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
-     * @param _requesterAnswer The answer the requester deem to be correct.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function requestArbitration(bytes32 _questionID, bytes32 _requesterAnswer) external payable onlyIfInitialized {
+    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable onlyIfInitialized {
         Arbitration storage arbitration = arbitrations[_questionID];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
@@ -181,10 +181,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
         arbitration.deposit = msg.value;
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requesterAnswer, msg.sender);
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _contestedAnswer, msg.sender);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        emit ArbitrationRequested(_questionID, _requesterAnswer, msg.sender);
+        emit ArbitrationRequested(_questionID, _contestedAnswer, msg.sender);
     }
 
     /**

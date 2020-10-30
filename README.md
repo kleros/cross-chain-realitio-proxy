@@ -4,23 +4,28 @@ Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB
 
 ## High-Level Flow Description
 
-1. User requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the answer it deems correct.
-1. The ETH proxy communicates the request (questionID, answerRequester) with the xDAI proxy through the AMB.
-1. The xDAI proxy looks at the current answer on Realitio.
-    1. If it is different from answerRequester, it notifies Realitio of the dispute and notifies the ETH proxy through the AMB.
-    1. If it is the same, it waits until becomes different or the answer is final.
-        1. If it becomes different, it notifies Realitio of the dispute and notifies the ETH proxy through the AMB.
-        1. If it becomes final, it notifies the ETH proxy through the AMB which then refunds the requester. END
-1. At this point Realitio has been notified of arbitration. However, arbitration fees might have changed.
-    1. If the fees stayed the same it creates a dispute on Kleros Court (that should happen most of the time).
-    1. If the fees have decreased, it refunds the requester and creates a dispute in the Kleros Court.
-    1. If the fees have increased, the arbitration request will fail
-        1. It refunds the requester of the value paid so far.
+1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the current answer she deems to be **incorrect**.
+1. The ETH proxy communicates the request (questionID, currentAnswer) to the xDAI proxy through the AMB.
+1. The xDAI proxy looks at the current answer on Realitio:
+    1. If it **is the same** as the one pointed by Alice and it **is not** final then:
+        1. Notify Realitio of the dispute.
+        1. Notify the ETH proxy through the AMB.
+    1. Otherwise, if it became a **different answer** then:
+        1. Notify the ETH proxy through the AMB.
+        1. The ETH proxy refunds Alice. **END**
+1. At this point Realitio has been notified of arbitration. However arbitration fees might have changed:
+    1. If the fees stayed the same (most common case) then:
+        1. Create a dispute on Kleros Court.
+    1. If the fees have decreased then:
+        1. Create a dispute on Kleros Court.
+        1. Refund Alice of the difference.
+    1. If the fees have increased, then the arbitration request will fail:
+        1. Refund Alice of the value paid so far.
         1. The ETH proxy notifies the xDAI proxy through the AMB that the arbitration failed to be created.
-        1. The xDAI proxy notifies Realitio of the failed arbitration. END
-1. The Kleros court gives a ruling. It is transmitted to the xDAI proxy through the AMB.
-    1. If the ruling is the current answer, the last answerer is the winner. END
-    1. If it is not, the requester is the winner (even if the answer is not the answer which was initially claimed). END
+        1. The xDAI proxy notifies Realitio of the failed arbitration. **END**
+1. The Kleros court gives a ruling. It is relayed to the xDAI proxy through the AMB.
+    1. If the ruling is the current answer, Bob, the last answerer, is the winner. **END**
+    1. If it is not, Alice is the winner. **END**
 
 ## Deployed Addresses
 

@@ -27,10 +27,13 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
     address public foreignProxy;
 
-    /// @dev Metadata for Realitio interface.
-    string public constant metadata = '{"foreignProxy":true,"foreignChainId":1}';
+    /// @dev The chain ID where the foreign proxy is deployed.
+    uint256 public foreignChainId;
 
-    enum Status {None, Pending, Notified, AwaitingRuling, Ruled}
+    /// @dev Metadata for Realitio interface.
+    string public constant metadata = '{"foreignProxy":true}';
+
+    enum Status {None, Rejected, Notified, AwaitingRuling, Ruled}
 
     struct Request {
         Status status;
@@ -43,15 +46,15 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     mapping(bytes32 => Request) public questionIDToRequest;
 
     /**
-     * @dev To be emitted when arbitration request is received but remained pending.
+     * @dev To be emitted when arbitration request is rejected.
      * @notice This will happen if the best answer for a given question changes between
      * the arbitration is requested on the Foreign Chain and the cross-chain message
      * reaches the home chain and becomes the same answer as the one from requester.
      * @param _questionID The ID of the question.
-     * @param _requesterAnswer The answer the requester deem to be correct.
+     * @param _contestedAnswer The answer the requester deem to be correct.
      * @param _requester The address of the user that requested arbitration.
      */
-    event RequestPending(bytes32 indexed _questionID, bytes32 _requesterAnswer, address indexed _requester);
+    event RequestRejected(bytes32 indexed _questionID, bytes32 _contestedAnswer, address indexed _requester);
 
     /**
      * @dev To be emitted when the Realitio contract has been notified of an arbitration request.
@@ -59,10 +62,10 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * the arbitration is requested on the Foreign Chain and the cross-chain message
      * reaches the home chain and becomes the same answer as the one from requester.
      * @param _questionID The ID of the question.
-     * @param _requesterAnswer The answer the requester deem to be correct.
+     * @param _contestedAnswer The answer the requester deem to be correct.
      * @param _requester The address of the user that requested arbitration.
      */
-    event RequestNotified(bytes32 indexed _questionID, bytes32 _requesterAnswer, address indexed _requester);
+    event RequestNotified(bytes32 indexed _questionID, bytes32 _contestedAnswer, address indexed _requester);
 
     /**
      * @dev To be emitted when there arbitration request acknowledgement is sent to the Foreign Chain.
@@ -74,7 +77,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @dev To be emitted when there arbitration request is canceled.
      * @param _questionID The ID of the question.
      */
-    event RequestCancelled(bytes32 indexed _questionID);
+    event RequestCanceled(bytes32 indexed _questionID);
 
     /**
      * @dev To be emitted when the dispute could not be created on the Foreign Chain.
@@ -112,7 +115,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Creates an arbitration proxy on the home chain.
+     * @notice Creates an arbitration proxy on the home chain.
      * @param _amb ArbitraryMessageBridge contract address.
      * @param _realitio Realitio contract address.
      */
@@ -122,7 +125,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Sets the address of a new governor.
+     * @notice Sets the address of a new governor.
      * @param _governor The address of the new governor.
      */
     function setGovernor(address _governor) external onlyGovernor {
@@ -130,48 +133,50 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Sets the address of the arbitration proxy on the Foreign Chain.
+     * @notice Sets the address of the arbitration proxy on the Foreign Chain.
      * @param _foreignProxy The address of the proxy.
+     * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
      */
-    function setForeignProxy(address _foreignProxy) external onlyGovernor {
+    function setForeignProxy(address _foreignProxy, uint256 _foreignChainId) external onlyGovernor {
         foreignProxy = _foreignProxy;
+        foreignChainId = _foreignChainId;
     }
 
     /**
-     * @dev Recieves the requested arbitration for a question.
+     * @notice Recieves the requested arbitration for a question.
      * @param _questionID The ID of the question.
-     * @param _requesterAnswer The answer the requester deem to be correct.
+     * @param _contestedAnswer The answer the requester deem to be correct.
      * @param _requester The address of the user that requested arbitration.
      */
     function receiveArbitrationRequest(
         bytes32 _questionID,
-        bytes32 _requesterAnswer,
+        bytes32 _contestedAnswer,
         address _requester
     ) external override onlyAmb onlyForeignProxy {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.None, "Request already exists");
 
+        bool isFinalized = realitio.isFinalized(_questionID);
         bytes32 currentAnswer = realitio.getBestAnswer(_questionID);
 
-        request.requester = _requester;
-        request.requesterAnswer = _requesterAnswer;
+        if (isFinalized || currentAnswer != _contestedAnswer) {
+            request.status = Status.Rejected;
 
-        if (currentAnswer == _requesterAnswer) {
-            request.status = Status.Pending;
-
-            emit RequestPending(_questionID, _requesterAnswer, _requester);
+            emit RequestRejected(_questionID, _contestedAnswer, _requester);
         } else {
+            request.requester = _requester;
+
             request.status = Status.Notified;
 
             realitio.notifyOfArbitrationRequest(_questionID, _requester, 0);
 
-            emit RequestNotified(_questionID, _requesterAnswer, _requester);
+            emit RequestNotified(_questionID, _contestedAnswer, _requester);
         }
     }
 
     /**
-     * @dev Handles arbitration request after it has been notified to Realitio for a given question.
      * @notice Sends the arbitration acknowledgement to the Foreign Chain.
+     * @dev Handles arbitration request after it has been notified to Realitio for a given question.
      * @param _questionID The ID of the question.
      */
     function handleNotifiedRequest(bytes32 _questionID) external {
@@ -188,41 +193,14 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Handles changed answer for a given question.
-     * @notice Sends the arbitration acknowledgement to the Foreign Chain.
+     * @notice Sends the arbitration rejection to the Foreign Chain.
+     * @dev Handles arbitration request after it has been rejected due to the quesiton
+     * being finalized or the contested answer being different from the current one.
      * @param _questionID The ID of the question.
      */
-    function handleChangedAnswer(bytes32 _questionID) external {
+    function handleRejectedRequest(bytes32 _questionID) external {
         Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.Pending, "Invalid request status");
-
-        bytes32 currentAnswer = realitio.getBestAnswer(_questionID);
-        require(request.requesterAnswer != currentAnswer, "Answers are the same");
-
-        request.status = Status.AwaitingRuling;
-
-        realitio.notifyOfArbitrationRequest(_questionID, request.requester, 0);
-
-        emit RequestNotified(_questionID, request.requesterAnswer, request.requester);
-
-        bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;
-        bytes memory data = abi.encodeWithSelector(selector, _questionID);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
-
-        emit RequestAcknowledged(_questionID);
-    }
-
-    /**
-     * @dev Handles a given question being finalized.
-     * @notice Sends the arbitration cancellation to the Foreign Chain.
-     * @param _questionID The ID of the question.
-     */
-    function handleFinalizedQuestion(bytes32 _questionID) external {
-        Request storage request = questionIDToRequest[_questionID];
-        require(request.status == Status.Pending, "Invalid request status");
-
-        bool isFinalized = realitio.isFinalized(_questionID);
-        require(isFinalized, "Question not finalized");
+        require(request.status == Status.Rejected, "Invalid request status");
 
         delete questionIDToRequest[_questionID];
 
@@ -230,7 +208,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes memory data = abi.encodeWithSelector(selector, _questionID);
         amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
 
-        emit RequestCancelled(_questionID);
+        emit RequestCanceled(_questionID);
     }
 
     /**

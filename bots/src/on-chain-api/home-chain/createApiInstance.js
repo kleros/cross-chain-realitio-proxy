@@ -40,14 +40,6 @@ export default async function createApiInstance() {
     };
   }
 
-  async function getPendingRequestDetails(questionId) {
-    const [bestAnswer, isFinalized] = await P.all([_getBestAnswer(questionId), _isFinalized(questionId)]);
-
-    return {
-      question: {bestAnswer, isFinalized},
-    };
-  }
-
   async function getNotifiedRequests({fromBlock = 0, toBlock = "latest"} = {}) {
     const events = await getPastEvents(homeProxy, "RequestNotified", {fromBlock, toBlock});
 
@@ -60,15 +52,15 @@ export default async function createApiInstance() {
     return into([], onlyFulfilled, allNotifiedRequests);
   }
 
-  async function getPendingRequests({fromBlock = 0, toBlock = "latest"} = {}) {
-    const events = await getPastEvents(homeProxy, "RequestPending", {fromBlock, toBlock});
+  async function getRejectedRequests({fromBlock = 0, toBlock = "latest"} = {}) {
+    const events = await getPastEvents(homeProxy, "RequestRejected", {fromBlock, toBlock});
 
-    const allPendingRequests = await P.allSettled(
+    const allRejectedRequests = await P.allSettled(
       map(compose(getRequestByQuestionId, path(["returnValues", "_questionID"])), events)
     );
     const onlyFulfilled = compose(filter(propEq("status", "fulfilled")), map(prop("value")));
 
-    return into([], onlyFulfilled, allPendingRequests);
+    return into([], onlyFulfilled, allRejectedRequests);
   }
 
   async function handleNotifiedRequest(request) {
@@ -110,14 +102,6 @@ export default async function createApiInstance() {
     return request;
   }
 
-  async function _getBestAnswer(questionId) {
-    return realitio.methods.getBestAnswer(questionId).call();
-  }
-
-  async function _isFinalized(questionId) {
-    return realitio.methods.isFinalized(questionId).call();
-  }
-
   async function _getLatestAnswerParams(questionId) {
     const answers = await getPastEvents(realitio, "LogNewAnswer", {
       filter: {
@@ -146,8 +130,8 @@ export default async function createApiInstance() {
     getBlockNumber,
     getChainId,
     getNotifiedRequests,
-    getPendingRequestDetails,
-    getPendingRequests,
+
+    getRejectedRequests,
     getRequestByQuestionId,
     handleChangedAnswer,
     handleFinalizedQuestion,

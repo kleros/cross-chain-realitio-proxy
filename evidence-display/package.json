@@ -10,6 +10,7 @@
     "build": "react-app-rewired build"
   },
   "dependencies": {
+    "@kleros/cross-chain-realitio-contracts": "^0.2.0",
     "antd": "^3.16.2",
     "lodash": "^4.17.11",
     "prop-types": "^15.7.2",

@@ -118,8 +118,8 @@ functions:
       - schedule:
           rate: cron(0 * * * ? *) # every 1 hour at hh:00
 
-  checkPendingRequests:
-    handler: src/handler.checkPendingRequests
+  checkRejectedRequests:
+    handler: src/handler.checkRejectedRequests
     timeout: 300
     events:
       - schedule:

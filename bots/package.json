@@ -7,7 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "@kleros/contract-deployments": "^0.3.2",
-    "@kleros/cross-chain-realitio-contracts": "^0.2.0",
+    "@kleros/cross-chain-realitio-contracts": "~0.3.0",
     "aws-sdk": "^2.730.0",
     "core-js": "^3.0.0",
     "dayjs": "^1.8.33",

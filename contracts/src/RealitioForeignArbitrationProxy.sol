@@ -169,6 +169,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _homeChainId The chain ID where the home proxy is deployed.
      */
     function setHomeProxy(address _homeProxy, uint256 _homeChainId) external onlyGovernor {
+        require(homeProxy == address(0), "Home proxy already set");
+
         homeProxy = _homeProxy;
         homeChainId = _homeChainId;
     }
@@ -212,7 +214,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
 
             emit ArbitrationFailed(_questionID);
         } else {
-            // At this point, arbitration.deposit is guaranteed to be greater than or equal arbitration cost.
+            // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
             uint256 remainder = arbitration.deposit - arbitrationCost;
 
             uint256 disputeID = arbitrator.createDispute{value: arbitrationCost}(

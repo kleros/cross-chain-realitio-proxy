@@ -46,11 +46,10 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
     /**
      * @notice To be emitted when arbitration request is rejected.
-     * @dev This will happen if the best answer for a given question changes between
-     * the arbitration is requested on the Foreign Chain and the cross-chain message
-     * reaches the home chain and becomes the same answer as the one from requester.
+     * @dev This can happen if the contested answer is different from the current best answer,
+     * if the notification of arbitration request fails or if the question is already finalized.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be correct.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      * @param _requester The address of the user that requested arbitration.
      */
     event RequestRejected(bytes32 indexed _questionID, bytes32 _contestedAnswer, address indexed _requester);
@@ -58,7 +57,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /**
      * @notice To be emitted when the Realitio contract has been notified of an arbitration request.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be correct.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      * @param _requester The address of the user that requested arbitration.
      */
     event RequestNotified(bytes32 indexed _questionID, bytes32 _contestedAnswer, address indexed _requester);
@@ -77,7 +76,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
     /**
      * @notice To be emitted when the dispute could not be created on the Foreign Chain.
-     * @dev This will happen if there is a remaining arbitration fee users fail to pay.
+     * @dev This will happen if the arbitration fee increases in between the arbitration request and acknowledgement.
      * @param _questionID The ID of the question.
      */
     event ArbitrationFailed(bytes32 indexed _questionID);
@@ -139,6 +138,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
      */
     function setForeignProxy(address _foreignProxy, uint256 _foreignChainId) external onlyGovernor {
+        require(foreignProxy == address(0), "Foreign proxy already set");
+
         foreignProxy = _foreignProxy;
         foreignChainId = _foreignChainId;
     }
@@ -146,7 +147,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /**
      * @notice Receives the requested arbitration for a question.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be correct.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      * @param _requester The address of the user that requested arbitration.
      */
     function receiveArbitrationRequest(
@@ -203,7 +204,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.Rejected, "Invalid request status");
 
-        delete questionIDToRequest[_questionID];
+        // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
+        request.status == Status.None;
 
         bytes4 selector = IForeignArbitrationProxy(0).cancelArbitration.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID);

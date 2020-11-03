@@ -5,7 +5,7 @@ interface IHomeArbitrationProxy {
     /**
      * @dev Receives the requested arbitration for a question. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be correct.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      * @param _requester The address of the user that requested arbitration.
      */
     function receiveArbitrationRequest(
@@ -23,7 +23,7 @@ interface IHomeArbitrationProxy {
     /**
      * @dev Receives the answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _answer The answer from the arbitratior.
+     * @param _answer The answer from the arbitrator.
      */
     function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external;
 }

@@ -14,12 +14,6 @@
     "pretest:watch": "run-s -s build",
     "test:watch": "mocha -r hardhat/register -t 20000 --watch-files '**/*.js,**/*.sol' --watch"
   },
-  "files": [
-    "src",
-    "deployments/**/.chainId",
-    "deployments/**/*.json",
-    "aftifacts/"
-  ],
   "dependencies": {
     "@kleros/erc-792": "^7.0.0",
     "@kleros/ethereum-libraries": "^7.0.0"

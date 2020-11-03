@@ -2,6 +2,18 @@
 
 Smart contracts to enable cross-chain arbitration for Realitio (Reality.eth)
 
+## Deployed Addresses
+
+### Home Proxy
+
+- Sokol: [deployment](deployments/sokol/RealitioHomeArbitrationProxy.json#L2).
+- xDai: `<none>`
+
+### Foreign Proxy
+
+- Kovan: [deployment](deployments/kovan/RealitioForeignArbitrationProxy.json#L2).
+- Mainnet: `<none>`
+
 ## Contributing
 
 ### Install Dependencies
@@ -33,4 +45,3 @@ yarn lint
 ```bash
 yarn fix
 ```
-

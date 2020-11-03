@@ -1,6 +1,5 @@
-*
-.*
 **/*
-**/.*
-!src/
-!artifacts/
+!/src/**
+!/artifacts/@kleros/**
+!/artifacts/src/**
+!/deployments/*/*.json

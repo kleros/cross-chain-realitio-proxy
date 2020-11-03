@@ -3,25 +3,25 @@ pragma solidity ^0.7.2;
 
 interface IHomeArbitrationProxy {
     /**
-     * @dev Recieves the requested arbitration for a question. TRUSTED.
+     * @dev Receives the requested arbitration for a question. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requesterAnswer The answer the requester deem to be correct.
+     * @param _contestedAnswer The answer the requester deems to be correct.
      * @param _requester The address of the user that requested arbitration.
      */
     function receiveArbitrationRequest(
         bytes32 _questionID,
-        bytes32 _requesterAnswer,
+        bytes32 _contestedAnswer,
         address _requester
     ) external;
 
     /**
-     * @dev Recieves a failed attempt to request arbitration. TRUSTED.
+     * @dev Receives a failed attempt to request arbitration. TRUSTED.
      * @param _questionID The ID of the question.
      */
     function receiveArbitrationFailure(bytes32 _questionID) external;
 
     /**
-     * @dev Recieves the answer to a specified question. TRUSTED.
+     * @dev Receives the answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitratior.
      */

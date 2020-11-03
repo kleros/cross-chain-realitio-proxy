@@ -38,6 +38,10 @@ contract MockAMB is IAMB {
         return currentMessageSender;
     }
 
+    function messageSourceChainId() external view override returns (bytes32) {
+        return bytes32(0);
+    }
+
     function messageId() external view override returns (bytes32) {
         return bytes32(currentMessageId);
     }

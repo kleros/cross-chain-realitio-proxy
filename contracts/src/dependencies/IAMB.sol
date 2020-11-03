@@ -12,5 +12,7 @@ interface IAMB {
 
     function messageSender() external view returns (address);
 
+    function messageSourceChainId() external view returns (bytes32);
+
     function messageId() external view returns (bytes32);
 }

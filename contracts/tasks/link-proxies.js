@@ -58,7 +58,12 @@ task("link-proxies", "Links cross-chain proxies together", async ({env}, {ethers
       return;
     }
 
-    const tx = await foreignProxy.setHomeProxy(homeProxy.address);
+    const homeChainIdByEnv = {
+      staging: 77,
+      production: 100,
+    };
+
+    const tx = await foreignProxy.setHomeProxy(homeProxy.address, homeChainIdByEnv[env]);
 
     await tx.wait();
     console.log("Home Proxy address successfuly set on Foreign Proxy!");

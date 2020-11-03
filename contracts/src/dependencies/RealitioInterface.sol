@@ -13,11 +13,7 @@ interface RealitioInterface {
         bool is_commitment
     );
 
-    event LogNewTemplate(
-        uint256 indexed template_id,
-        address indexed user,
-        string question_text
-    );
+    event LogNewTemplate(uint256 indexed template_id, address indexed user, string question_text);
 
     event LogNewQuestion(
         bytes32 indexed question_id,
@@ -70,13 +66,6 @@ interface RealitioInterface {
         bytes32 last_answer_or_commitment_id,
         address last_answerer
     ) external;
-
-    /**
-     * @notice Report whether the answer to the specified question is finalized
-     * @param question_id The ID of the question
-     * @return Return true if finalized
-     */
-    function isFinalized(bytes32 question_id) external view returns (bool);
 
     /**
      * @notice Returns the current best answer.

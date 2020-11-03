@@ -78,6 +78,7 @@ contract MockRealitio is RealitioInterface {
     ) external override {
         Question storage question = questions[uint256(_questionId)];
         require(question.status == Status.Open, "Invalid question status");
+        require(question.answerer != address(0), "Question not answered");
 
         question.status = Status.PendingArbitration;
 
@@ -112,10 +113,6 @@ contract MockRealitio is RealitioInterface {
         }
 
         emit MockFinalize(_questionId, _answer);
-    }
-
-    function isFinalized(bytes32 _questionId) external view override returns (bool) {
-        return questions[uint256(_questionId)].status == Status.Finalized;
     }
 
     function getBestAnswer(bytes32 _questionId) external view override returns (bytes32) {

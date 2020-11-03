@@ -38,6 +38,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
     address public homeProxy;
 
+    /// @dev The chain ID where the home proxy is deployed.
+    uint256 public homeChainId;
+
     /// @dev The path for the Terms of Service for Kleros as an arbitrator for Realitio.
     string public termsOfService;
 
@@ -46,7 +49,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     struct Arbitration {
         // Status of the arbitration.
         Status status;
-        // Address that made the arbitration or paid the remaining fee.
+        // Address that made the arbitration request.
         address payable requester;
         // The deposit paid by the requester at the time of the arbitration.
         uint256 deposit;
@@ -99,6 +102,11 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
 
     modifier onlyAmb() {
         require(msg.sender == address(amb), "Only AMB allowed");
+        _;
+    }
+
+    modifier onlyHomeChain() {
+        require(amb.messageSourceChainId() == bytes32(homeChainId), "Only home chain allowed");
         _;
     }
 
@@ -158,9 +166,11 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     /**
      * @notice Sets the address of the arbitration proxy on the Home Chain.
      * @param _homeProxy The address of the proxy.
+     * @param _homeChainId The chain ID where the home proxy is deployed.
      */
-    function setHomeProxy(address _homeProxy) external onlyGovernor {
+    function setHomeProxy(address _homeProxy, uint256 _homeChainId) external onlyGovernor {
         homeProxy = _homeProxy;
+        homeChainId = _homeChainId;
     }
 
     /**
@@ -191,7 +201,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @notice Requests arbitration for given question ID.
      * @param _questionID The ID of the question.
      */
-    function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
+    function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeChain onlyHomeProxy {
         Arbitration storage arbitration = arbitrations[_questionID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
@@ -225,7 +235,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @notice Cancels the arbitration.
      * @param _questionID The ID of the question.
      */
-    function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeProxy {
+    function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeChain onlyHomeProxy {
         Arbitration storage arbitration = arbitrations[_questionID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 

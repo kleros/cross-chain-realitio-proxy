@@ -54,10 +54,10 @@ describe("Cross-Chain Arbitration", () => {
     const setArbitratorTx = await realitio.setArbitrator(homeProxy.address);
     await setArbitratorTx.wait();
 
-    const setForeignProxyTx = await homeProxy.setForeignProxy(foreignProxy.address, 31337);
+    const setForeignProxyTx = await homeProxy.setForeignProxy(foreignProxy.address, 0);
     await setForeignProxyTx.wait();
 
-    const setHomeProxyTx = await foreignProxy.setHomeProxy(homeProxy.address);
+    const setHomeProxyTx = await foreignProxy.setHomeProxy(homeProxy.address, 0);
     await setHomeProxyTx.wait();
     const initializeTx = await foreignProxy.initialize(metaEvidence, termsOfService);
     await initializeTx.wait();
@@ -131,6 +131,25 @@ describe("Cross-Chain Arbitration", () => {
 
         const expectedBalance = balanceBefore.add(arbitrationFee);
         expect(balanceAfter).to.equal(expectedBalance, "Requester was not properly reimbursed");
+      });
+    });
+
+    describe("When requester contests an unanswered question #regression", () => {
+      let unansweredQuestionId;
+
+      beforeEach("Create question and do not submit an answer", async () => {
+        const askTx = await realitio.connect(asker).askQuestion(question);
+        const askTxReceipt = await askTx.wait();
+        unansweredQuestionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
+      });
+
+      it("should reject the arbitration request and not notify Realitio", async () => {
+        const {txPromise} = await requestArbitration(unansweredQuestionId, currentAnswer);
+
+        await expect(txPromise)
+          .to.emit(homeProxy, "RequestRejected")
+          .withArgs(unansweredQuestionId, currentAnswer, await requester.getAddress());
+        await expect(txPromise).not.to.emit(realitio, "MockNotifyOfArbitrationRequest");
       });
     });
 

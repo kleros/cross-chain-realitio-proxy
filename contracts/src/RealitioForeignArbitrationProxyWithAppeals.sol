@@ -15,7 +15,7 @@ import "@kleros/ethereum-libraries/contracts/CappedMath.sol";
 import "./dependencies/IAMB.sol";
 import "./ArbitrationProxyInterfaces.sol";
 
-contract RealitioForeignArbitrationProxyWithAppeals is IDisputeResolver {
+contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver {
     using CappedMath for uint256;
 
     /* Constants */
@@ -250,10 +250,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IDisputeResolver {
 
     /**
      * @notice Creates a dispute for a given question ID.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _questionID The ID of the question.
      */
-    function acknowledgeArbitration(uint256 _arbitrationID) external onlyAmb onlyHomeChain onlyHomeProxy {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+    function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeChain onlyHomeProxy {
+        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -261,14 +261,14 @@ contract RealitioForeignArbitrationProxyWithAppeals is IDisputeResolver {
         if (arbitration.deposit < arbitrationCost) {
             arbitration.status = Status.Failed;
 
-            emit ArbitrationFailed(_arbitrationID);
+            emit ArbitrationFailed(uint256(_questionID));
         } else {
             // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
             uint256 remainder = arbitration.deposit - arbitrationCost;
 
             uint256 disputeID =
                 arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData);
-            externalIDtoLocalID[disputeID] = _arbitrationID;
+            externalIDtoLocalID[disputeID] = uint256(_questionID);
             arbitration.status = Status.Created;
             arbitration.deposit = 0;
             arbitration.disputeID = disputeID;
@@ -278,23 +278,23 @@ contract RealitioForeignArbitrationProxyWithAppeals is IDisputeResolver {
                 arbitration.requester.send(remainder);
             }
 
-            emit ArbitrationCreated(_arbitrationID, disputeID);
+            emit ArbitrationCreated(uint256(_questionID), disputeID);
         }
     }
 
     /**
      * @notice Cancels the arbitration.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _questionID The ID of the question.
      */
-    function cancelArbitration(uint256 _arbitrationID) external onlyAmb onlyHomeChain onlyHomeProxy {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+    function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeChain onlyHomeProxy {
+        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         arbitration.requester.send(arbitration.deposit);
 
-        delete arbitrations[_arbitrationID];
+        delete arbitrations[uint256(_questionID)];
 
-        emit ArbitrationCanceled(_arbitrationID);
+        emit ArbitrationCanceled(uint256(_questionID));
     }
 
     /**
@@ -523,7 +523,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IDisputeResolver {
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee() external view returns (uint256) {
+    function getDisputeFee(bytes32 _questionID) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 

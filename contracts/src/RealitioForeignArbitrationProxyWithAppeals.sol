@@ -69,32 +69,32 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Should be emitted when the arbitration is requested.
-     * @param _arbitrationID The ID of the arbitration which is a questionID converted into uint256.
+     * @param _questionID The ID of the question.
      * @param _answer The answer provided by the requester.
      * @param _requester The requester.
      */
-    event ArbitrationRequested(uint256 indexed _arbitrationID, uint256 _answer, address indexed _requester);
+    event ArbitrationRequested(bytes32 indexed _questionID, bytes32 _answer, address indexed _requester);
 
     /**
      * @notice Should be emitted when the dispute is created.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _questionID The ID of the question.
      * @param _disputeID The ID of the dispute.
      */
-    event ArbitrationCreated(uint256 indexed _arbitrationID, uint256 indexed _disputeID);
+    event ArbitrationCreated(bytes32 indexed _questionID, uint256 indexed _disputeID);
 
     /**
      * @notice Should be emitted when the dispute could not be created.
      * @dev This will happen if there is an increase in the arbitration fees
      * between the time the arbitration is made and the time it is acknowledged.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _questionID The ID of the question.
      */
-    event ArbitrationFailed(uint256 indexed _arbitrationID);
+    event ArbitrationFailed(bytes32 indexed _questionID);
 
     /**
      * @notice Should be emitted when the arbitration is canceled by the Home Chain.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _questionID The ID of the question.
      */
-    event ArbitrationCanceled(uint256 indexed _arbitrationID);
+    event ArbitrationCanceled(bytes32 indexed _questionID);
 
     /* Modifiers */
 
@@ -223,14 +223,18 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         emit MetaEvidence(metaEvidenceUpdates, _metaEvidence);
     }
 
+    // ************************ //
+    // *    Realitio logic    * //
+    // ************************ //
+
     /**
      * @notice Requests arbitration for a given question ID.
      * @dev Can be executed only if the contract has been initialized.
-     * @param _arbitrationID The ID of the arbitration, which is the ID of the related question converted into uint256.
+     * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function requestArbitration(uint256 _arbitrationID, uint256 _contestedAnswer) external payable onlyIfInitialized {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable onlyIfInitialized {
+        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -241,11 +245,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         arbitration.deposit = msg.value;
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
-        bytes memory data =
-            abi.encodeWithSelector(methodSelector, bytes32(_arbitrationID), bytes32(_contestedAnswer), msg.sender);
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _contestedAnswer, msg.sender);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        emit ArbitrationRequested(_arbitrationID, _contestedAnswer, msg.sender);
+        emit ArbitrationRequested(_questionID, _contestedAnswer, msg.sender);
     }
 
     /**
@@ -261,7 +264,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         if (arbitration.deposit < arbitrationCost) {
             arbitration.status = Status.Failed;
 
-            emit ArbitrationFailed(uint256(_questionID));
+            emit ArbitrationFailed(_questionID);
         } else {
             // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
             uint256 remainder = arbitration.deposit - arbitrationCost;
@@ -278,7 +281,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
                 arbitration.requester.send(remainder);
             }
 
-            emit ArbitrationCreated(uint256(_questionID), disputeID);
+            emit ArbitrationCreated(_questionID, disputeID);
         }
     }
 
@@ -294,27 +297,31 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         delete arbitrations[uint256(_questionID)];
 
-        emit ArbitrationCanceled(uint256(_questionID));
+        emit ArbitrationCanceled(_questionID);
     }
 
     /**
      * @notice Cancels the arbitration in case the dispute could not be created.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _questionID The ID of the question.
      */
-    function handleFailedDisputeCreation(uint256 _arbitrationID) external onlyIfInitialized {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+    function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
+        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(_arbitrationID));
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
         arbitration.requester.send(arbitration.deposit);
 
-        delete arbitrations[_arbitrationID];
+        delete arbitrations[uint256(_questionID)];
 
-        emit ArbitrationCanceled(_arbitrationID);
+        emit ArbitrationCanceled(_questionID);
     }
+
+    // ********************************* //
+    // *    Appeals and arbitration    * //
+    // ********************************* //
 
     /** @notice Takes up to the total amount required to fund an answer. Reimburses the rest. Creates an appeal if at least two answers are funded.
      *  @param _arbitrationID The ID of the arbitration.

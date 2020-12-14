@@ -606,4 +606,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             contributions[i] = round.contributions[_contributor][fundedAnswers[i]];
         }
     }
+
+    /** @notice Casts question ID into uint256 thus returning the related arbitration ID.
+     *  @param _questionID The ID of the question.
+     *  @return The ID of the arbitration.
+     */
+    function questionIDToArbitrationID(bytes32 _questionID) external pure returns (uint256) {
+        return uint256(_questionID);
+    }
 }

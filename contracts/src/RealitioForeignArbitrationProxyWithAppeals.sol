@@ -193,29 +193,33 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         homeChainId = _homeChainId;
     }
 
-    /** @notice Changes the proportion of appeal fees that must be added to appeal cost when there is no winner or loser.
-     *  @param _sharedMultiplier The new shared multiplier value in basis points.
+    /**
+     * @notice Changes the proportion of appeal fees that must be added to appeal cost when there is no winner or loser.
+     * @param _sharedMultiplier The new shared multiplier value in basis points.
      */
     function changeSharedMultiplier(uint64 _sharedMultiplier) external onlyGovernor {
         sharedMultiplier = _sharedMultiplier;
     }
 
-    /** @notice Changes the proportion of appeal fees that must be added to appeal cost for the winning party.
-     *  @param _winnerMultiplier The new winner multiplier value in basis points.
+    /**
+     * @notice Changes the proportion of appeal fees that must be added to appeal cost for the winning party.
+     * @param _winnerMultiplier The new winner multiplier value in basis points.
      */
     function changeWinnerMultiplier(uint64 _winnerMultiplier) external onlyGovernor {
         winnerMultiplier = _winnerMultiplier;
     }
 
-    /** @notice Changes the proportion of appeal fees that must be added to appeal cost for the losing party.
-     *  @param _loserMultiplier The new loser multiplier value in basis points.
+    /**
+     * @notice Changes the proportion of appeal fees that must be added to appeal cost for the losing party.
+     * @param _loserMultiplier The new loser multiplier value in basis points.
      */
     function changeLoserMultiplier(uint64 _loserMultiplier) external onlyGovernor {
         loserMultiplier = _loserMultiplier;
     }
 
-    /** @notice Updates the meta evidence used for disputes.
-     *  @param _metaEvidence URI to the new meta evidence file.
+    /**
+     * @notice Updates the meta evidence used for disputes.
+     * @param _metaEvidence URI to the new meta evidence file.
      */
     function changeMetaEvidence(string calldata _metaEvidence) external onlyGovernor {
         require(initialized, "Metaevidence was not set.");
@@ -323,10 +327,11 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     // *    Appeals and arbitration    * //
     // ********************************* //
 
-    /** @notice Takes up to the total amount required to fund an answer. Reimburses the rest. Creates an appeal if at least two answers are funded.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _answer One of the possible rulings the arbitrator can give that the funder considers to be the correct answer to the question.
-     *  @return Whether the answer was fully funded or not.
+    /**
+     * @notice Takes up to the total amount required to fund an answer. Reimburses the rest. Creates an appeal if at least two answers are funded.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _answer One of the possible rulings the arbitrator can give that the funder considers to be the correct answer to the question.
+     * @return Whether the answer was fully funded or not.
      */
     function fundAppeal(uint256 _arbitrationID, uint256 _answer) external payable override returns (bool) {
         Arbitration storage arbitration = arbitrations[_arbitrationID];
@@ -384,12 +389,13 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         return round.hasPaid[_answer];
     }
 
-    /** @notice Sends the fee stake rewards and reimbursements proportional to the contributions made to the winner of a dispute. Reimburses contributions if there is no winner.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _beneficiary The address to send reward to.
-     *  @param _round The round from which to withdraw.
-     *  @param _answer The answer to query the reward from.
-     *  @return reward The withdrawn amount.
+    /**
+     * @notice Sends the fee stake rewards and reimbursements proportional to the contributions made to the winner of a dispute. Reimburses contributions if there is no winner.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _beneficiary The address to send reward to.
+     * @param _round The round from which to withdraw.
+     * @param _answer The answer to query the reward from.
+     * @return reward The withdrawn amount.
      */
     function withdrawFeesAndRewards(
         uint256 _arbitrationID,
@@ -423,13 +429,14 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         }
     }
 
-    /** @notice Allows to withdraw any reimbursable fees or rewards after the dispute gets solved for multiple ruling options (answers) at once.
-     *  @dev This function is O(n) where n is the number of queried answers.
-     *  @dev This could exceed gas limits, therefore this function should be used only as a utility and not be relied upon by other contracts.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _beneficiary The address that made contributions.
-     *  @param _round The round from which to withdraw.
-     *  @param _contributedTo Answers that received contributions from contributor.
+    /**
+     * @notice Allows to withdraw any reimbursable fees or rewards after the dispute gets solved for multiple ruling options (answers) at once.
+     * @dev This function is O(n) where n is the number of queried answers.
+     * @dev This could exceed gas limits, therefore this function should be used only as a utility and not be relied upon by other contracts.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _beneficiary The address that made contributions.
+     * @param _round The round from which to withdraw.
+     * @param _contributedTo Answers that received contributions from contributor.
      */
     function withdrawFeesAndRewardsForMultipleRulings(
         uint256 _arbitrationID,
@@ -442,12 +449,13 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         }
     }
 
-    /** @notice Allows to withdraw any rewards or reimbursable fees for multiple rulings options (answers) and for all rounds at once.
-     *  @dev This function is O(n*m) where n is the total number of rounds and m is the number of queried answers.
-     *  @dev This could exceed gas limits, therefore this function should be used only as a utility and not be relied upon by other contracts.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _beneficiary The address that made contributions.
-     *  @param _contributedTo Answers that received contributions from contributor.
+    /**
+     * @notice Allows to withdraw any rewards or reimbursable fees for multiple rulings options (answers) and for all rounds at once.
+     * @dev This function is O(n*m) where n is the total number of rounds and m is the number of queried answers.
+     * @dev This could exceed gas limits, therefore this function should be used only as a utility and not be relied upon by other contracts.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _beneficiary The address that made contributions.
+     * @param _contributedTo Answers that received contributions from contributor.
      */
     function withdrawFeesAndRewardsForAllRounds(
         uint256 _arbitrationID,
@@ -459,9 +467,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         }
     }
 
-    /** @notice Allows to submit evidence for a particular question.
-     *  @param _arbitrationID The ID of the arbitration related to the question.
-     *  @param _evidenceURI Link to evidence.
+    /**
+     * @notice Allows to submit evidence for a particular question.
+     * @param _arbitrationID The ID of the arbitration related to the question.
+     * @param _evidenceURI Link to evidence.
      */
     function submitEvidence(uint256 _arbitrationID, string calldata _evidenceURI) external override {
         Arbitration storage arbitration = arbitrations[_arbitrationID];
@@ -498,11 +507,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /* External Views */
 
-    /** @dev Returns stake multipliers.
-     *  @return winner Winners stake multiplier.
-     *  @return loser Losers stake multiplier.
-     *  @return shared Multiplier when it's a tie.
-     *  @return divisor Multiplier divisor.
+    /**
+     * @notice Returns stake multipliers.
+     * @return winner Winners stake multiplier.
+     * @return loser Losers stake multiplier.
+     * @return shared Multiplier when it's a tie.
+     * @return divisor Multiplier divisor.
      */
     function getMultipliers()
         external
@@ -518,9 +528,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         return (winnerMultiplier, loserMultiplier, sharedMultiplier, MULTIPLIER_DIVISOR);
     }
 
-    /** @dev Returns number of possible ruling options. Valid rulings are [0, return value].
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @return count The number of ruling options.
+    /**
+     * @notice Returns number of possible ruling options. Valid rulings are [0, return value].
+     * @param _arbitrationID The ID of the arbitration.
+     * @return count The number of ruling options.
      */
     function numberOfRulingOptions(uint256 _arbitrationID) external pure override returns (uint256) {
         return NUMBER_OF_CHOICES_FOR_ARBITRATOR;
@@ -534,20 +545,22 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 
-    /** @notice Gets the number of rounds of the specific question.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @return The number of rounds.
+    /**
+     * @notice Gets the number of rounds of the specific question.
+     * @param _arbitrationID The ID of the arbitration.
+     * @return The number of rounds.
      */
     function getNumberOfRounds(uint256 _arbitrationID) external view returns (uint256) {
         return arbitrations[_arbitrationID].rounds.length;
     }
 
-    /** @notice Gets the information of a round of a question.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _round The round to query.
-     *  @return paidFees The amount of fees paid for each fully funded answer.
-     *  @return feeRewards The amount of fees that will be used as rewards.
-     *  @return fundedAnswers IDs of fully funded answers.
+    /**
+     * @notice Gets the information of a round of a question.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _round The round to query.
+     * @return paidFees The amount of fees paid for each fully funded answer.
+     * @return feeRewards The amount of fees that will be used as rewards.
+     * @return fundedAnswers IDs of fully funded answers.
      */
     function getRoundInfo(uint256 _arbitrationID, uint256 _round)
         external
@@ -570,12 +583,13 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         feeRewards = round.feeRewards;
     }
 
-    /** @notice Gets the information of a round of a question for a specific answer choice.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _round The round to query.
-     *  @param _answer The answer choice to get funding status for.
-     *  @return raised The amount paid for this answer.
-     *  @return fullyFunded Whether the answer is fully funded or not.
+    /**
+     * @notice Gets the information of a round of a question for a specific answer choice.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _round The round to query.
+     * @param _answer The answer choice to get funding status for.
+     * @return raised The amount paid for this answer.
+     * @return fullyFunded Whether the answer is fully funded or not.
      */
     function getFundingStatus(
         uint256 _arbitrationID,
@@ -587,12 +601,13 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         fullyFunded = round.hasPaid[_answer];
     }
 
-    /** @notice Gets contributions to the answers that are fully funded.
-     *  @param _arbitrationID The ID of the arbitration.
-     *  @param _round The round to query.
-     *  @param _contributor The address whose contributions to query.
-     *  @return fundedAnswers IDs of the answers that are fully funded.
-     *  @return contributions The amount contributed to each funded answer by the contributor.
+    /**
+     * @notice Gets contributions to the answers that are fully funded.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _round The round to query.
+     * @param _contributor The address whose contributions to query.
+     * @return fundedAnswers IDs of the answers that are fully funded.
+     * @return contributions The amount contributed to each funded answer by the contributor.
      */
     function getContributionsToSuccessfulFundings(
         uint256 _arbitrationID,
@@ -607,9 +622,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         }
     }
 
-    /** @notice Casts question ID into uint256 thus returning the related arbitration ID.
-     *  @param _questionID The ID of the question.
-     *  @return The ID of the arbitration.
+    /**
+     * @notice Casts question ID into uint256 thus returning the related arbitration ID.
+     * @param _questionID The ID of the question.
+     * @return The ID of the arbitration.
      */
     function questionIDToArbitrationID(bytes32 _questionID) external pure returns (uint256) {
         return uint256(_questionID);

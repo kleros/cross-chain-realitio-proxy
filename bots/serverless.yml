@@ -113,28 +113,28 @@ provider:
 functions:
   checkNotifiedRequests:
     handler: src/handler.checkNotifiedRequests
-    timeout: 300
+    timeout: 600
     events:
       - schedule:
           rate: cron(0 * * * ? *) # every 1 hour at hh:00
 
   checkRejectedRequests:
     handler: src/handler.checkRejectedRequests
-    timeout: 300
+    timeout: 600
     events:
       - schedule:
           rate: cron(15 * * * ? *) # every 1 hour at hh:00
 
   checkAcceptedArbitrationRequests:
     handler: src/handler.checkAcceptedArbitrationRequests
-    timeout: 300
+    timeout: 600
     events:
       - schedule:
           rate: cron(30 * * * ? *) # every hour at hh:45
 
   checkArbitrationAnswers:
     handler: src/handler.checkArbitrationAnswers
-    timeout: 300
+    timeout: 600
     events:
       - schedule:
           rate: cron(45 * * * ? *) # every hour at hh:45

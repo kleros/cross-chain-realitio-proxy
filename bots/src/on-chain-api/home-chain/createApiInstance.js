@@ -90,6 +90,15 @@ export default async function createApiInstance() {
     return request;
   }
 
+  async function handleRejectedRequest(request) {
+    await batchSend({
+      args: [request.questionId],
+      method: homeProxy.methods.handleRejectedRequest,
+      to: homeProxy.options.address,
+    });
+    return request;
+  }
+
   async function reportArbitrationAnswer(request) {
     const {questionId} = request;
     const {historyHash, answerOrCommitmentID, answerer} = await _getLatestAnswerParams(questionId);
@@ -130,12 +139,12 @@ export default async function createApiInstance() {
     getBlockNumber,
     getChainId,
     getNotifiedRequests,
-
     getRejectedRequests,
     getRequestByQuestionId,
     handleChangedAnswer,
     handleFinalizedQuestion,
     handleNotifiedRequest,
+    handleRejectedRequest,
     reportArbitrationAnswer,
   };
 }

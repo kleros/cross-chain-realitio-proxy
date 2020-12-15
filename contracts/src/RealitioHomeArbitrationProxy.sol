@@ -205,7 +205,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         require(request.status == Status.Rejected, "Invalid request status");
 
         // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
-        request.status == Status.None;
+        request.status = Status.None;
 
         bytes4 selector = IForeignArbitrationProxy(0).cancelArbitration.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID);

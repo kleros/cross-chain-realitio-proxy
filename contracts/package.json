@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@kleros/erc-792": "^7.0.0",
-    "@kleros/ethereum-libraries": "^7.0.0"
+    "@kleros/ethereum-libraries": "^7.0.0",
+    "@kleros/arbitrable-proxy-contracts": "^1.0.1"
   },
   "devDependencies": {
     "@kleros/kleros-interaction": "^0.10.0",

@@ -411,6 +411,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             reward = round.contributions[_beneficiary][_answer];
         } else if (arbitration.answer == 0 || !round.hasPaid[arbitration.answer]) {
             // Reimburse unspent fees proportionally if there is no winner and loser. Also applies to the situation where the ultimate winner didn't pay appeal fees fully.
+            // Note that if only one side is funded it will become a winner and this part of the condition won't be reached.
             reward = round.fundedAnswers.length > 1
                 ? (round.contributions[_beneficiary][_answer] * round.feeRewards) /
                     (round.paidFees[round.fundedAnswers[0]] + round.paidFees[round.fundedAnswers[1]])

@@ -1,4 +1,4 @@
-async function getContracts({env, ethers}) {
+async function getContracts({ env, ethers }) {
   const networksByEnv = {
     staging: {
       home: {
@@ -46,7 +46,7 @@ async function getContracts({env, ethers}) {
     foreignWallet
   );
 
-  return {homeProxy, foreignProxy};
+  return { homeProxy, foreignProxy };
 }
 
 module.exports = getContracts;

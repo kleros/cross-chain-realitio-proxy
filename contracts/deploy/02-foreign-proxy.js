@@ -1,8 +1,8 @@
 const FOREIGN_CHAIN_IDS = [42, 1];
 
-async function deployForeignProxy({deployments, getNamedAccounts}) {
-  const {deploy} = deployments;
-  const {deployer} = await getNamedAccounts();
+async function deployForeignProxy({ deployments, getNamedAccounts }) {
+  const { deploy } = deployments;
+  const { deployer } = await getNamedAccounts();
 
   await deploy("RealitioForeignArbitrationProxy", {
     from: deployer,
@@ -15,11 +15,15 @@ async function deployForeignProxy({deployments, getNamedAccounts}) {
       "0x3b261920Ba47f0C0c6162e592181bbE2244b63AE",
       // Arbitrator extra data
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+      // MetaEvidence
+      "/ipfs/QmSULaAycSQiCgGrKC8BR6ayAHAFsKBkityEfmNBw1RsSF/realitio-metaevidence.json",
+      // Terms of Service
+      "/ipfs/QmPDN28pUtYy9vvVQVNNufKFMsH6gc59iKy2HSX9jzNPkd/realitio-tos.pdf",
     ],
   });
 }
 
 deployForeignProxy.tags = ["ForeignChain"];
-deployForeignProxy.skip = async ({getChainId}) => !FOREIGN_CHAIN_IDS.includes(Number(await getChainId()));
+deployForeignProxy.skip = async ({ getChainId }) => !FOREIGN_CHAIN_IDS.includes(Number(await getChainId()));
 
 module.exports = deployForeignProxy;

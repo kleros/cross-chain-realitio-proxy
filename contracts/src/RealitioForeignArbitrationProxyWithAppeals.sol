@@ -58,7 +58,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     string public termsOfService; // The path for the Terms of Service for Kleros as an arbitrator for Realitio.
 
     // Multipliers are in basis points.
-    uint64 private sharedMultiplier; // Multiplier for calculating the appeal fee that must be paid in the case where there is no winner/loser (e.g. when the arbitrator refused to rule).
     uint64 private winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
     uint64 private loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
 
@@ -134,7 +133,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _amb ArbitraryMessageBridge contract address.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
-     * @param _sharedMultiplier Multiplier of the appeal cost in the case when there was no winner/loser in the previous round.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
      * @param _loserMultiplier Multiplier for calculation the appeal cost of the losing answer.
      */
@@ -142,14 +140,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         IAMB _amb,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
-        uint64 _sharedMultiplier,
         uint64 _winnerMultiplier,
         uint64 _loserMultiplier
     ) {
         amb = _amb;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
-        sharedMultiplier = _sharedMultiplier;
         winnerMultiplier = _winnerMultiplier;
         loserMultiplier = _loserMultiplier;
     }
@@ -191,14 +187,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         homeProxy = _homeProxy;
         homeChainId = _homeChainId;
-    }
-
-    /**
-     * @notice Changes the proportion of appeal fees that must be added to appeal cost when there is no winner or loser.
-     * @param _sharedMultiplier The new shared multiplier value in basis points.
-     */
-    function changeSharedMultiplier(uint64 _sharedMultiplier) external onlyGovernor {
-        sharedMultiplier = _sharedMultiplier;
     }
 
     /**
@@ -336,8 +324,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     function fundAppeal(uint256 _arbitrationID, uint256 _answer) external payable override returns (bool) {
         Arbitration storage arbitration = arbitrations[_arbitrationID];
         require(arbitration.status == Status.Created, "No dispute to appeal.");
-        // The "-1" answer is reserved for "Refuse to arbitrate" in Realitio, thus it can not be funded.
-        require(_answer != uint256(-1), "The answer is out of bounds.");
         (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitrator.appealPeriod(arbitration.disputeID);
         require(block.timestamp >= appealPeriodStart && block.timestamp < appealPeriodEnd, "Appeal period is over.");
 
@@ -346,8 +332,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 multiplier;
         if (winner == _answer + 1) {
             multiplier = winnerMultiplier;
-        } else if (winner == 0) {
-            multiplier = sharedMultiplier;
         } else {
             require(
                 block.timestamp - appealPeriodStart < (appealPeriodEnd - appealPeriodStart) / 2,
@@ -409,8 +393,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         // Allow to reimburse if funding of the round was unsuccessful.
         if (!round.hasPaid[_answer]) {
             reward = round.contributions[_beneficiary][_answer];
-        } else if (arbitration.answer == 0 || !round.hasPaid[arbitration.answer]) {
-            // Reimburse unspent fees proportionally if there is no winner and loser. Also applies to the situation where the ultimate winner didn't pay appeal fees fully.
+        } else if (!round.hasPaid[arbitration.answer]) {
+            // Reimburse unspent fees proportionally if the ultimate winner didn't pay appeal fees fully.
             // Note that if only one side is funded it will become a winner and this part of the condition won't be reached.
             reward = round.fundedAnswers.length > 1
                 ? (round.contributions[_beneficiary][_answer] * round.feeRewards) /
@@ -512,7 +496,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @notice Returns stake multipliers.
      * @return winner Winners stake multiplier.
      * @return loser Losers stake multiplier.
-     * @return shared Multiplier when it's a tie.
+     * @return shared Multiplier when it's a tie. Is not used in this contract.
      * @return divisor Multiplier divisor.
      */
     function getMultipliers()
@@ -526,7 +510,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             uint256 divisor
         )
     {
-        return (winnerMultiplier, loserMultiplier, sharedMultiplier, MULTIPLIER_DIVISOR);
+        return (winnerMultiplier, loserMultiplier, 0, MULTIPLIER_DIVISOR);
     }
 
     /**

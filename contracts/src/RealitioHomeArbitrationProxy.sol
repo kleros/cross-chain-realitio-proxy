@@ -99,17 +99,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         _;
     }
 
-    modifier onlyAmb() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        _;
-    }
-
-    modifier onlyForeignChain() {
-        require(amb.messageSourceChainId() == bytes32(foreignChainId), "Only foreign chain allowed");
-        _;
-    }
-
     modifier onlyForeignProxy() {
+        require(msg.sender == address(amb), "Only AMB allowed");
+        require(amb.messageSourceChainId() == bytes32(foreignChainId), "Only foreign chain allowed");
         require(amb.messageSender() == foreignProxy, "Only foreign proxy allowed");
         _;
     }
@@ -154,12 +146,12 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes32 _questionID,
         bytes32 _contestedAnswer,
         address _requester
-    ) external override onlyAmb onlyForeignChain onlyForeignProxy {
+    ) external override onlyForeignProxy {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.None, "Request already exists");
 
         if (realitio.getBestAnswer(_questionID) == _contestedAnswer) {
-            try realitio.notifyOfArbitrationRequest(_questionID, _requester, 0)  {
+            try realitio.notifyOfArbitrationRequest(_questionID, _requester, 0) {
                 request.status = Status.Notified;
                 request.requester = _requester;
 
@@ -218,13 +210,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @dev Receives a failed attempt to request arbitration.
      * @param _questionID The ID of the question.
      */
-    function receiveArbitrationFailure(bytes32 _questionID)
-        external
-        override
-        onlyAmb
-        onlyForeignChain
-        onlyForeignProxy
-    {
+    function receiveArbitrationFailure(bytes32 _questionID) external override onlyForeignProxy {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -240,13 +226,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitratior.
      */
-    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer)
-        external
-        override
-        onlyAmb
-        onlyForeignChain
-        onlyForeignProxy
-    {
+    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
         Request storage request = questionIDToRequest[_questionID];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 

@@ -1,15 +1,14 @@
 require("dotenv/config");
-const {task} = require("hardhat/config");
+const { task } = require("hardhat/config");
 require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-web3");
 require("hardhat-deploy");
 require("./tasks/link-proxies");
-require("./tasks/initialize-foreign-proxy");
 
 // This is a sample Buidler task. To learn how to create your own go to
 // https://buidler.dev/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (_, {ethers}) => {
+task("accounts", "Prints the list of accounts", async (_, { ethers }) => {
   const accounts = await ethers.getSigners();
 
   for (const account of accounts) {

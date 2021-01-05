@@ -49,7 +49,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
-    uint256 public metaEvidenceUpdates; // The number of times the meta evidence has been updated. Used to track the latest meta evidence ID.
+    uint256 public metaEvidenceID; // The ID of the MetaEvidence for disputes.
 
     IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
     address public homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
@@ -107,23 +107,15 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         _;
     }
 
-    modifier onlyAmb() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        _;
-    }
-
-    modifier onlyHomeChain() {
-        require(amb.messageSourceChainId() == bytes32(homeChainId), "Only home chain allowed");
-        _;
-    }
-
     modifier onlyHomeProxy() {
+        require(msg.sender == address(amb), "Only AMB allowed");
+        require(amb.messageSourceChainId() == bytes32(homeChainId), "Only home chain allowed");
         require(amb.messageSender() == homeProxy, "Only home proxy allowed");
         _;
     }
 
     modifier onlyIfInitialized() {
-        require(initialized, "Not initialized yet");
+        require(homeProxy != address(0), "Not initialized yet");
         _;
     }
 
@@ -140,37 +132,25 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         IAMB _amb,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
+        string memory _metaEvidence,
+        string memory _termsOfService,
         uint64 _winnerMultiplier,
         uint64 _loserMultiplier
     ) {
         amb = _amb;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
+        termsOfService = _termsOfService;
         winnerMultiplier = _winnerMultiplier;
         loserMultiplier = _loserMultiplier;
+
+        emit MetaEvidence(metaEvidenceID, _metaEvidence);
     }
 
     /* External and public */
 
     /**
-     * @notice Initializes the contract so it can start receiving arbitration requests.
-     * @dev This function can only be called once, after `homeProxy` has already been set for the first time.
-     * Since there is a circular dependency between `RealitioForeignArbitrationProxy` and `RealitioHomeArbitrationProxy`,
-     * it is not possible to require the home proxy to be a constructor param.
-     * @param _metaEvidence The URI of the meta evidence file.
-     * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
-     */
-    function initialize(string calldata _metaEvidence, string calldata _termsOfService) external onlyGovernor {
-        require(!initialized, "Proxy already initialized");
-        require(homeProxy != address(0), "Home proxy not set");
-
-        initialized = true;
-        termsOfService = _termsOfService;
-        emit MetaEvidence(0, _metaEvidence);
-    }
-
-    /**
-     * @notice Changes the address of a governor.
+     * @notice Changes the address of a new governor.
      * @param _governor The address of the new governor.
      */
     function changeGovernor(address _governor) external onlyGovernor {
@@ -206,13 +186,20 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     }
 
     /**
-     * @notice Updates the meta evidence used for disputes.
+     * @notice Changes the meta evidence used for disputes.
      * @param _metaEvidence URI to the new meta evidence file.
      */
     function changeMetaEvidence(string calldata _metaEvidence) external onlyGovernor {
-        require(initialized, "Metaevidence was not set.");
-        metaEvidenceUpdates++;
-        emit MetaEvidence(metaEvidenceUpdates, _metaEvidence);
+        metaEvidenceID += 1;
+        emit MetaEvidence(metaEvidenceID, _metaEvidence);
+    }
+
+    /**
+     * @notice Changes the terms of service for Realitio.
+     * @param _termsOfService URI to the new Terms of Service file.
+     */
+    function changeTermsOfService(string calldata _termsOfService) external onlyGovernor {
+        termsOfService = _termsOfService;
     }
 
     // ************************ //
@@ -247,33 +234,40 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @notice Creates a dispute for a given question ID.
      * @param _questionID The ID of the question.
      */
-    function acknowledgeArbitration(bytes32 _questionID) external override onlyAmb onlyHomeChain onlyHomeProxy {
-        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
+    function acknowledgeArbitration(bytes32 _questionID) external override onlyHomeProxy {
+        uint256 arbitrationID = uint256(_questionID);
+        Arbitration storage arbitration = arbitrations[arbitrationID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
 
-        if (arbitration.deposit < arbitrationCost) {
-            arbitration.status = Status.Failed;
+        if (arbitration.deposit >= arbitrationCost) {
+            try
+                arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData)
+            returns (uint256 disputeID) {
+                externalIDtoLocalID[disputeID] = arbitrationID;
 
-            emit ArbitrationFailed(_questionID);
-        } else {
-            // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
-            uint256 remainder = arbitration.deposit - arbitrationCost;
+                // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
+                uint256 remainder = arbitration.deposit - arbitrationCost;
 
-            uint256 disputeID =
-                arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData);
-            externalIDtoLocalID[disputeID] = uint256(_questionID);
-            arbitration.status = Status.Created;
-            arbitration.deposit = 0;
-            arbitration.disputeID = disputeID;
-            arbitration.rounds.push();
+                arbitration.status = Status.Created;
+                arbitration.deposit = 0;
+                arbitration.disputeID = disputeID;
+                arbitration.rounds.push();
 
-            if (remainder > 0) {
-                arbitration.requester.send(remainder);
+                if (remainder > 0) {
+                    arbitration.requester.send(remainder);
+                }
+
+                emit ArbitrationCreated(_questionID, disputeID);
+                emit Dispute(arbitrator, disputeID, metaEvidenceID, arbitrationID);
+            } catch {
+                arbitration.status = Status.Failed;
+                emit ArbitrationFailed(_questionID);
             }
-
-            emit ArbitrationCreated(_questionID, disputeID);
+        } else {
+            arbitration.status = Status.Failed;
+            emit ArbitrationFailed(_questionID);
         }
     }
 
@@ -281,7 +275,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @notice Cancels the arbitration.
      * @param _questionID The ID of the question.
      */
-    function cancelArbitration(bytes32 _questionID) external override onlyAmb onlyHomeChain onlyHomeProxy {
+    function cancelArbitration(bytes32 _questionID) external override onlyHomeProxy {
         Arbitration storage arbitration = arbitrations[uint256(_questionID)];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
@@ -300,13 +294,13 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         Arbitration storage arbitration = arbitrations[uint256(_questionID)];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
-
         arbitration.requester.send(arbitration.deposit);
 
         delete arbitrations[uint256(_questionID)];
+
+        bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
+        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
         emit ArbitrationCanceled(_questionID);
     }

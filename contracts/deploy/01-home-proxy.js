@@ -1,8 +1,8 @@
 const HOME_CHAIN_IDS = [77, 100];
 
-async function deployHomeProxy({deployments, getNamedAccounts}) {
-  const {deploy} = deployments;
-  const {deployer} = await getNamedAccounts();
+async function deployHomeProxy({ deployments, getNamedAccounts }) {
+  const { deploy } = deployments;
+  const { deployer } = await getNamedAccounts();
 
   await deploy("RealitioHomeArbitrationProxy", {
     from: deployer,
@@ -17,6 +17,6 @@ async function deployHomeProxy({deployments, getNamedAccounts}) {
 }
 
 deployHomeProxy.tags = ["HomeChain"];
-deployHomeProxy.skip = async ({getChainId}) => !HOME_CHAIN_IDS.includes(Number(await getChainId()));
+deployHomeProxy.skip = async ({ getChainId }) => !HOME_CHAIN_IDS.includes(Number(await getChainId()));
 
 module.exports = deployHomeProxy;

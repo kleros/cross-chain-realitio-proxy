@@ -1,10 +1,10 @@
 require("dotenv/config");
-const {task} = require("hardhat/config");
+const { task } = require("hardhat/config");
 const prompts = require("prompts");
 const getContracts = require("./helpers/getContracts");
 
-task("link-proxies", "Links cross-chain proxies together", async ({env}, {ethers}) => {
-  const {homeProxy, foreignProxy} = await getContracts({env, ethers});
+task("link-proxies", "Links cross-chain proxies together", async ({ env }, { ethers }) => {
+  const { homeProxy, foreignProxy } = await getContracts({ env, ethers });
 
   await setHomeProxy();
   await setForeignProxy();

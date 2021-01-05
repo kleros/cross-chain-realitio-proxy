@@ -1951,10 +1951,10 @@
     "@hapi/bourne" "1.x.x"
     "@hapi/hoek" "8.x.x"
 
-"@kleros/arbitrable-proxy-contracts@^1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@kleros/arbitrable-proxy-contracts/-/arbitrable-proxy-contracts-1.0.1.tgz#5b227be7aeccccf309c9315e8c5e55e380444acc"
-  integrity sha512-n8bwdL8CfUKGLfSgzZhe9zU42IkIrQdZweYmmpospzzW2aUOzlR5ZsM5+fmbkzRSFBRBPQHxISs3iEzo9CmaDA==
+"@kleros/arbitrable-proxy-contracts@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@kleros/arbitrable-proxy-contracts/-/arbitrable-proxy-contracts-1.1.0.tgz#5f5fa39523816105bbbe5c8eb62f19dfe2222aaa"
+  integrity sha512-Yqnj+VcIQM7Q3qYtXEsDSs+6b2+VRNBfYJQ4TE97hDJOH9zSDqwj00CNTXXtZ2GZPvJtiPZAgJvI6yGN0TyHyw==
   dependencies:
     "@kleros/erc-792" "7.0.0"
     "@kleros/ethereum-libraries" "^2.0.0"

@@ -43,6 +43,14 @@ module.exports = {
       saveDeployments: true,
       tags: ["staging"],
     },
+    xdai: {
+      chainId: 100,
+      url: "https://rpc.xdaichain.com/",
+      accounts: [process.env.PRIVATE_KEY],
+      live: true,
+      saveDeployments: true,
+      tags: ["production"],
+    },
     kovan: {
       chainId: 42,
       url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
@@ -50,6 +58,14 @@ module.exports = {
       live: true,
       saveDeployments: true,
       tags: ["staging"],
+    },
+    mainnet: {
+      chainId: 1,
+      url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.MAINNET_PRIVATE_KEY],
+      live: true,
+      saveDeployments: true,
+      tags: ["production"],
     },
   },
   namedAccounts: {

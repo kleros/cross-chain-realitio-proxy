@@ -270,6 +270,20 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /**
+     * @notice Allows to submit evidence for a particular question.
+     * @param _questionID The ID of the arbitration related to the question.
+     * @param _evidenceURI Link to evidence.
+     */
+    function submitEvidence(bytes32 _questionID, string calldata _evidenceURI) external {
+        Arbitration storage arbitration = arbitrations[_questionID];
+        require(arbitration.status == Status.Created, "The status should be Created.");
+
+        if (bytes(_evidenceURI).length > 0) {
+            emit Evidence(arbitrator, uint256(_questionID), msg.sender, _evidenceURI);
+        }
+    }
+
+    /**
      * @notice Rules a specified dispute.
      * @dev Note that 0 is reserved for "Unable/refused to arbitrate" and we map it to `bytes32(-1)` which has a similar connotation in Realitio.
      * @param _disputeID The ID of the dispute in the ERC792 arbitrator.

@@ -6,17 +6,17 @@ import createHomeChainApi from "./on-chain-api/home-chain/createApiInstance";
 import createForeignChainApi from "./on-chain-api/foreign-chain/createApiInstance";
 
 export async function checkNotifiedRequests() {
-  await checkNotifiedRequestsHandler({homeChainApi: await createHomeChainApi()});
+  await checkNotifiedRequestsHandler({ homeChainApi: await createHomeChainApi() });
 }
 
 export async function checkRejectedRequests() {
-  await checkRejectedRequestsHandler({homeChainApi: await createHomeChainApi()});
+  await checkRejectedRequestsHandler({ homeChainApi: await createHomeChainApi() });
 }
 
 export async function checkArbitrationAnswers() {
-  await checkArbitrationAnswersHandler({homeChainApi: await createHomeChainApi()});
+  await checkArbitrationAnswersHandler({ homeChainApi: await createHomeChainApi() });
 }
 
 export async function checkAcceptedArbitrationRequests() {
-  await checkAcceptedArbitrationRequestsHandler({foreignChainApi: await createForeignChainApi()});
+  await checkAcceptedArbitrationRequestsHandler({ foreignChainApi: await createForeignChainApi() });
 }

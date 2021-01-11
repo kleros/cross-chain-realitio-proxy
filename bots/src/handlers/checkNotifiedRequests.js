@@ -1,12 +1,12 @@
-import {andThen, cond, map, pick, pipeWith, prop, reduceBy} from "ramda";
-import {getBlockHeight, updateBlockHeight} from "~/off-chain-storage/chainMetadata";
-import {fetchRequestsByChainIdAndStatus, saveRequests, updateRequest} from "~/off-chain-storage/requests";
-import {Status} from "~/on-chain-api/home-chain/entities";
+import { andThen, cond, map, pick, pipeWith, prop, reduceBy } from "ramda";
+import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
+import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
+import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 
-export default async function checkNotifiedRequests({homeChainApi}) {
+export default async function checkNotifiedRequests({ homeChainApi }) {
   const chainId = await homeChainApi.getChainId();
 
   await checkNewNotifiedRequests();
@@ -15,13 +15,13 @@ export default async function checkNotifiedRequests({homeChainApi}) {
   async function checkNewNotifiedRequests() {
     const [fromBlock, toBlock] = await P.all([getBlockHeight("NOTIFIED_REQUESTS"), homeChainApi.getBlockNumber()]);
 
-    const newRequests = await homeChainApi.getNotifiedRequests({fromBlock, toBlock});
+    const newRequests = await homeChainApi.getNotifiedRequests({ fromBlock, toBlock });
 
     await saveRequests(newRequests);
 
     const blockHeight = toBlock + 1;
-    await updateBlockHeight({key: "NOTIFIED_REQUESTS", blockHeight});
-    console.info({blockHeight}, "Set NOTIFIED_REQUESTS block height");
+    await updateBlockHeight({ key: "NOTIFIED_REQUESTS", blockHeight });
+    console.info({ blockHeight }, "Set NOTIFIED_REQUESTS block height");
 
     const stats = {
       data: map(pick(["questionId", "chainId", "status"]), newRequests),
@@ -62,9 +62,9 @@ export default async function checkNotifiedRequests({homeChainApi}) {
       ]),
     ]);
 
-    const notifiedRequests = await fetchRequestsByChainIdAndStatus({status: Status.Notified, chainId});
+    const notifiedRequests = await fetchRequestsByChainIdAndStatus({ status: Status.Notified, chainId });
 
-    console.info({data: map(prop("questionId"), notifiedRequests)}, "Fetched notified requests");
+    console.info({ data: map(prop("questionId"), notifiedRequests) }, "Fetched notified requests");
 
     const results = await P.allSettled(map(pipeline, notifiedRequests));
 
@@ -85,7 +85,7 @@ export default async function checkNotifiedRequests({homeChainApi}) {
   }
 
   async function fetchOnChainCounterpart(offChainRequest) {
-    const {questionId} = offChainRequest;
+    const { questionId } = offChainRequest;
 
     const onChainRequest = await homeChainApi.getRequestByQuestionId(questionId);
 

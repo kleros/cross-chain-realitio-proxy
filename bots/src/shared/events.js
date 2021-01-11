@@ -1,4 +1,4 @@
-export async function getPastEvents(contract, eventName, {filter, fromBlock = 0, toBlock = "latest"} = {}) {
+export async function getPastEvents(contract, eventName, { filter, fromBlock = 0, toBlock = "latest" } = {}) {
   return promiseRetry(
     contract
       .getPastEvents(eventName, {
@@ -7,8 +7,8 @@ export async function getPastEvents(contract, eventName, {filter, fromBlock = 0,
         filter,
       })
       .then((events) => {
-        if (events.some(({event}) => event === undefined)) {
-          console.warn("Failed to get log values for event", {eventName, filter, events});
+        if (events.some(({ event }) => event === undefined)) {
+          console.warn("Failed to get log values for event", { eventName, filter, events });
           throw new Error("Failed to get log values for event");
         }
 
@@ -22,7 +22,7 @@ export async function getPastEvents(contract, eventName, {filter, fromBlock = 0,
   );
 }
 
-async function promiseRetry(promise, {maxAttempts = 5, delay = 1000, shouldRetry = () => true} = {}) {
+async function promiseRetry(promise, { maxAttempts = 5, delay = 1000, shouldRetry = () => true } = {}) {
   let count = 0;
   let result;
   let succeeded = false;

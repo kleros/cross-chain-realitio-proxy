@@ -2,7 +2,7 @@ const path = require("path");
 const webpack = require("webpack");
 const slsw = require("serverless-webpack");
 const nodeExternals = require("webpack-node-externals");
-const {CleanWebpackPlugin} = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = (async () => {
   const accountId = await slsw.lib.serverless.providers.aws.getAccountId();

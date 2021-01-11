@@ -1,10 +1,10 @@
 import ForeignProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json";
-import {compose, filter, into, map, path, prop, propEq} from "ramda";
-import {createBatchSend} from "~/shared/batchSend";
-import {getContract} from "~/shared/contract";
-import {getPastEvents} from "~/shared/events";
+import { compose, filter, into, map, path, prop, propEq } from "ramda";
+import { createBatchSend } from "~/shared/batchSend";
+import { getContract } from "~/shared/contract";
+import { getPastEvents } from "~/shared/events";
 import * as P from "~/shared/promise";
-import {foreignWeb3 as web3} from "~/shared/web3";
+import { foreignWeb3 as web3 } from "~/shared/web3";
 
 const FOREIGN_TX_BATCHER_CONTRACT_ADDRESS = process.env.FOREIGN_TX_BATCHER_CONTRACT_ADDRESS;
 
@@ -33,8 +33,8 @@ export default async function createApiInstance() {
     };
   }
 
-  async function getRequestedArbitrations({fromBlock = 0, toBlock = "latest"} = {}) {
-    const events = await getPastEvents(foreignProxy, "ArbitrationRequested", {fromBlock, toBlock});
+  async function getRequestedArbitrations({ fromBlock = 0, toBlock = "latest" } = {}) {
+    const events = await getPastEvents(foreignProxy, "ArbitrationRequested", { fromBlock, toBlock });
 
     const allNotifiedRequests = await P.allSettled(
       map(compose(getArbitrationByQuestionId, path(["returnValues", "_questionID"])), events)

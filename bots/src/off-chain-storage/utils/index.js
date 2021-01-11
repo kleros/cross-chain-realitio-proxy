@@ -1,5 +1,5 @@
-import {DynamoDB} from "aws-sdk";
-import {compose, curry, flatten, join, map, mergeAll, pluck, splitEvery, toPairs} from "ramda";
+import { DynamoDB } from "aws-sdk";
+import { compose, curry, flatten, join, map, mergeAll, pluck, splitEvery, toPairs } from "ramda";
 import * as P from "~/shared/promise";
 
 const DYNAMO_DB_MAX_BATCH_SIZE = 25;
@@ -43,8 +43,8 @@ const buildGenericConditionExpression = curry(function _buildGenericConditionExp
   const buildDescriptors = compose(
     map(([key, value]) => ({
       expr: `#${key} = :${key}`,
-      name: {[`#${key}`]: key},
-      value: {[`:${key}`]: value},
+      name: { [`#${key}`]: key },
+      value: { [`:${key}`]: value },
     })),
     toPairs
   );
@@ -73,8 +73,8 @@ export function buildSetUpdateExpression(obj) {
   const buildDescriptors = compose(
     map(([key, value]) => ({
       expr: `#${key} = :${key}`,
-      name: {[`#${key}`]: key},
-      value: {[`:${key}`]: value},
+      name: { [`#${key}`]: key },
+      value: { [`:${key}`]: value },
     })),
     toPairs
   );

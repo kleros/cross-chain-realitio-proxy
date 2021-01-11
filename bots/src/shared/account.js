@@ -1,4 +1,4 @@
-import {S3} from "aws-sdk";
+import { S3 } from "aws-sdk";
 
 const s3 = new S3();
 
@@ -25,6 +25,6 @@ async function getPrivateKey() {
     })
     .promise();
 
-  const {privateKey} = JSON.parse(data.Body?.toString("utf8") ?? "{}");
+  const { privateKey } = JSON.parse(data.Body?.toString("utf8") ?? "{}");
   return privateKey;
 }

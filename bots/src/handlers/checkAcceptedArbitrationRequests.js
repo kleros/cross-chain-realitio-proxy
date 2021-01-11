@@ -1,12 +1,12 @@
-import {andThen, cond, map, pick, pipeWith, prop, reduceBy} from "ramda";
-import {getBlockHeight, updateBlockHeight} from "~/off-chain-storage/chainMetadata";
-import {fetchRequestsByChainId, removeRequest, saveRequests, updateRequest} from "~/off-chain-storage/requests";
-import {Status} from "~/on-chain-api/foreign-chain/entities";
+import { andThen, cond, map, pick, pipeWith, prop, reduceBy } from "ramda";
+import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
+import { fetchRequestsByChainId, removeRequest, saveRequests, updateRequest } from "~/off-chain-storage/requests";
+import { Status } from "~/on-chain-api/foreign-chain/entities";
 import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 
-export default async function checkAcceptedArbitrationRequests({foreignChainApi}) {
+export default async function checkAcceptedArbitrationRequests({ foreignChainApi }) {
   const chainId = await foreignChainApi.getChainId();
 
   await checkNewRequestedArbitrations();
@@ -18,13 +18,13 @@ export default async function checkAcceptedArbitrationRequests({foreignChainApi}
       foreignChainApi.getBlockNumber(),
     ]);
 
-    const newArbitrationRequests = await foreignChainApi.getRequestedArbitrations({fromBlock, toBlock});
+    const newArbitrationRequests = await foreignChainApi.getRequestedArbitrations({ fromBlock, toBlock });
 
     await saveRequests(newArbitrationRequests);
 
     const blockHeight = toBlock + 1;
-    await updateBlockHeight({key: "ACCEPTED_ARBITRATION_REQUESTS", blockHeight});
-    console.info({blockHeight}, "Set ACCEPTED_ARBITRATION_REQUESTS block height");
+    await updateBlockHeight({ key: "ACCEPTED_ARBITRATION_REQUESTS", blockHeight });
+    console.info({ blockHeight }, "Set ACCEPTED_ARBITRATION_REQUESTS block height");
 
     const stats = {
       data: map(pick(["questionId", "chainId", "status"]), newArbitrationRequests),
@@ -87,9 +87,9 @@ export default async function checkAcceptedArbitrationRequests({foreignChainApi}
       ]),
     ]);
 
-    const requestedArbitrations = await fetchRequestsByChainId({chainId});
+    const requestedArbitrations = await fetchRequestsByChainId({ chainId });
 
-    console.info({data: map(prop("questionId"), requestedArbitrations)}, "Fetched requested arbitrations");
+    console.info({ data: map(prop("questionId"), requestedArbitrations) }, "Fetched requested arbitrations");
 
     const results = await P.allSettled(map(pipeline, requestedArbitrations));
 
@@ -110,7 +110,7 @@ export default async function checkAcceptedArbitrationRequests({foreignChainApi}
   }
 
   async function fetchOnChainCounterpart(offChainArbitration) {
-    const {questionId} = offChainArbitration;
+    const { questionId } = offChainArbitration;
 
     const onChainArbitration = await foreignChainApi.getArbitrationByQuestionId(questionId);
 

@@ -1,15 +1,15 @@
-import {andThen, cond, map, pipeWith, prop, reduceBy} from "ramda";
-import {fetchRequestsByChainId, updateRequest, removeRequest} from "~/off-chain-storage/requests";
-import {Status} from "~/on-chain-api/home-chain/entities";
+import { andThen, cond, map, pipeWith, prop, reduceBy } from "ramda";
+import { fetchRequestsByChainId, updateRequest, removeRequest } from "~/off-chain-storage/requests";
+import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 
-export default async function checkArbitrationAnswers({homeChainApi}) {
+export default async function checkArbitrationAnswers({ homeChainApi }) {
   const chainId = await homeChainApi.getChainId();
 
   async function fetchOnChainCounterpart(offChainRequest) {
-    const {questionId} = offChainRequest;
+    const { questionId } = offChainRequest;
 
     const onChainRequest = await homeChainApi.getRequestByQuestionId(questionId);
 
@@ -55,10 +55,10 @@ export default async function checkArbitrationAnswers({homeChainApi}) {
     }),
   ]);
 
-  const requestsWithRuling = await fetchRequestsByChainId({status: Status.Ruled, chainId});
+  const requestsWithRuling = await fetchRequestsByChainId({ status: Status.Ruled, chainId });
 
   console.info(
-    {data: map(prop("questionId"), requestsWithRuling)},
+    { data: map(prop("questionId"), requestsWithRuling) },
     "Fetched requests which received the arbitration ruling"
   );
 

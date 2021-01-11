@@ -1,11 +1,11 @@
 import HomeProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioHomeArbitrationProxy.sol/RealitioHomeArbitrationProxy.json";
 import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/dependencies/RealitioInterface.sol/RealitioInterface.json";
-import {compose, descend, filter, into, map, path, prop, propEq, sort} from "ramda";
-import {createBatchSend} from "~/shared/batchSend";
-import {getContract} from "~/shared/contract";
-import {getPastEvents} from "~/shared/events";
+import { compose, descend, filter, into, map, path, prop, propEq, sort } from "ramda";
+import { createBatchSend } from "~/shared/batchSend";
+import { getContract } from "~/shared/contract";
+import { getPastEvents } from "~/shared/events";
 import * as P from "~/shared/promise";
-import {homeWeb3 as web3} from "~/shared/web3";
+import { homeWeb3 as web3 } from "~/shared/web3";
 
 const HOME_TX_BATCHER_CONTRACT_ADDRESS = process.env.HOME_TX_BATCHER_CONTRACT_ADDRESS;
 
@@ -40,8 +40,8 @@ export default async function createApiInstance() {
     };
   }
 
-  async function getNotifiedRequests({fromBlock = 0, toBlock = "latest"} = {}) {
-    const events = await getPastEvents(homeProxy, "RequestNotified", {fromBlock, toBlock});
+  async function getNotifiedRequests({ fromBlock = 0, toBlock = "latest" } = {}) {
+    const events = await getPastEvents(homeProxy, "RequestNotified", { fromBlock, toBlock });
 
     const allNotifiedRequests = await P.allSettled(
       map(compose(getRequestByQuestionId, path(["returnValues", "_questionID"])), events)
@@ -52,8 +52,8 @@ export default async function createApiInstance() {
     return into([], onlyFulfilled, allNotifiedRequests);
   }
 
-  async function getRejectedRequests({fromBlock = 0, toBlock = "latest"} = {}) {
-    const events = await getPastEvents(homeProxy, "RequestRejected", {fromBlock, toBlock});
+  async function getRejectedRequests({ fromBlock = 0, toBlock = "latest" } = {}) {
+    const events = await getPastEvents(homeProxy, "RequestRejected", { fromBlock, toBlock });
 
     const allRejectedRequests = await P.allSettled(
       map(compose(getRequestByQuestionId, path(["returnValues", "_questionID"])), events)
@@ -100,8 +100,8 @@ export default async function createApiInstance() {
   }
 
   async function reportArbitrationAnswer(request) {
-    const {questionId} = request;
-    const {historyHash, answerOrCommitmentID, answerer} = await _getLatestAnswerParams(questionId);
+    const { questionId } = request;
+    const { historyHash, answerOrCommitmentID, answerer } = await _getLatestAnswerParams(questionId);
 
     await batchSend({
       args: [questionId, historyHash, answerOrCommitmentID, answerer],

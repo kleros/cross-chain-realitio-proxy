@@ -1,5 +1,5 @@
 import doCreateBatchSend from "web3-batched-send";
-import {getDefaultAccount} from "./account";
+import { getDefaultAccount } from "./account";
 
 const DEBOUNCE_PERIOD = 10000; // milliseconds
 

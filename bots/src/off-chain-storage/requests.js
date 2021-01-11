@@ -1,7 +1,7 @@
-import {compose, map, pick} from "ramda";
-import {buildKeyConditionExpression, buildSetUpdateExpression, createEnhancedClient} from "./utils";
+import { compose, map, pick } from "ramda";
+import { buildKeyConditionExpression, buildSetUpdateExpression, createEnhancedClient } from "./utils";
 
-const {client, batchWrite} = createEnhancedClient();
+const { client, batchWrite } = createEnhancedClient();
 
 const requestsTable = process.env.REQUESTS_TABLE_NAME;
 
@@ -53,31 +53,31 @@ export async function deleteAllRequests() {
   return compose(batchWrite(requestsTable), map(createDeleteRequest))(requestIds);
 }
 
-export async function fetchRequestsByChainIdAndStatus({chainId, status}) {
+export async function fetchRequestsByChainIdAndStatus({ chainId, status }) {
   const data = await client
     .query({
       TableName: requestsTable,
       IndexName: "byChainIdAndStatus",
-      ...buildKeyConditionExpression({chainId, status}),
+      ...buildKeyConditionExpression({ chainId, status }),
     })
     .promise();
 
   return data.Items;
 }
 
-export async function fetchRequestsByChainId({chainId}) {
+export async function fetchRequestsByChainId({ chainId }) {
   const data = await client
     .query({
       TableName: requestsTable,
       IndexName: "byChainIdAndStatus",
-      ...buildKeyConditionExpression({chainId}),
+      ...buildKeyConditionExpression({ chainId }),
     })
     .promise();
 
   return data.Items;
 }
 
-export async function updateRequest({questionId, chainId, ...attrs}) {
+export async function updateRequest({ questionId, chainId, ...attrs }) {
   const data = await client
     .update({
       TableName: requestsTable,
@@ -93,7 +93,7 @@ export async function updateRequest({questionId, chainId, ...attrs}) {
   return data.Attributes;
 }
 
-export async function removeRequest({questionId, chainId}) {
+export async function removeRequest({ questionId, chainId }) {
   const data = await client
     .delete({
       TableName: requestsTable,

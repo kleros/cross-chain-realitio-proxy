@@ -1,12 +1,12 @@
-import {andThen, cond, map, pick, pipeWith, prop, reduceBy} from "ramda";
-import {getBlockHeight, updateBlockHeight} from "~/off-chain-storage/chainMetadata";
-import {fetchRequestsByChainIdAndStatus, saveRequests, updateRequest} from "~/off-chain-storage/requests";
-import {Status} from "~/on-chain-api/home-chain/entities";
+import { andThen, cond, map, pick, pipeWith, prop, reduceBy } from "ramda";
+import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
+import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
+import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 
-export default async function checkRejectedRequests({homeChainApi}) {
+export default async function checkRejectedRequests({ homeChainApi }) {
   const chainId = await homeChainApi.getChainId();
 
   await checkNewRejectedRequests();
@@ -18,13 +18,13 @@ export default async function checkRejectedRequests({homeChainApi}) {
       homeChainApi.getBlockNumber(),
     ]);
 
-    const newRequests = await homeChainApi.getRejectedRequests({fromBlock, toBlock});
+    const newRequests = await homeChainApi.getRejectedRequests({ fromBlock, toBlock });
 
     await saveRequests(newRequests);
 
     const blockHeight = toBlock + 1;
-    await updateBlockHeight({key: "REJECTED_REQUESTS", blockHeight});
-    console.info({blockHeight}, "Set REJECTED_REQUESTS block height");
+    await updateBlockHeight({ key: "REJECTED_REQUESTS", blockHeight });
+    console.info({ blockHeight }, "Set REJECTED_REQUESTS block height");
 
     const stats = {
       data: map(pick(["questionId", "chainId", "status"]), newRequests),
@@ -65,9 +65,9 @@ export default async function checkRejectedRequests({homeChainApi}) {
       ]),
     ]);
 
-    const rejectedRequests = await fetchRequestsByChainIdAndStatus({status: Status.Rejected, chainId});
+    const rejectedRequests = await fetchRequestsByChainIdAndStatus({ status: Status.Rejected, chainId });
 
-    console.info({data: map(prop("questionId"), rejectedRequests)}, "Fetched rejected requests");
+    console.info({ data: map(prop("questionId"), rejectedRequests) }, "Fetched rejected requests");
 
     const results = await P.allSettled(map(pipeline, rejectedRequests));
 
@@ -88,7 +88,7 @@ export default async function checkRejectedRequests({homeChainApi}) {
   }
 
   async function fetchOnChainCounterpart(offChainRequest) {
-    const {questionId} = offChainRequest;
+    const { questionId } = offChainRequest;
 
     const onChainRequest = await homeChainApi.getRequestByQuestionId(questionId);
 

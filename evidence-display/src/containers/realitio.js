@@ -1,12 +1,12 @@
-import React, {Component} from "react";
+import React, { Component } from "react";
 import t from "prop-types";
 import styled from "styled-components/macro";
+import { withErrorBoundary } from "react-error-boundary";
 import Web3 from "web3";
-import {withErrorBoundary} from "react-error-boundary";
-import RealitioHomeArbitrationProxy from "@kleros/cross-chain-realitio-contracts/artifacts/RealitioHomeArbitrationProxy.json";
-import RealitioForeignArbitrationProxy from "@kleros/cross-chain-realitio-contracts/artifacts/RealitioForeignArbitrationProxy.json";
-import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/RealitioInterface.json";
-import RealitioLogo from "../assets/images/realitio_logo.png";
+import RealitioForeignArbitrationProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json";
+import RealitioHomeArbitrationProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioHomeArbitrationProxy.sol/RealitioHomeArbitrationProxy.json";
+import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/dependencies/RealitioInterface.sol/RealitioInterface.json";
+import RealityEthLogo from "../assets/images/reality_eth_logo.png";
 
 const homeRpcEndpoint = process.env.REACT_APP_HOME_CHAIN_RPC_ENDPOINT;
 const homeWeb3 = new Web3(homeRpcEndpoint);
@@ -17,21 +17,21 @@ const foreignWeb3 = new Web3(foreignRpcEndpoint);
 class RealitioDisplayInterface extends Component {
   constructor() {
     super();
-    this.state = {question: null, error: null};
+    this.state = { question: null, error: null };
   }
 
   async componentDidMount() {
     if (window.location.search[0] !== "?") {
-      this.setState({error: new Error("Missing dispute params")});
+      this.setState({ error: new Error("Missing dispute params") });
       return;
     }
 
     const message = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
 
-    const {arbitrableContractAddress, disputeID} = message;
+    const { arbitrableContractAddress, disputeID } = message;
 
     if (!arbitrableContractAddress || !disputeID) {
-      this.setState({error: new Error("Missing dispute params")});
+      this.setState({ error: new Error("Missing dispute params") });
       return;
     }
 
@@ -51,7 +51,7 @@ class RealitioDisplayInterface extends Component {
     });
 
     if (arbitrationCreatedLogs.length !== 1) {
-      this.setState({error: new Error("Could not find the dispute")});
+      this.setState({ error: new Error("Could not find the dispute") });
       return;
     }
 
@@ -71,11 +71,14 @@ class RealitioDisplayInterface extends Component {
     const questionText = questionEventLog[0].returnValues.question.split("\u241f");
     question.text = questionText[0];
 
-    this.setState({question});
+    const user = questionEventLog[0].returnValues.user;
+    question.user = user;
+
+    this.setState({ question });
   }
 
   render() {
-    const {question, error} = this.state;
+    const { question, error } = this.state;
     if (error) {
       throw error;
     }
@@ -85,18 +88,26 @@ class RealitioDisplayInterface extends Component {
         <Header>
           <SquareLeft />
           <SquareRight />
-          <img src={RealitioLogo} />
+          <img src={RealityEthLogo} />
         </Header>
         {question ? (
           <>
             <QuestionText>{question.text}</QuestionText>
             <QuestionLink
-              href={`https://realitio.github.io/#!/question/${question.questionID}`}
+              href={`https://reality.eth.link/app/#!/question/${question.questionID}/network/100`}
               target="_blank"
               rel="noopener noreferrer"
             >
               Question Details
             </QuestionLink>
+            <QuestionDisclaimer>
+              This realitio dispute has been created by Omen, we advise you to read the Omen Rules and consult the
+              evidence provided in the{" "}
+              <a href={`https://omen.eth.link/#/${question.user}`} target="_blank" rel="noreferrer noopener">
+                Market Comments
+              </a>
+              .
+            </QuestionDisclaimer>
           </>
         ) : (
           <QuestionText>Loading question details...</QuestionText>
@@ -106,15 +117,15 @@ class RealitioDisplayInterface extends Component {
   }
 }
 
-export default withErrorBoundary(RealitioDisplayInterface, {FallbackComponent: ErrorFallback});
+export default withErrorBoundary(RealitioDisplayInterface, { FallbackComponent: ErrorFallback });
 
-function ErrorFallback({error}) {
+function ErrorFallback({ error }) {
   return (
     <div>
       <Header>
         <SquareLeft />
         <SquareRight />
-        <img src={RealitioLogo} />
+        <img src={RealityEthLogo} />
       </Header>
       <ErrorText>Error: {error.message}</ErrorText>
     </div>
@@ -133,6 +144,10 @@ const QuestionText = styled.div`
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.65);
   background-color: #fff;
+`;
+
+const QuestionDisclaimer = styled(QuestionText)`
+  font-size: 18px;
 `;
 
 const ErrorText = styled(QuestionText)`
@@ -156,8 +171,8 @@ const Header = styled.div`
   overflow-x: hidden;
 
   img {
-    height: 50%;
-    margin: 16px;
+    height: 100%;
+    margin: 0;
   }
 `;
 

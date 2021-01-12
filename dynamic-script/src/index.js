@@ -1,8 +1,8 @@
 const Web3 = require("web3");
 const rcQuestion = require("@realitio/realitio-lib/formatters/question.js");
-const RealitioForeignArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/RealitioForeignArbitrationProxy.json");
-const RealitioHomeArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/RealitioHomeArbitrationProxy.json");
-const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/RealitioInterface.json");
+const RealitioForeignArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json");
+const RealitioHomeArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioHomeArbitrationProxy.sol/RealitioHomeArbitrationProxy.json");
+const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/src/dependencies/RealitioInterface.sol/RealitioInterface.json");
 
 const homeRpcEndpoint = process.env.HOME_CHAIN_RPC_ENDPOINT;
 const homeWeb3 = new Web3(homeRpcEndpoint);
@@ -37,7 +37,7 @@ module.exports = async function getMetaEvidence() {
     toBlock: "latest",
   });
 
-  if(arbitrationCreatedLogs.length != 1) {
+  if (arbitrationCreatedLogs.length != 1) {
     return rejectScript("Could not find the dispute");
   }
 

@@ -15,6 +15,10 @@ import "@kleros/ethereum-libraries/contracts/CappedMath.sol";
 import "./dependencies/IAMB.sol";
 import "./ArbitrationProxyInterfaces.sol";
 
+/**
+ * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
+ * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
+ */
 contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver {
     using CappedMath for uint256;
 
@@ -61,7 +65,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     uint64 private winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
     uint64 private loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
 
-    mapping(uint256 => Arbitration) public arbitrations; // Maps arbitration ID to its data.
+    mapping(uint256 => Arbitration) public questionIDToArbitration; // Maps arbitration ID to its data.
     mapping(uint256 => uint256) public override externalIDtoLocalID; // Maps external dispute ids to local dispute(arbitration) ids.
 
     /* Events */
@@ -213,7 +217,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable onlyIfInitialized {
-        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
+        Arbitration storage arbitration = questionIDToArbitration[uint256(_questionID)];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -236,7 +240,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      */
     function acknowledgeArbitration(bytes32 _questionID) external override onlyHomeProxy {
         uint256 arbitrationID = uint256(_questionID);
-        Arbitration storage arbitration = arbitrations[arbitrationID];
+        Arbitration storage arbitration = questionIDToArbitration[arbitrationID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -276,12 +280,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external override onlyHomeProxy {
-        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
+        Arbitration storage arbitration = questionIDToArbitration[uint256(_questionID)];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         arbitration.requester.send(arbitration.deposit);
 
-        delete arbitrations[uint256(_questionID)];
+        delete questionIDToArbitration[uint256(_questionID)];
 
         emit ArbitrationCanceled(_questionID);
     }
@@ -291,12 +295,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _questionID The ID of the question.
      */
     function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
-        Arbitration storage arbitration = arbitrations[uint256(_questionID)];
+        Arbitration storage arbitration = questionIDToArbitration[uint256(_questionID)];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
         arbitration.requester.send(arbitration.deposit);
 
-        delete arbitrations[uint256(_questionID)];
+        delete questionIDToArbitration[uint256(_questionID)];
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
@@ -316,7 +320,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @return Whether the answer was fully funded or not.
      */
     function fundAppeal(uint256 _arbitrationID, uint256 _answer) external payable override returns (bool) {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+        Arbitration storage arbitration = questionIDToArbitration[_arbitrationID];
         require(arbitration.status == Status.Created, "No dispute to appeal.");
         (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitrator.appealPeriod(arbitration.disputeID);
         require(block.timestamp >= appealPeriodStart && block.timestamp < appealPeriodEnd, "Appeal period is over.");
@@ -381,7 +385,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _round,
         uint256 _answer
     ) public override returns (uint256 reward) {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+        Arbitration storage arbitration = questionIDToArbitration[_arbitrationID];
         Round storage round = arbitration.rounds[_round];
         require(arbitration.status == Status.Ruled, "Dispute not resolved");
         // Allow to reimburse if funding of the round was unsuccessful.
@@ -441,7 +445,11 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         address payable _beneficiary,
         uint256[] memory _contributedTo
     ) external override {
-        for (uint256 roundNumber = 0; roundNumber < arbitrations[_arbitrationID].rounds.length; roundNumber++) {
+        for (
+            uint256 roundNumber = 0;
+            roundNumber < questionIDToArbitration[_arbitrationID].rounds.length;
+            roundNumber++
+        ) {
             withdrawFeesAndRewardsForMultipleRulings(_arbitrationID, _beneficiary, roundNumber, _contributedTo);
         }
     }
@@ -452,7 +460,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _evidenceURI Link to evidence.
      */
     function submitEvidence(uint256 _arbitrationID, string calldata _evidenceURI) external override {
-        Arbitration storage arbitration = arbitrations[_arbitrationID];
+        Arbitration storage arbitration = questionIDToArbitration[_arbitrationID];
         require(arbitration.status == Status.Created, "The status should be Created.");
         if (bytes(_evidenceURI).length > 0) emit Evidence(arbitrator, _arbitrationID, msg.sender, _evidenceURI);
     }
@@ -465,7 +473,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      */
     function rule(uint256 _disputeID, uint256 _ruling) external override onlyArbitrator {
         uint256 arbitrationID = externalIDtoLocalID[_disputeID];
-        Arbitration storage arbitration = arbitrations[arbitrationID];
+        Arbitration storage arbitration = questionIDToArbitration[arbitrationID];
         require(arbitration.status == Status.Created, "Invalid arbitration status");
         uint256 finalRuling = _ruling;
 
@@ -530,7 +538,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @return The number of rounds.
      */
     function getNumberOfRounds(uint256 _arbitrationID) external view returns (uint256) {
-        return arbitrations[_arbitrationID].rounds.length;
+        return questionIDToArbitration[_arbitrationID].rounds.length;
     }
 
     /**
@@ -550,7 +558,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             uint256[] memory fundedAnswers
         )
     {
-        Round storage round = arbitrations[_arbitrationID].rounds[_round];
+        Round storage round = questionIDToArbitration[_arbitrationID].rounds[_round];
         fundedAnswers = round.fundedAnswers;
 
         paidFees = new uint256[](round.fundedAnswers.length);
@@ -575,7 +583,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _round,
         uint256 _answer
     ) external view returns (uint256 raised, bool fullyFunded) {
-        Round storage round = arbitrations[_arbitrationID].rounds[_round];
+        Round storage round = questionIDToArbitration[_arbitrationID].rounds[_round];
         raised = round.paidFees[_answer];
         fullyFunded = round.hasPaid[_answer];
     }
@@ -593,7 +601,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _round,
         address _contributor
     ) external view returns (uint256[] memory fundedAnswers, uint256[] memory contributions) {
-        Round storage round = arbitrations[_arbitrationID].rounds[_round];
+        Round storage round = questionIDToArbitration[_arbitrationID].rounds[_round];
         fundedAnswers = round.fundedAnswers;
         contributions = new uint256[](round.fundedAnswers.length);
         for (uint256 i = 0; i < contributions.length; i++) {

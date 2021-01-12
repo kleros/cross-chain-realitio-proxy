@@ -118,7 +118,7 @@ it("Should set correct values when requesting arbitration and fire the event", a
     .to.emit(foreignProxy, "ArbitrationRequested")
     .withArgs(questionID, answer, await requester.getAddress());
 
-  const arbitration = await foreignProxy.arbitrations(0);
+  const arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
   expect(arbitration[1]).to.equal(await requester.getAddress(), "Incorrect requester address");
   expect(arbitration[2]).to.equal(1000, "Deposit value stored incorrectly");
@@ -147,7 +147,7 @@ it("Should set correct values when acknowledging arbitration and create a disput
     .to.emit(homeProxy, "RequestAcknowledged")
     .withArgs(questionID);
 
-  const arbitration = await foreignProxy.arbitrations(0);
+  const arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(2, "Incorrect status of the arbitration after acknowledging arbitration");
   expect(arbitration[2]).to.equal(0, "Deposit value should be empty");
   expect(arbitration[3]).to.equal(2, "Incorrect dispute ID");
@@ -187,7 +187,7 @@ it("Should cancel arbitration correctly", async () => {
   const newBalance = await requester.getBalance();
   expect(newBalance).to.equal(oldBalance.add(5555), "Requester was not reimbursed correctly");
 
-  const arbitration = await foreignProxy.arbitrations(0);
+  const arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(0, "Status should be empty");
   expect(arbitration[1]).to.equal(ZERO_ADDRESS, "Requester should be empty");
   expect(arbitration[2]).to.equal(0, "Deposit should be empty");
@@ -210,7 +210,7 @@ it("Should correctly handle failed dispute creation", async () => {
     .to.emit(homeProxy, "RequestAcknowledged")
     .withArgs(questionID);
 
-  let arbitration = await foreignProxy.arbitrations(0);
+  let arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(4, "Status should be Failed");
 
   await expect(foreignProxy.handleFailedDisputeCreation(questionID))
@@ -224,7 +224,7 @@ it("Should correctly handle failed dispute creation", async () => {
   const newBalance = await requester.getBalance();
   expect(newBalance).to.equal(oldBalance.add(arbitrationCost), "Requester was not reimbursed correctly");
 
-  arbitration = await foreignProxy.arbitrations(0);
+  arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(0, "Status should be empty");
   expect(arbitration[1]).to.equal(ZERO_ADDRESS, "Requester should be empty");
   expect(arbitration[2]).to.equal(0, "Deposit should be empty");
@@ -245,7 +245,7 @@ it("Should handle the ruling correctly", async () => {
     .to.emit(foreignProxy, "Ruling")
     .withArgs(arbitrator.address, 2, 8);
 
-  const arbitration = await foreignProxy.arbitrations(0);
+  const arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(3, "Status should be Ruled");
   expect(arbitration[4]).to.equal(7, "Stored answer is incorrect");
 
@@ -471,7 +471,7 @@ it("Should correctly withdraw appeal fees if a dispute had winner/loser", async 
 
   let ruling = (await arbitrator.currentRuling(2)) - 1;
 
-  const arbitration = await foreignProxy.arbitrations(0);
+  const arbitration = await foreignProxy.questionIDToArbitration(0);
   expect(arbitration[0]).to.equal(3, "Status should be Ruled");
   expect(arbitration[4]).to.equal(ruling, "Stored answer is incorrect");
 
@@ -737,7 +737,7 @@ it("Should switch the ruling if the loser paid appeal fees while winner did not"
   await time.increase(appealTimeOut + 1);
   await arbitrator.executeRuling(2);
 
-  const arbitration = await foreignProxy.arbitrations(arbitrationID);
+  const arbitration = await foreignProxy.questionIDToArbitration(arbitrationID);
   expect(arbitration[0]).to.equal(3, "Status should be Ruled");
   expect(arbitration[4]).to.equal(50, "The answer should be 50");
 });

@@ -16,6 +16,10 @@ import "@kleros/erc-792/contracts/erc-1497/IEvidence.sol";
 import "./dependencies/IAMB.sol";
 import "./ArbitrationProxyInterfaces.sol";
 
+/**
+ * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
+ * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
+ */
 contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrable, IEvidence {
     /// @dev The contract governor. TRUSTED.
     address public governor = msg.sender;
@@ -56,7 +60,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
     }
 
     /// @dev Tracks arbitration requests for question ID.
-    mapping(bytes32 => Arbitration) public arbitrations;
+    mapping(bytes32 => Arbitration) public questionIDToArbitration;
 
     /// @dev Associates dispute IDs to question IDs.
     mapping(uint256 => bytes32) public disputeIDToQuestionID;
@@ -180,7 +184,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable onlyIfInitialized {
-        Arbitration storage arbitration = arbitrations[_questionID];
+        Arbitration storage arbitration = questionIDToArbitration[_questionID];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -202,7 +206,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _questionID The ID of the question.
      */
     function acknowledgeArbitration(bytes32 _questionID) external override onlyHomeProxy {
-        Arbitration storage arbitration = arbitrations[_questionID];
+        Arbitration storage arbitration = questionIDToArbitration[_questionID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -240,12 +244,12 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _questionID The ID of the question.
      */
     function cancelArbitration(bytes32 _questionID) external override onlyHomeProxy {
-        Arbitration storage arbitration = arbitrations[_questionID];
+        Arbitration storage arbitration = questionIDToArbitration[_questionID];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         arbitration.requester.send(arbitration.deposit);
 
-        delete arbitrations[_questionID];
+        delete questionIDToArbitration[_questionID];
 
         emit ArbitrationCanceled(_questionID);
     }
@@ -255,12 +259,12 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _questionID The ID of the question.
      */
     function handleFailedDisputeCreation(bytes32 _questionID) external onlyIfInitialized {
-        Arbitration storage arbitration = arbitrations[_questionID];
+        Arbitration storage arbitration = questionIDToArbitration[_questionID];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
         arbitration.requester.send(arbitration.deposit);
 
-        delete arbitrations[_questionID];
+        delete questionIDToArbitration[_questionID];
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID);
@@ -275,7 +279,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      * @param _evidenceURI Link to evidence.
      */
     function submitEvidence(bytes32 _questionID, string calldata _evidenceURI) external {
-        Arbitration storage arbitration = arbitrations[_questionID];
+        Arbitration storage arbitration = questionIDToArbitration[_questionID];
         require(arbitration.status == Status.Created, "The status should be Created.");
 
         if (bytes(_evidenceURI).length > 0) {
@@ -291,10 +295,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, IArbitrabl
      */
     function rule(uint256 _disputeID, uint256 _ruling) external override onlyArbitrator {
         bytes32 questionID = disputeIDToQuestionID[_disputeID];
-        Arbitration storage arbitration = arbitrations[questionID];
+        Arbitration storage arbitration = questionIDToArbitration[questionID];
         require(arbitration.status == Status.Created, "Invalid arbitration status");
 
-        delete arbitrations[questionID];
+        delete questionIDToArbitration[questionID];
         delete disputeIDToQuestionID[_disputeID];
 
         // Realitio ruling is shifted by 1 compared to Kleros.

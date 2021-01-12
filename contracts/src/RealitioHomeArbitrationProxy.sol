@@ -14,6 +14,10 @@ import "./dependencies/IAMB.sol";
 import "./dependencies/RealitioInterface.sol";
 import "./ArbitrationProxyInterfaces.sol";
 
+/**
+ * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
+ * @dev This contract is meant to be deployed to side-chains (i.e.: xDAI) in which Reality.eth is been deployed.
+ */
 contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev The contract governor. TRUSTED.
     address public governor = msg.sender;
@@ -237,7 +241,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Report the answer provided by the arbitrator to a specified question.
+     * @notice Report the answer provided by the arbitrator to a specified question.
+     * @dev The Realitio contract validates the input parameters passed to this method, so it is safe to publicly accessible.
      * @param _questionID The ID of the question.
      * @param _lastHistoryHash The history hash given with the last answer to the question in the Realitio contract.
      * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.

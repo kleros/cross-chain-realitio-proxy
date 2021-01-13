@@ -156,7 +156,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
                 request.requester = _requester;
 
                 emit RequestNotified(_questionID, _contestedAnswer, _requester);
-            } catch {
+            } catch { // Will fail if the question has timed out or another request has been processed first.
                 request.status = Status.Rejected;
 
                 emit RequestRejected(_questionID, _contestedAnswer, _requester);

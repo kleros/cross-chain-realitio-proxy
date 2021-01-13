@@ -147,8 +147,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
     /**
      * @notice Sends the arbitration rejection to the Foreign Chain.
-     * @dev Handles arbitration request after it has been rejected due to the quesiton
-     * being finalized or the contested answer being different from the current one.
+     * @dev Handles arbitration request after it has been rejected due to the question
+     * being finalized, the contested answer being different from the current one
+     * or another request for the same question having been processed first.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
@@ -189,7 +190,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /**
      * @dev Receives the answer to a specified question.
      * @param _questionID The ID of the question.
-     * @param _answer The answer from the arbitratior.
+     * @param _answer The answer from the arbitrator.
      */
     function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
         bytes32 contestedAnswer = questionIDToContestedAnswer[_questionID];

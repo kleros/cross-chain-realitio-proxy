@@ -291,17 +291,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     }
 
     /**
-     * @notice Allows to submit evidence for a particular question.
-     * @param _questionID The ID of the arbitration related to the question.
-     * @param _evidenceURI Link to evidence.
-     */
-    function submitEvidence(bytes32 _questionID, string calldata _evidenceURI) external {
-        if (bytes(_evidenceURI).length > 0) {
-            emit Evidence(arbitrator, uint256(_questionID), msg.sender, _evidenceURI);
-        }
-    }
-
-    /**
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */

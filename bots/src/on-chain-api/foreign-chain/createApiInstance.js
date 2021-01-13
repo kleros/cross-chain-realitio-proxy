@@ -23,7 +23,10 @@ export default async function createApiInstance() {
   }
 
   async function getArbitrationByQuestionId(questionId) {
-    const [arbitration, chainId] = await P.all([foreignProxy.methods.arbitrations(questionId).call(), getChainId()]);
+    const [arbitration, chainId] = await P.all([
+      foreignProxy.methods.questionIDToArbitration(questionId).call(),
+      getChainId(),
+    ]);
 
     return {
       questionId,

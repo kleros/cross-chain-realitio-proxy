@@ -118,7 +118,7 @@ it("Should set correct values when requesting arbitration and fire the event", a
     .to.emit(foreignProxy, "ArbitrationRequested")
     .withArgs(questionID, answer, await requester.getAddress());
 
-  const arbitration = await foreignProxy.questionIDToArbitration(0);
+  const arbitration = await foreignProxy.arbitrationRequests(0, answer);
   expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
   expect(arbitration[1]).to.equal(await requester.getAddress(), "Incorrect requester address");
   expect(arbitration[2]).to.equal(1000, "Deposit value stored incorrectly");
@@ -133,21 +133,23 @@ it("Should set correct values when acknowledging arbitration and create a disput
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: oneETH }); // Deliberately overpay
   const oldBalance = await requester.getBalance();
 
-  await expect(foreignProxy.connect(other).acknowledgeArbitration(questionID)).to.be.revertedWith("Only AMB allowed");
+  await expect(foreignProxy.connect(other).acknowledgeArbitration(questionID, answer)).to.be.revertedWith(
+    "Only AMB allowed"
+  );
   // Change metaevidence so the ID is not default value.
   await foreignProxy.changeMetaEvidence("NewMeta");
 
-  await expect(homeProxy.handleNotifiedRequest(questionID))
+  await expect(homeProxy.handleNotifiedRequest(questionID, answer))
     .to.emit(arbitrator, "DisputeCreation")
     .withArgs(2, foreignProxy.address)
     .to.emit(foreignProxy, "ArbitrationCreated")
-    .withArgs(questionID, 2)
+    .withArgs(questionID, answer, 2)
     .to.emit(foreignProxy, "Dispute")
     .withArgs(arbitrator.address, 2, 1, 0) // Arbitrator, DisputeID, MetaevidenceID, ArbitrationID
     .to.emit(homeProxy, "RequestAcknowledged")
-    .withArgs(questionID);
+    .withArgs(questionID, answer);
 
-  const arbitration = await foreignProxy.questionIDToArbitration(0);
+  const arbitration = await foreignProxy.arbitrationRequests(0, answer);
   expect(arbitration[0]).to.equal(2, "Incorrect status of the arbitration after acknowledging arbitration");
   expect(arbitration[2]).to.equal(0, "Deposit value should be empty");
   expect(arbitration[3]).to.equal(2, "Incorrect dispute ID");
@@ -176,55 +178,59 @@ it("Should cancel arbitration correctly", async () => {
     .withArgs(questionID, badAnswer, await requester.getAddress());
 
   const oldBalance = await requester.getBalance();
-  await expect(foreignProxy.connect(other).cancelArbitration(questionID)).to.be.revertedWith("Only AMB allowed");
+  await expect(foreignProxy.connect(other).cancelArbitration(questionID, badAnswer)).to.be.revertedWith(
+    "Only AMB allowed"
+  );
 
-  await expect(homeProxy.handleRejectedRequest(questionID))
+  await expect(homeProxy.handleRejectedRequest(questionID, badAnswer))
     .to.emit(foreignProxy, "ArbitrationCanceled")
-    .withArgs(questionID)
+    .withArgs(questionID, badAnswer)
     .to.emit(homeProxy, "RequestCanceled")
-    .withArgs(questionID);
+    .withArgs(questionID, badAnswer);
 
   const newBalance = await requester.getBalance();
   expect(newBalance).to.equal(oldBalance.add(5555), "Requester was not reimbursed correctly");
 
-  const arbitration = await foreignProxy.questionIDToArbitration(0);
+  const arbitration = await foreignProxy.arbitrationRequests(0, badAnswer);
   expect(arbitration[0]).to.equal(0, "Status should be empty");
   expect(arbitration[1]).to.equal(ZERO_ADDRESS, "Requester should be empty");
   expect(arbitration[2]).to.equal(0, "Deposit should be empty");
 });
 
 it("Should correctly handle failed dispute creation", async () => {
-  await expect(foreignProxy.handleFailedDisputeCreation(questionID)).to.be.revertedWith("Not initialized yet");
+  await expect(foreignProxy.handleFailedDisputeCreation(questionID, answer)).to.be.revertedWith("Not initialized yet");
 
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
   const oldBalance = await requester.getBalance();
-  await expect(foreignProxy.handleFailedDisputeCreation(questionID)).to.be.revertedWith("Invalid arbitration status");
+  await expect(foreignProxy.handleFailedDisputeCreation(questionID, answer)).to.be.revertedWith(
+    "Invalid arbitration status"
+  );
 
   await arbitrator.setArbitrationPrice(2000); // Increase the cost so creation fails.
 
-  await expect(homeProxy.handleNotifiedRequest(questionID))
+  await expect(homeProxy.handleNotifiedRequest(questionID, answer))
     .to.emit(foreignProxy, "ArbitrationFailed")
-    .withArgs(questionID)
+    .withArgs(questionID, answer)
     .to.emit(homeProxy, "RequestAcknowledged")
-    .withArgs(questionID);
+    .withArgs(questionID, answer);
 
-  let arbitration = await foreignProxy.questionIDToArbitration(0);
+  let arbitration = await foreignProxy.arbitrationRequests(0, answer);
   expect(arbitration[0]).to.equal(4, "Status should be Failed");
 
-  await expect(foreignProxy.handleFailedDisputeCreation(questionID))
+  await expect(foreignProxy.handleFailedDisputeCreation(questionID, answer))
     .to.emit(realitio, "MockCancelArbitrationRequest")
     .withArgs(questionID)
     .to.emit(homeProxy, "ArbitrationFailed")
-    .withArgs(questionID)
+    .withArgs(questionID, answer)
     .to.emit(foreignProxy, "ArbitrationCanceled")
-    .withArgs(questionID);
+    .withArgs(questionID, answer);
 
   const newBalance = await requester.getBalance();
   expect(newBalance).to.equal(oldBalance.add(arbitrationCost), "Requester was not reimbursed correctly");
 
-  arbitration = await foreignProxy.questionIDToArbitration(0);
+  arbitration = await foreignProxy.arbitrationRequests(0, answer);
   expect(arbitration[0]).to.equal(0, "Status should be empty");
   expect(arbitration[1]).to.equal(ZERO_ADDRESS, "Requester should be empty");
   expect(arbitration[2]).to.equal(0, "Deposit should be empty");
@@ -234,7 +240,7 @@ it("Should handle the ruling correctly", async () => {
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
   await expect(foreignProxy.rule(2, 8)).to.be.revertedWith("Only arbitrator allowed");
 
   const arbAnswer = hexZeroPad(7, 32);
@@ -245,14 +251,14 @@ it("Should handle the ruling correctly", async () => {
     .to.emit(foreignProxy, "Ruling")
     .withArgs(arbitrator.address, 2, 8);
 
-  const arbitration = await foreignProxy.questionIDToArbitration(0);
+  const arbitration = await foreignProxy.arbitrationRequests(0, answer);
   expect(arbitration[0]).to.equal(3, "Status should be Ruled");
   expect(arbitration[4]).to.equal(7, "Stored answer is incorrect");
 
   await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZERO_ADDRESS))
     .to.emit(realitio, "MockFinalize")
     .withArgs(questionID, arbAnswer)
-    .to.emit(homeProxy, "ArbitrationCompleted")
+    .to.emit(homeProxy, "ArbitrationFinished")
     .withArgs(questionID);
 });
 
@@ -270,7 +276,7 @@ it("Should correctly fund an appeal and fire the events", async () => {
   await expect(foreignProxy.connect(crowdfunder1).fundAppeal(arbitrationID, 11, { value: 1000 })).to.be.revertedWith(
     "No dispute to appeal."
   );
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
   // Check that can't fund the dispute that is not appealable.
   await expect(foreignProxy.connect(crowdfunder1).fundAppeal(arbitrationID, 11, { value: 1000 })).to.be.revertedWith(
     "Appeal period is over."
@@ -352,7 +358,7 @@ it("Should correctly create and fund subsequent appeal rounds", async () => {
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 21, appealCost, appealTimeOut);
 
@@ -399,7 +405,7 @@ it("Should not fund the appeal after the timeout", async () => {
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 21, appealCost, appealTimeOut);
 
@@ -432,7 +438,7 @@ it("Should correctly withdraw appeal fees if a dispute had winner/loser", async 
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 5, appealCost, appealTimeOut);
 
@@ -471,7 +477,7 @@ it("Should correctly withdraw appeal fees if a dispute had winner/loser", async 
 
   let ruling = (await arbitrator.currentRuling(2)) - 1;
 
-  const arbitration = await foreignProxy.questionIDToArbitration(0);
+  const arbitration = await foreignProxy.arbitrationRequests(0, answer);
   expect(arbitration[0]).to.equal(3, "Status should be Ruled");
   expect(arbitration[4]).to.equal(ruling, "Stored answer is incorrect");
 
@@ -580,7 +586,7 @@ it("Should correctly withdraw appeal fees if the winner did not pay the fees in 
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 20, appealCost, appealTimeOut);
 
@@ -625,7 +631,7 @@ it("Should correctly withdraw appeal fees for multiple answers", async () => {
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 17, appealCost, appealTimeOut);
 
@@ -691,7 +697,7 @@ it("Should correctly withdraw appeal fees for multiple rounds", async () => {
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 3, appealCost, appealTimeOut);
 
@@ -729,7 +735,7 @@ it("Should switch the ruling if the loser paid appeal fees while winner did not"
   await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
   await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
 
   await arbitrator.giveAppealableRuling(2, 14, appealCost, appealTimeOut);
 
@@ -737,7 +743,7 @@ it("Should switch the ruling if the loser paid appeal fees while winner did not"
   await time.increase(appealTimeOut + 1);
   await arbitrator.executeRuling(2);
 
-  const arbitration = await foreignProxy.questionIDToArbitration(arbitrationID);
+  const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, answer);
   expect(arbitration[0]).to.equal(3, "Status should be Ruled");
   expect(arbitration[4]).to.equal(50, "The answer should be 50");
 });
@@ -750,7 +756,7 @@ it("Should correctly submit evidence", async () => {
     "The status should be Created."
   );
 
-  await homeProxy.handleNotifiedRequest(questionID);
+  await homeProxy.handleNotifiedRequest(questionID, answer);
   await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text"))
     .to.emit(foreignProxy, "Evidence")
     .withArgs(arbitrator.address, arbitrationID, await other.getAddress(), "text");
@@ -795,4 +801,19 @@ it("Should make governance changes", async () => {
   await expect(foreignProxy.connect(governor).changeGovernor(await governor.getAddress())).to.be.revertedWith(
     "Only governor allowed"
   );
+});
+
+it("Should forbid requesting arbitration after a dispute has been created for the given question", async () => {
+  await foreignProxy.setHomeProxy(homeProxy.address, homeChainID);
+  await foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost });
+
+  await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text")).to.be.revertedWith(
+    "The status should be Created."
+  );
+
+  await homeProxy.handleNotifiedRequest(questionID, answer);
+
+  expect(
+    foreignProxy.connect(requester).requestArbitration(questionID, answer, { value: arbitrationCost })
+  ).to.be.revertedWith("Dispute already exists");
 });

@@ -37,7 +37,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
 
-    enum Status {None, Rejected, Notified, AwaitingRuling, Ruled}
+    enum Status {None, Rejected, Notified, AwaitingRuling, Ruled, Finished}
 
     struct Request {
         Status status;
@@ -45,58 +45,11 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes32 arbitratorAnswer;
     }
 
-    /// @dev Associates an arbitration request with a question ID.
-    mapping(bytes32 => Request) public questionIDToRequest;
+    /// @dev Associates an arbitration request with a question ID and a contested answer.
+    mapping(bytes32 => mapping(bytes32 => Request)) public requests;
 
-    /**
-     * @notice To be emitted when arbitration request is rejected.
-     * @dev This can happen if the contested answer is different from the current best answer,
-     * if the notification of arbitration request fails or if the question is already finalized.
-     * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be incorrect.
-     * @param _requester The address of the user that requested arbitration.
-     */
-    event RequestRejected(bytes32 indexed _questionID, bytes32 _contestedAnswer, address indexed _requester);
-
-    /**
-     * @notice To be emitted when the Realitio contract has been notified of an arbitration request.
-     * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be incorrect.
-     * @param _requester The address of the user that requested arbitration.
-     */
-    event RequestNotified(bytes32 indexed _questionID, bytes32 _contestedAnswer, address indexed _requester);
-
-    /**
-     * @notice To be emitted when the arbitration request acknowledgement is sent to the Foreign Chain.
-     * @param _questionID The ID of the question.
-     */
-    event RequestAcknowledged(bytes32 indexed _questionID);
-
-    /**
-     * @notice To be emitted when the arbitration request is canceled.
-     * @param _questionID The ID of the question.
-     */
-    event RequestCanceled(bytes32 indexed _questionID);
-
-    /**
-     * @notice To be emitted when the dispute could not be created on the Foreign Chain.
-     * @dev This will happen if the arbitration fee increases in between the arbitration request and acknowledgement.
-     * @param _questionID The ID of the question.
-     */
-    event ArbitrationFailed(bytes32 indexed _questionID);
-
-    /**
-     * @notice To be emitted when receiving the answer from the arbitrator.
-     * @param _questionID The ID of the question.
-     * @param _answer The answer from the arbitrator.
-     */
-    event ArbitratorAnswered(bytes32 indexed _questionID, bytes32 _answer);
-
-    /**
-     * @notice To be emitted when reporting the arbitrator answer to Realitio.
-     * @param _questionID The ID of the question.
-     */
-    event ArbitrationCompleted(bytes32 indexed _questionID);
+    /// @dev Associates a question ID with the contested answer that led to the arbitration be requested.
+    mapping(bytes32 => bytes32) public questionIDToContestedAnswer;
 
     modifier onlyGovernor() {
         require(msg.sender == governor, "Only governor allowed");
@@ -151,13 +104,14 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes32 _contestedAnswer,
         address _requester
     ) external override onlyForeignProxy {
-        Request storage request = questionIDToRequest[_questionID];
+        Request storage request = requests[_questionID][_contestedAnswer];
         require(request.status == Status.None, "Request already exists");
 
         if (realitio.getBestAnswer(_questionID) == _contestedAnswer) {
             try realitio.notifyOfArbitrationRequest(_questionID, _requester, 0) {
                 request.status = Status.Notified;
                 request.requester = _requester;
+                questionIDToContestedAnswer[_questionID] = _contestedAnswer;
 
                 emit RequestNotified(_questionID, _contestedAnswer, _requester);
             } catch {
@@ -176,18 +130,19 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @notice Sends the arbitration acknowledgement to the Foreign Chain.
      * @dev Handles arbitration request after it has been notified to Realitio for a given question.
      * @param _questionID The ID of the question.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function handleNotifiedRequest(bytes32 _questionID) external {
-        Request storage request = questionIDToRequest[_questionID];
+    function handleNotifiedRequest(bytes32 _questionID, bytes32 _contestedAnswer) external override {
+        Request storage request = requests[_questionID][_contestedAnswer];
         require(request.status == Status.Notified, "Invalid request status");
 
         request.status = Status.AwaitingRuling;
 
         bytes4 selector = IForeignArbitrationProxy(0).acknowledgeArbitration.selector;
-        bytes memory data = abi.encodeWithSelector(selector, _questionID);
+        bytes memory data = abi.encodeWithSelector(selector, _questionID, _contestedAnswer);
         amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
 
-        emit RequestAcknowledged(_questionID);
+        emit RequestAcknowledged(_questionID, _contestedAnswer);
     }
 
     /**
@@ -195,34 +150,40 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @dev Handles arbitration request after it has been rejected due to the quesiton
      * being finalized or the contested answer being different from the current one.
      * @param _questionID The ID of the question.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function handleRejectedRequest(bytes32 _questionID) external {
-        Request storage request = questionIDToRequest[_questionID];
+    function handleRejectedRequest(bytes32 _questionID, bytes32 _contestedAnswer) external override {
+        Request storage request = requests[_questionID][_contestedAnswer];
         require(request.status == Status.Rejected, "Invalid request status");
 
         // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
         request.status = Status.None;
 
         bytes4 selector = IForeignArbitrationProxy(0).cancelArbitration.selector;
-        bytes memory data = abi.encodeWithSelector(selector, _questionID);
+        bytes memory data = abi.encodeWithSelector(selector, _questionID, _contestedAnswer);
         amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
 
-        emit RequestCanceled(_questionID);
+        emit RequestCanceled(_questionID, _contestedAnswer);
     }
 
     /**
      * @dev Receives a failed attempt to request arbitration.
      * @param _questionID The ID of the question.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function receiveArbitrationFailure(bytes32 _questionID) external override onlyForeignProxy {
-        Request storage request = questionIDToRequest[_questionID];
+    function receiveArbitrationFailure(bytes32 _questionID, bytes32 _contestedAnswer)
+        external
+        override
+        onlyForeignProxy
+    {
+        Request storage request = requests[_questionID][_contestedAnswer];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
-        delete questionIDToRequest[_questionID];
+        delete requests[_questionID][_contestedAnswer];
 
         realitio.cancelArbitration(_questionID);
 
-        emit ArbitrationFailed(_questionID);
+        emit ArbitrationFailed(_questionID, _contestedAnswer);
     }
 
     /**
@@ -231,7 +192,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _answer The answer from the arbitratior.
      */
     function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
-        Request storage request = questionIDToRequest[_questionID];
+        bytes32 contestedAnswer = questionIDToContestedAnswer[_questionID];
+        Request storage request = requests[_questionID][contestedAnswer];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
         request.status = Status.Ruled;
@@ -254,7 +216,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes32 _lastAnswerOrCommitmentID,
         address _lastAnswerer
     ) external {
-        Request storage request = questionIDToRequest[_questionID];
+        bytes32 contestedAnswer = questionIDToContestedAnswer[_questionID];
+        Request storage request = requests[_questionID][contestedAnswer];
         require(request.status == Status.Ruled, "Arbitrator has not ruled yet");
 
         realitio.assignWinnerAndSubmitAnswerByArbitrator(
@@ -266,8 +229,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
             _lastAnswerer
         );
 
-        delete questionIDToRequest[_questionID];
+        request.status = Status.Finished;
 
-        emit ArbitrationCompleted(_questionID);
+        emit ArbitrationFinished(_questionID);
     }
 }

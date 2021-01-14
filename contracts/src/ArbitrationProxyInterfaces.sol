@@ -71,31 +71,35 @@ interface IHomeArbitrationProxy {
     ) external;
 
     /**
-     * @notice Sends the arbitration acknowledgement to the Foreign Chain.
-     * @dev Handles arbitration request after it has been notified to Realitio for a given question.
+     * @notice Handles arbitration request after it has been notified to Realitio for a given question.
+     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     function handleNotifiedRequest(bytes32 _questionID, bytes32 _contestedAnswer) external;
 
     /**
-     * @notice Sends the arbitration rejection to the Foreign Chain.
-     * @dev Handles arbitration request after it has been rejected due to the quesiton
-     * being finalized or the contested answer being different from the current one.
+     * @notice Handles arbitration request after it has been rejected.
+     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
+     * Reasons why the request might be rejected:
+     *  - The question does not exist
+     *  - The question was not answered yet
+     *  - The contested answer is different from the current best answer
+     *  - Another request was already accepted
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     function handleRejectedRequest(bytes32 _questionID, bytes32 _contestedAnswer) external;
 
     /**
-     * @dev Receives a failed attempt to request arbitration. TRUSTED.
+     * @notice Receives a failed attempt to request arbitration. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     function receiveArbitrationFailure(bytes32 _questionID, bytes32 _contestedAnswer) external;
 
     /**
-     * @dev Receives the answer to a specified question. TRUSTED.
+     * @notice Receives the answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */

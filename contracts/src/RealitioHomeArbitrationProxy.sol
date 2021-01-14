@@ -51,11 +51,6 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the contested answer that led to the arbitration be requested.
     mapping(bytes32 => bytes32) public questionIDToContestedAnswer;
 
-    modifier onlyGovernor() {
-        require(msg.sender == governor, "Only governor allowed");
-        _;
-    }
-
     modifier onlyForeignProxy() {
         require(msg.sender == address(amb), "Only AMB allowed");
         require(amb.messageSourceChainId() == bytes32(foreignChainId), "Only foreign chain allowed");
@@ -66,31 +61,20 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the home chain.
      * @param _amb ArbitraryMessageBridge contract address.
-     * @param _realitio Realitio contract address.
-     */
-    constructor(IAMB _amb, RealitioInterface _realitio) {
-        amb = _amb;
-        realitio = _realitio;
-    }
-
-    /**
-     * @notice Sets the address of a new governor.
-     * @param _governor The address of the new governor.
-     */
-    function setGovernor(address _governor) external onlyGovernor {
-        governor = _governor;
-    }
-
-    /**
-     * @notice Sets the address of the arbitration proxy on the Foreign Chain.
      * @param _foreignProxy The address of the proxy.
      * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
+     * @param _realitio Realitio contract address.
      */
-    function setForeignProxy(address _foreignProxy, uint256 _foreignChainId) external onlyGovernor {
-        require(foreignProxy == address(0), "Foreign proxy already set");
-
+    constructor(
+        IAMB _amb,
+        address _foreignProxy,
+        uint256 _foreignChainId,
+        RealitioInterface _realitio
+    ) {
+        amb = _amb;
         foreignProxy = _foreignProxy;
         foreignChainId = _foreignChainId;
+        realitio = _realitio;
     }
 
     /**
@@ -114,7 +98,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
                 questionIDToContestedAnswer[_questionID] = _contestedAnswer;
 
                 emit RequestNotified(_questionID, _contestedAnswer, _requester);
-            } catch { // Will fail if the question has timed out or another request has been processed first.
+            } catch {
+                // Will fail if the question has timed out or another request has been processed first.
                 request.status = Status.Rejected;
 
                 emit RequestRejected(_questionID, _contestedAnswer, _requester);
@@ -127,8 +112,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Sends the arbitration acknowledgement to the Foreign Chain.
-     * @dev Handles arbitration request after it has been notified to Realitio for a given question.
+     * @notice Handles arbitration request after it has been notified to Realitio for a given question.
+     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
@@ -146,10 +131,13 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Sends the arbitration rejection to the Foreign Chain.
-     * @dev Handles arbitration request after it has been rejected due to the question
-     * being finalized, the contested answer being different from the current one
-     * or another request for the same question having been processed first.
+     * @notice Handles arbitration request after it has been rejected.
+     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
+     * Reasons why the request might be rejected:
+     *  - The question does not exist
+     *  - The question was not answered yet
+     *  - The contested answer is different from the current best answer
+     *  - Another request was already accepted
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
@@ -168,7 +156,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Receives a failed attempt to request arbitration.
+     * @notice Receives a failed attempt to request arbitration.
+     * @dev Currently this can happen only if the arbitration cost increased
+     * in between the arbitration request and its acknowledgement.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
@@ -188,7 +178,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Receives the answer to a specified question.
+     * @notice Receives the answer to a specified question.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
@@ -205,10 +195,12 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
     /**
      * @notice Report the answer provided by the arbitrator to a specified question.
-     * @dev The Realitio contract validates the input parameters passed to this method, so it is safe to publicly accessible.
+     * @dev The Realitio contract validates the input parameters passed to this method,
+     * so it is safe to publicly accessible.
      * @param _questionID The ID of the question.
      * @param _lastHistoryHash The history hash given with the last answer to the question in the Realitio contract.
-     * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.
+     * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment,
+     * to the question in the Realitio contract.
      * @param _lastAnswerer The last answerer to the question in the Realitio contract.
      */
     function reportArbitrationAnswer(

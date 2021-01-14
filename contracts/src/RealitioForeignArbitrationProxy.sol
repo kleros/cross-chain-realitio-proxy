@@ -19,21 +19,6 @@ import "./ArbitrationProxyInterfaces.sol";
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
 contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
-    /// @dev The contract governor. TRUSTED.
-    address public governor = msg.sender;
-
-    /// @dev The address of the arbitrator. TRUSTED.
-    IArbitrator public immutable arbitrator;
-
-    /// @dev The extra data used to raise a dispute in the arbitrator.
-    bytes public arbitratorExtraData;
-
-    /// @dev The ID of the MetaEvidence for disputes.
-    uint256 public metaEvidenceID;
-
-    /// @dev The number of choices for the arbitrator.
-    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 2;
-
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
     IAMB public immutable amb;
 
@@ -42,6 +27,18 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /// @dev The chain ID where the home proxy is deployed.
     uint256 public homeChainId;
+
+    /// @dev The address of the arbitrator. TRUSTED.
+    IArbitrator public immutable arbitrator;
+
+    /// @dev The extra data used to raise a dispute in the arbitrator.
+    bytes public arbitratorExtraData;
+
+    /// @dev The ID of the MetaEvidence for disputes.
+    uint256 public constant META_EVIDENCE_ID = 0;
+
+    /// @dev The number of choices for the arbitrator.
+    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 2;
 
     /// @dev The path for the Terms of Service for Kleros as an arbitrator for Realitio.
     string public termsOfService;
@@ -71,20 +68,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         _;
     }
 
-    modifier onlyGovernor() {
-        require(msg.sender == governor, "Only governor allowed");
-        _;
-    }
-
     modifier onlyHomeProxy() {
         require(msg.sender == address(amb), "Only AMB allowed");
         require(amb.messageSourceChainId() == bytes32(homeChainId), "Only home chain allowed");
         require(amb.messageSender() == homeProxy, "Only home proxy allowed");
-        _;
-    }
-
-    modifier onlyIfInitialized() {
-        require(homeProxy != address(0), "Not initialized yet");
         _;
     }
 
@@ -99,54 +86,23 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
      */
     constructor(
         IAMB _amb,
+        address _homeProxy,
+        uint256 _homeChainId,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         string memory _termsOfService
     ) {
+        require(_homeProxy != address(0), "Invalid Home Proxy");
+
         amb = _amb;
+        homeProxy = _homeProxy;
+        homeChainId = _homeChainId;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
 
-        emit MetaEvidence(metaEvidenceID, _metaEvidence);
-    }
-
-    /**
-     * @notice Changes the address of a new governor.
-     * @param _governor The address of the new governor.
-     */
-    function changeGovernor(address _governor) external onlyGovernor {
-        governor = _governor;
-    }
-
-    /**
-     * @notice Sets the address of the arbitration proxy on the Home Chain.
-     * @param _homeProxy The address of the proxy.
-     * @param _homeChainId The chain ID where the home proxy is deployed.
-     */
-    function setHomeProxy(address _homeProxy, uint256 _homeChainId) external onlyGovernor {
-        require(homeProxy == address(0), "Home proxy already set");
-
-        homeProxy = _homeProxy;
-        homeChainId = _homeChainId;
-    }
-
-    /**
-     * @notice Changes the meta evidence used for disputes.
-     * @param _metaEvidence URI to the new meta evidence file.
-     */
-    function changeMetaEvidence(string calldata _metaEvidence) external onlyGovernor {
-        metaEvidenceID += 1;
-        emit MetaEvidence(metaEvidenceID, _metaEvidence);
-    }
-
-    /**
-     * @notice Changes the terms of service for Realitio.
-     * @param _termsOfService URI to the new Terms of Service file.
-     */
-    function changeTermsOfService(string calldata _termsOfService) external onlyGovernor {
-        termsOfService = _termsOfService;
+        emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
 
     /**
@@ -159,7 +115,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         external
         payable
         override
-        onlyIfInitialized
     {
         require(!questionIDToDisputeExists[_questionID], "Dispute already exists");
 
@@ -210,7 +165,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
                 }
 
                 emit ArbitrationCreated(_questionID, _contestedAnswer, disputeID);
-                emit Dispute(arbitrator, disputeID, metaEvidenceID, uint256(_questionID));
+                emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, uint256(_questionID));
             } catch {
                 arbitration.status = Status.Failed;
                 emit ArbitrationFailed(_questionID, _contestedAnswer);
@@ -245,7 +200,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     function handleFailedDisputeCreation(bytes32 _questionID, bytes32 _contestedAnswer)
         external
         override
-        onlyIfInitialized
     {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_contestedAnswer];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");

@@ -49,11 +49,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     }
 
     address public governor = msg.sender; // The contract governor. TRUSTED.
-    bool public initialized; // Whether the contract has been properly initialized or not.
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
-    uint256 public metaEvidenceID; // The ID of the MetaEvidence for disputes.
+    uint256 public META_EVIDENCE_ID; // The ID of the MetaEvidence for disputes.
 
     IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
     address public homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
@@ -91,15 +90,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         _;
     }
 
-    modifier onlyIfInitialized() {
-        require(homeProxy != address(0), "Not initialized yet");
-        _;
-    }
-
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
      * @dev Contract will still require initialization before being usable.
      * @param _amb ArbitraryMessageBridge contract address.
+     * @param _homeProxy The address of the proxy.
+     * @param _homeChainId The chain ID where the home proxy is deployed.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
@@ -107,6 +103,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      */
     constructor(
         IAMB _amb,
+        address _homeProxy,
+        uint256 _homeChainId,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -115,13 +113,15 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint64 _loserMultiplier
     ) {
         amb = _amb;
+        homeProxy = _homeProxy;
+        homeChainId = _homeChainId;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
         winnerMultiplier = _winnerMultiplier;
         loserMultiplier = _loserMultiplier;
 
-        emit MetaEvidence(metaEvidenceID, _metaEvidence);
+        emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
 
     /* External and public */
@@ -132,18 +132,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      */
     function changeGovernor(address _governor) external onlyGovernor {
         governor = _governor;
-    }
-
-    /**
-     * @notice Sets the address of the arbitration proxy on the Home Chain.
-     * @param _homeProxy The address of the proxy.
-     * @param _homeChainId The chain ID where the home proxy is deployed.
-     */
-    function setHomeProxy(address _homeProxy, uint256 _homeChainId) external onlyGovernor {
-        require(homeProxy == address(0), "Home proxy already set");
-
-        homeProxy = _homeProxy;
-        homeChainId = _homeChainId;
     }
 
     /**
@@ -162,39 +150,16 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         loserMultiplier = _loserMultiplier;
     }
 
-    /**
-     * @notice Changes the meta evidence used for disputes.
-     * @param _metaEvidence URI to the new meta evidence file.
-     */
-    function changeMetaEvidence(string calldata _metaEvidence) external onlyGovernor {
-        metaEvidenceID += 1;
-        emit MetaEvidence(metaEvidenceID, _metaEvidence);
-    }
-
-    /**
-     * @notice Changes the terms of service for Realitio.
-     * @param _termsOfService URI to the new Terms of Service file.
-     */
-    function changeTermsOfService(string calldata _termsOfService) external onlyGovernor {
-        termsOfService = _termsOfService;
-    }
-
     // ************************ //
     // *    Realitio logic    * //
     // ************************ //
 
     /**
      * @notice Requests arbitration for a given question ID.
-     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer)
-        external
-        payable
-        override
-        onlyIfInitialized
-    {
+    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable override {
         require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
 
         Arbitration storage arbitration = arbitrationRequests[uint256(_questionID)][uint256(_contestedAnswer)];
@@ -249,7 +214,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
                 }
 
                 emit ArbitrationCreated(_questionID, _contestedAnswer, disputeID);
-                emit Dispute(arbitrator, disputeID, metaEvidenceID, arbitrationID);
+                emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, arbitrationID);
             } catch {
                 arbitration.status = Status.Failed;
                 emit ArbitrationFailed(_questionID, _contestedAnswer);
@@ -283,11 +248,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function handleFailedDisputeCreation(bytes32 _questionID, bytes32 _contestedAnswer)
-        external
-        override
-        onlyIfInitialized
-    {
+    function handleFailedDisputeCreation(bytes32 _questionID, bytes32 _contestedAnswer) external override {
         uint256 arbitrationID = uint256(_questionID);
         uint256 answerID = uint256(_contestedAnswer);
         Arbitration storage arbitration = arbitrationRequests[arbitrationID][answerID];

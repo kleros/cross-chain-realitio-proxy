@@ -5,9 +5,13 @@
   "main": "index.js",
   "author": "Kleros",
   "license": "MIT",
+  "scripts": {
+    "deploy:staging": "serverless deploy -s staging",
+    "deploy:production": "serverless deploy -s production"
+  },
   "dependencies": {
     "@kleros/contract-deployments": "^0.3.2",
-    "@kleros/cross-chain-realitio-contracts": "~0.3.0",
+    "@kleros/cross-chain-realitio-contracts": "~0.4.0",
     "aws-sdk": "^2.730.0",
     "core-js": "^3.0.0",
     "dayjs": "^1.8.33",

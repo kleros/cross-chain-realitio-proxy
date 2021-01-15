@@ -22,16 +22,17 @@ export default async function createApiInstance() {
     return Number(await web3.eth.getChainId());
   }
 
-  async function getArbitrationByQuestionId(questionId) {
+  async function getArbitrationRequest({ questionId, contestedAnswer }) {
     const [arbitration, chainId] = await P.all([
-      foreignProxy.methods.questionIDToArbitration(questionId).call(),
+      foreignProxy.methods.arbitrationRequests(questionId, contestedAnswer).call(),
       getChainId(),
     ]);
 
     return {
-      questionId,
-      chainId,
       ...arbitration,
+      chainId,
+      questionId,
+      contestedAnswer,
       status: Number(arbitration.status),
     };
   }
@@ -40,7 +41,14 @@ export default async function createApiInstance() {
     const events = await getPastEvents(foreignProxy, "ArbitrationRequested", { fromBlock, toBlock });
 
     const allNotifiedRequests = await P.allSettled(
-      map(compose(getArbitrationByQuestionId, path(["returnValues", "_questionID"])), events)
+      map(
+        ({ returnValues }) =>
+          getArbitrationRequest({
+            questionId: returnValues._questionID,
+            contestedAnswer: returnValues._contestedAnswer,
+          }),
+        events
+      )
     );
     const onlyFulfilled = compose(filter(propEq("status", "fulfilled")), map(prop("value")));
 
@@ -49,7 +57,7 @@ export default async function createApiInstance() {
 
   async function handleFailedDisputeCreation(arbitration) {
     await batchSend({
-      args: [arbitration.questionId],
+      args: [arbitration.questionId, arbitration.contestedAnswer],
       method: foreignProxy.methods.handleFailedDisputeCreation,
       to: foreignProxy.options.address,
     });
@@ -59,7 +67,7 @@ export default async function createApiInstance() {
   return {
     getChainId,
     getBlockNumber,
-    getArbitrationByQuestionId,
+    getArbitrationRequest,
     getRequestedArbitrations,
     handleFailedDisputeCreation,
   };

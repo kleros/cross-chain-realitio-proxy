@@ -26,16 +26,17 @@ export default async function createApiInstance() {
     return Number(await web3.eth.getChainId());
   }
 
-  async function getRequestByQuestionId(questionId) {
+  async function getRequest({ questionId, contestedAnswer }) {
     const [request, chainId] = await Promise.all([
-      homeProxy.methods.questionIDToRequest(questionId).call(),
+      homeProxy.methods.requests(questionId, contestedAnswer).call(),
       getChainId(),
     ]);
 
     return {
-      questionId,
-      chainId,
       ...request,
+      chainId,
+      questionId,
+      contestedAnswer,
       status: Number(request.status),
     };
   }
@@ -44,7 +45,14 @@ export default async function createApiInstance() {
     const events = await getPastEvents(homeProxy, "RequestNotified", { fromBlock, toBlock });
 
     const allNotifiedRequests = await P.allSettled(
-      map(compose(getRequestByQuestionId, path(["returnValues", "_questionID"])), events)
+      map(
+        ({ returnValues }) =>
+          getRequest({
+            questionId: returnValues._questionID,
+            contestedAnswer: returnValues._contestedAnswer,
+          }),
+        events
+      )
     );
 
     const onlyFulfilled = compose(filter(propEq("status", "fulfilled")), map(prop("value")));
@@ -56,7 +64,14 @@ export default async function createApiInstance() {
     const events = await getPastEvents(homeProxy, "RequestRejected", { fromBlock, toBlock });
 
     const allRejectedRequests = await P.allSettled(
-      map(compose(getRequestByQuestionId, path(["returnValues", "_questionID"])), events)
+      map(
+        ({ returnValues }) =>
+          getRequest({
+            questionId: returnValues._questionID,
+            contestedAnswer: returnValues._contestedAnswer,
+          }),
+        events
+      )
     );
     const onlyFulfilled = compose(filter(propEq("status", "fulfilled")), map(prop("value")));
 
@@ -65,7 +80,7 @@ export default async function createApiInstance() {
 
   async function handleNotifiedRequest(request) {
     await batchSend({
-      args: [request.questionId],
+      args: [request.questionId, request.contestedAnswer],
       method: homeProxy.methods.handleNotifiedRequest,
       to: homeProxy.options.address,
     });
@@ -74,7 +89,7 @@ export default async function createApiInstance() {
 
   async function handleChangedAnswer(request) {
     await batchSend({
-      args: [request.questionId],
+      args: [request.questionId, request.contestedAnswer],
       method: homeProxy.methods.handleChangedAnswer,
       to: homeProxy.options.address,
     });
@@ -83,7 +98,7 @@ export default async function createApiInstance() {
 
   async function handleFinalizedQuestion(request) {
     await batchSend({
-      args: [request.questionId],
+      args: [request.questionId, request.contestedAnswer],
       method: homeProxy.methods.handleFinalizedQuestion,
       to: homeProxy.options.address,
     });
@@ -92,7 +107,7 @@ export default async function createApiInstance() {
 
   async function handleRejectedRequest(request) {
     await batchSend({
-      args: [request.questionId],
+      args: [request.questionId, request.contestedAnswer],
       method: homeProxy.methods.handleRejectedRequest,
       to: homeProxy.options.address,
     });
@@ -140,7 +155,7 @@ export default async function createApiInstance() {
     getChainId,
     getNotifiedRequests,
     getRejectedRequests,
-    getRequestByQuestionId,
+    getRequest,
     handleChangedAnswer,
     handleFinalizedQuestion,
     handleNotifiedRequest,

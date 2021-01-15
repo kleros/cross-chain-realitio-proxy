@@ -5,14 +5,19 @@ const { client, batchWrite } = createEnhancedClient();
 
 const requestsTable = process.env.REQUESTS_TABLE_NAME;
 
-const extractStoredData = pick([
-  "chainId",
-  "questionId",
-  "status",
-  "requesterAnswer",
-  "arbitratorAnswer",
-  "latestAnswer",
-]);
+function normalizeData({ questionId, contestedAnswer, ...rest }) {
+  return {
+    requestId: `${questionId}/${contestedAnswer}`,
+    ...rest,
+  };
+}
+
+function denormalizeData({ requestId, ...rest }) {
+  const [questionId, contestedAnswer] = requestId.split("/");
+  return { questionId, contestedAnswer, ...rest };
+}
+
+const extractStoredData = pick(["requestId", "chainId", "status", "arbitratorAnswer", "latestAnswer"]);
 
 export async function saveRequests(requests) {
   const createPutRequest = (item) => ({
@@ -21,7 +26,7 @@ export async function saveRequests(requests) {
     },
   });
 
-  const createBatchItem = compose(createPutRequest, extractStoredData);
+  const createBatchItem = compose(createPutRequest, extractStoredData, normalizeData);
 
   return compose(batchWrite(requestsTable), map(createBatchItem))(requests);
 }
@@ -30,11 +35,11 @@ export async function fetchAllRequestIds() {
   const data = await client
     .scan({
       TableName: requestsTable,
-      ProjectionExpression: "questionId, chainId",
+      ProjectionExpression: "requestId, chainId",
     })
     .promise();
 
-  return data.Items;
+  return map(denormalizeData, data.Items);
 }
 
 export async function deleteAllRequests() {
@@ -62,7 +67,7 @@ export async function fetchRequestsByChainIdAndStatus({ chainId, status }) {
     })
     .promise();
 
-  return data.Items;
+  return map(denormalizeData, data.Items);
 }
 
 export async function fetchRequestsByChainId({ chainId }) {
@@ -74,15 +79,17 @@ export async function fetchRequestsByChainId({ chainId }) {
     })
     .promise();
 
-  return data.Items;
+  return map(denormalizeData, data.Items);
 }
 
-export async function updateRequest({ questionId, chainId, ...attrs }) {
-  const data = await client
+export async function updateRequest(data) {
+  const { requestId, chainId, ...attrs } = normalizeData(data);
+
+  const result = await client
     .update({
       TableName: requestsTable,
       Key: {
-        questionId,
+        requestId,
         chainId,
       },
       ReturnValues: "ALL_NEW",
@@ -90,20 +97,22 @@ export async function updateRequest({ questionId, chainId, ...attrs }) {
     })
     .promise();
 
-  return data.Attributes;
+  return result.Attributes;
 }
 
-export async function removeRequest({ questionId, chainId }) {
-  const data = await client
+export async function removeRequest(data) {
+  const { requestId, chainId } = normalizeData(data);
+
+  const result = await client
     .delete({
       TableName: requestsTable,
       Key: {
-        questionId,
+        requestId,
         chainId,
       },
       ReturnValues: "ALL_OLD",
     })
     .promise();
 
-  return data.Attributes;
+  return result.Attributes;
 }

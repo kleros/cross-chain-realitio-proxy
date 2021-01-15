@@ -19,6 +19,7 @@ service: cross-chain-realitio-bot
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
 # frameworkVersion: "=X.X.X"
+useDotenv: true
 
 plugins:
   - serverless-webpack
@@ -51,13 +52,13 @@ custom:
 
   currentStage: ${opt:stage, self:provider.stage}
   serverlessIfElse:
-    - If: '"${self:custom.currentStage}" == "test"'
+    - If: '"${self:custom.currentStage}" == "production"'
       Set:
-        provider.environment.HOME_CHAIN_ID: 77
-        provider.environment.FOREIGN_CHAIN_ID: 42
-      ElseSet:
         provider.environment.HOME_CHAIN_ID: 100
         provider.environment.FOREIGN_CHAIN_ID: 1
+      ElseSet:
+        provider.environment.HOME_CHAIN_ID: 77
+        provider.environment.FOREIGN_CHAIN_ID: 42
 
   prune:
     automatic: true
@@ -66,7 +67,7 @@ custom:
 provider:
   name: aws
   region: ${env:AWS_REGION,'us-east-2'}
-  stage: test
+  stage: staging
   runtime: nodejs12.x
   environment:
     CHAIN_METADATA_TABLE_NAME: XChainRealitioProxy_ChainMetadata_${self:custom.currentStage}
@@ -163,12 +164,12 @@ resources:
         AttributeDefinitions:
           - AttributeName: chainId
             AttributeType: N
-          - AttributeName: questionId
+          - AttributeName: requestId
             AttributeType: S
           - AttributeName: status
             AttributeType: N
         KeySchema:
-          - AttributeName: questionId
+          - AttributeName: requestId
             KeyType: HASH
           - AttributeName: chainId
             KeyType: RANGE

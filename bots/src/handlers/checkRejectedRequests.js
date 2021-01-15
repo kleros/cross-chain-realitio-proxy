@@ -1,5 +1,5 @@
-import { andThen, cond, map, pick, pipeWith, prop, reduceBy } from "ramda";
-import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
+import { andThen, cond, map, pick, pipeWith, reduceBy } from "ramda";
+import { getBlockHeight, removeRequest, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
 import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
 import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
@@ -38,6 +38,16 @@ export default async function checkRejectedRequests({ homeChainApi }) {
   }
 
   async function checkCurrentRejectedRequests() {
+    const requestRemoved = ([_, onChainArbitration]) => onChainArbitration.status === Status.None;
+    const removeOffChainRequest = asyncPipe([
+      ([_, onChainArbitration]) => onChainArbitration,
+      removeRequest,
+      (arbitration) => ({
+        action: "REQUEST_REMOVED",
+        payload: arbitration,
+      }),
+    ]);
+
     const requestStatusChanged = ([offChainRequest, onChainRequest]) => offChainRequest.status != onChainRequest.status;
     const updateOffChainRequest = asyncPipe([
       ([_, onChainRequest]) => onChainRequest,
@@ -60,6 +70,7 @@ export default async function checkRejectedRequests({ homeChainApi }) {
     const pipeline = asyncPipe([
       fetchOnChainCounterpart,
       cond([
+        [requestRemoved, removeOffChainRequest],
         [requestStatusChanged, updateOffChainRequest],
         [() => true, handleRejectedRequest],
       ]),
@@ -67,7 +78,7 @@ export default async function checkRejectedRequests({ homeChainApi }) {
 
     const rejectedRequests = await fetchRequestsByChainIdAndStatus({ status: Status.Rejected, chainId });
 
-    console.info({ data: map(prop("questionId"), rejectedRequests) }, "Fetched rejected requests");
+    console.info({ data: map(pick(["questionId", "contestedAnswer"]), rejectedRequests) }, "Fetched rejected requests");
 
     const results = await P.allSettled(map(pipeline, rejectedRequests));
 

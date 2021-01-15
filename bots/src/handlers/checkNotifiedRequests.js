@@ -1,4 +1,4 @@
-import { andThen, cond, map, pick, pipeWith, prop, reduceBy } from "ramda";
+import { andThen, cond, map, pick, pipeWith, reduceBy } from "ramda";
 import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
 import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
 import { Status } from "~/on-chain-api/home-chain/entities";
@@ -64,7 +64,7 @@ export default async function checkNotifiedRequests({ homeChainApi }) {
 
     const notifiedRequests = await fetchRequestsByChainIdAndStatus({ status: Status.Notified, chainId });
 
-    console.info({ data: map(prop("questionId"), notifiedRequests) }, "Fetched notified requests");
+    console.info({ data: map(pick(["questionId", "contestedAnswer"]), notifiedRequests) }, "Fetched notified requests");
 
     const results = await P.allSettled(map(pipeline, notifiedRequests));
 

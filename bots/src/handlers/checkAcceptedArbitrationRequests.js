@@ -27,7 +27,7 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
     console.info({ blockHeight }, "Set ACCEPTED_ARBITRATION_REQUESTS block height");
 
     const stats = {
-      data: map(pick(["questionId", "chainId", "status"]), newArbitrationRequests),
+      data: map(pick(["questionId", "contestedAnswer", "chainId", "status"]), newArbitrationRequests),
       fromBlock,
       toBlock,
     };

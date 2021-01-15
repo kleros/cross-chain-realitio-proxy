@@ -4,4 +4,5 @@ export const Status = {
   Notified: 2,
   AwaitingRuling: 3,
   Ruled: 4,
+  Finished: 5,
 };

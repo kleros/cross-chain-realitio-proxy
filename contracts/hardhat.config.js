@@ -4,6 +4,7 @@ require("@nomiclabs/hardhat-waffle");
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-web3");
 require("hardhat-deploy");
+require("hardhat-deploy-ethers");
 require("./tasks/link-proxies");
 
 // This is a sample Buidler task. To learn how to create your own go to
@@ -18,7 +19,7 @@ task("accounts", "Prints the list of accounts", async (_, { ethers }) => {
 
 module.exports = {
   solidity: {
-    version: "0.7.4",
+    version: "0.7.6",
     settings: {
       optimizer: {
         enabled: true,
@@ -46,7 +47,7 @@ module.exports = {
     xdai: {
       chainId: 100,
       url: "https://rpc.xdaichain.com/",
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY, process.env.MAINNET_PRIVATE_KEY],
       live: true,
       saveDeployments: true,
       tags: ["production"],
@@ -62,7 +63,7 @@ module.exports = {
     mainnet: {
       chainId: 1,
       url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.MAINNET_PRIVATE_KEY],
+      accounts: [process.env.MAINNET_PRIVATE_KEY, process.env.PRIVATE_KEY],
       live: true,
       saveDeployments: true,
       tags: ["production"],
@@ -71,6 +72,11 @@ module.exports = {
   namedAccounts: {
     deployer: {
       default: 0,
+    },
+    counterPartyDeployer: {
+      default: 0,
+      xdai: 1,
+      mainnet: 1,
     },
   },
 };

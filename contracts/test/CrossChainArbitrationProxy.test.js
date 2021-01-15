@@ -1,25 +1,27 @@
 const { ethers } = require("hardhat");
 const { solidity } = require("ethereum-waffle");
 const { use, expect } = require("chai");
+const getDeployAddress = require("../deploy-helpers/getDeployAddress");
 
 use(solidity);
 
 const { BigNumber } = ethers;
 const { hexZeroPad } = ethers.utils;
-
-const ZERO_HASH = hexZeroPad(0, 32);
-const ZERO_ADDRESS = hexZeroPad(0, 20);
+const ADDRESS_ZERO = ethers.constants.AddressZero;
+const HASH_ZERO = ethers.constants.HashZero;
 
 let arbitrator;
 let homeProxy;
 let foreignProxy;
-let amb;
 let realitio;
 
 let governor;
 let asker;
 let answerer;
 let requester;
+
+const homeChainId = 0;
+const foreignChainId = 0;
 
 const arbitrationFee = BigNumber.from(BigInt(1e18));
 const arbitratorExtraData = "0x00";
@@ -34,36 +36,7 @@ const otherAnswer = hexZeroPad(42, 32);
 describe("Cross-Chain Arbitration", () => {
   beforeEach("Setup contracts", async () => {
     [governor, asker, answerer, requester] = await ethers.getSigners();
-
-    const Arbitrator = await ethers.getContractFactory("MockArbitrator", governor);
-    arbitrator = await Arbitrator.deploy(String(arbitrationFee));
-
-    const AMB = await ethers.getContractFactory("MockAMB", governor);
-    amb = await AMB.deploy();
-
-    const ForeignProxy = await ethers.getContractFactory("RealitioForeignArbitrationProxy", governor);
-    foreignProxy = await ForeignProxy.deploy(
-      amb.address,
-      arbitrator.address,
-      arbitratorExtraData,
-      metaEvidence,
-      termsOfService
-    );
-
-    const Realitio = await ethers.getContractFactory("MockRealitio", governor);
-    realitio = await Realitio.deploy();
-
-    const HomeProxy = await ethers.getContractFactory("RealitioHomeArbitrationProxy", governor);
-    homeProxy = await HomeProxy.deploy(amb.address, realitio.address);
-
-    const setArbitratorTx = await realitio.setArbitrator(homeProxy.address);
-    await setArbitratorTx.wait();
-
-    const setForeignProxyTx = await homeProxy.setForeignProxy(foreignProxy.address, 0);
-    await setForeignProxyTx.wait();
-
-    const setHomeProxyTx = await foreignProxy.setHomeProxy(homeProxy.address, 0);
-    await setHomeProxyTx.wait();
+    ({ arbitrator, realitio, foreignProxy, homeProxy } = await deployContracts(governor));
   });
 
   describe("Request Arbitration", () => {
@@ -355,6 +328,46 @@ describe("Cross-Chain Arbitration", () => {
     });
   });
 
+  async function deployContracts(signer) {
+    const Arbitrator = await ethers.getContractFactory("MockArbitrator", signer);
+    const arbitrator = await Arbitrator.deploy(String(arbitrationFee));
+
+    const AMB = await ethers.getContractFactory("MockAMB", signer);
+    const amb = await AMB.deploy();
+
+    const Realitio = await ethers.getContractFactory("MockRealitio", signer);
+    const realitio = await Realitio.deploy();
+
+    const ForeignProxy = await ethers.getContractFactory("RealitioForeignArbitrationProxy", signer);
+    const HomeProxy = await ethers.getContractFactory("RealitioHomeArbitrationProxy", signer);
+
+    const address = await signer.getAddress();
+    const nonce = await signer.getTransactionCount();
+
+    const foreignProxyAddress = getDeployAddress(address, nonce);
+    const homeProxyAddress = getDeployAddress(address, nonce + 1);
+
+    const foreignProxy = await ForeignProxy.deploy(
+      amb.address,
+      homeProxyAddress,
+      homeChainId,
+      arbitrator.address,
+      arbitratorExtraData,
+      metaEvidence,
+      termsOfService
+    );
+
+    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address);
+
+    return {
+      amb,
+      arbitrator,
+      realitio,
+      foreignProxy,
+      homeProxy,
+    };
+  }
+
   async function submitAnswer(questionId, answer, signer = answerer) {
     return await submitTransaction(realitio.connect(signer).submitAnswer(questionId, answer, 0));
   }
@@ -393,7 +406,7 @@ describe("Cross-Chain Arbitration", () => {
 
   async function reportArbitrationAnswer(questionId, signer = governor) {
     return await submitTransaction(
-      homeProxy.connect(signer).reportArbitrationAnswer(questionId, ZERO_HASH, ZERO_HASH, ZERO_ADDRESS)
+      homeProxy.connect(signer).reportArbitrationAnswer(questionId, HASH_ZERO, HASH_ZERO, ADDRESS_ZERO)
     );
   }
 

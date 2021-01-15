@@ -1,8 +1,8 @@
 const Web3 = require("web3");
-const rcQuestion = require("@realitio/realitio-lib/formatters/question.js");
 const RealitioForeignArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json");
 const RealitioHomeArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioHomeArbitrationProxy.sol/RealitioHomeArbitrationProxy.json");
 const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/src/dependencies/RealitioInterface.sol/RealitioInterface.json");
+const RealitioQuestion = require("@realitio/realitio-lib/formatters/question.js");
 
 const homeRpcEndpoint = process.env.HOME_CHAIN_RPC_ENDPOINT;
 const homeWeb3 = new Web3(homeRpcEndpoint);
@@ -60,11 +60,17 @@ module.exports = async function getMetaEvidence() {
     toBlock: "latest",
   });
   const templateText = templateEventLog[0].returnValues.question_text;
-  const questionData = rcQuestion.populatedJSONForTemplate(templateText, questionEventLog[0].returnValues.question);
+  const questionData = RealitioQuestion.populatedJSONForTemplate(
+    templateText,
+    questionEventLog[0].returnValues.question
+  );
+
+  const erc1497OverridesMixin = questionData.title ? { question: questionData.title } : {};
 
   switch (questionData.type) {
     case "bool":
       return resolveScript({
+        ...erc1497OverridesMixin,
         rulingOptions: {
           type: "single-select",
           titles: ["No", "Yes"],
@@ -72,13 +78,15 @@ module.exports = async function getMetaEvidence() {
       });
     case "uint":
       return resolveScript({
+        ...erc1497OverridesMixin,
         rulingOptions: {
           type: "uint",
-          precision: questionData["decimals"],
+          precision: questionData.decimals,
         },
       });
     case "single-select":
       return resolveScript({
+        ...erc1497OverridesMixin,
         rulingOptions: {
           type: "single-select",
           titles: questionData.outcomes,
@@ -86,6 +94,7 @@ module.exports = async function getMetaEvidence() {
       });
     case "multiple-select":
       return resolveScript({
+        ...erc1497OverridesMixin,
         rulingOptions: {
           type: "multiple-select",
           titles: questionData.outcomes,
@@ -93,11 +102,12 @@ module.exports = async function getMetaEvidence() {
       });
     case "datetime":
       return resolveScript({
+        ...erc1497OverridesMixin,
         rulingOptions: {
           type: "datetime",
         },
       });
     default:
-      return resolveScript({});
+      return resolveScript({ ...erc1497OverridesMixin });
   }
 };

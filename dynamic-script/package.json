@@ -6,15 +6,19 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "webpack --mode production --progress"
+    "build:silent": "webpack --mode production --display=errors-only 1>&2",
+    "build": "webpack --mode production --progress",
+    "predeploy": "run-s -s build:silent",
+    "deploy": "file-to-ipfs -f dist/realitio-dynamic-script.js -r realitio.js"
   },
   "dependencies": {
-    "@kleros/cross-chain-realitio-contracts": "~0.3.0",
+    "@kleros/cross-chain-realitio-contracts": "~0.4.0",
     "@realitio/realitio-lib": "^1.0.2",
     "web3": "1.2.6",
     "webpack": "^4.19.0"
   },
   "devDependencies": {
+    "@kleros/file-to-ipfs": "^0.1.0",
     "clean-webpack-plugin": "^3.0.0",
     "dotenv-webpack": "^4.0.0",
     "webpack-cli": "^3.0.4",

@@ -16,7 +16,7 @@ import "./ArbitrationProxyInterfaces.sol";
 
 /**
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
- * @dev This contract is meant to be deployed to side-chains (i.e.: xDAI) in which Reality.eth is been deployed.
+ * @dev This contract is meant to be deployed to side-chains (i.e.: xDAI) in which Reality.eth is deployed.
  */
 contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev The contract governor. TRUSTED.
@@ -99,7 +99,13 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
                 emit RequestNotified(_questionID, _contestedAnswer, _requester);
             } catch {
-                // Will fail if the question has timed out or another request has been processed first.
+                /*
+                 * Will fail if:
+                 *  - The question does not exist
+                 *  - The question was not answered yet
+                 *  - The contested answer is different from the current best answer
+                 *  - Another request was already accepted
+                 */
                 request.status = Status.Rejected;
 
                 emit RequestRejected(_questionID, _contestedAnswer, _requester);
@@ -194,9 +200,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Report the answer provided by the arbitrator to a specified question.
+     * @notice Reports the answer provided by the arbitrator to a specified question.
      * @dev The Realitio contract validates the input parameters passed to this method,
-     * so it is safe to publicly accessible.
+     * so making this publicly accessible is safe.
      * @param _questionID The ID of the question.
      * @param _lastHistoryHash The history hash given with the last answer to the question in the Realitio contract.
      * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment,

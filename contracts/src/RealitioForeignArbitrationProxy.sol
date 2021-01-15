@@ -106,16 +106,12 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     }
 
     /**
-     * @notice Requests arbitration for given the question and contested answer.
+     * @notice Requests arbitration for the given question and contested answer.
      * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer)
-        external
-        payable
-        override
-    {
+    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable override {
         require(!questionIDToDisputeExists[_questionID], "Dispute already exists");
 
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_contestedAnswer];
@@ -197,10 +193,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
-    function handleFailedDisputeCreation(bytes32 _questionID, bytes32 _contestedAnswer)
-        external
-        override
-    {
+    function handleFailedDisputeCreation(bytes32 _questionID, bytes32 _contestedAnswer) external override {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_contestedAnswer];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 

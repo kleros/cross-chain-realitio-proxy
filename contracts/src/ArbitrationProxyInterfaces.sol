@@ -144,7 +144,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     event ArbitrationCanceled(bytes32 indexed _questionID, bytes32 indexed _contestedAnswer);
 
     /**
-     * @notice Requests arbitration for given the question and contested answer.
+     * @notice Requests arbitration for the given question and contested answer.
      * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.

@@ -14,10 +14,18 @@ const homeWeb3 = new Web3(homeRpcEndpoint);
 const foreignRpcEndpoint = process.env.REACT_APP_FOREIGN_CHAIN_RPC_ENDPOINT;
 const foreignWeb3 = new Web3(foreignRpcEndpoint);
 
+const OMEN_URL_TEMPLATE = process.env.REACT_APP_OMEN_URL_TEMPLATE;
+const REALITY_APP_URL_TEMPLATE = process.env.REACT_APP_REALITY_ETH_URL_TEMPLATE;
+
 class RealitioDisplayInterface extends Component {
   constructor() {
     super();
-    this.state = { question: null, error: null };
+    this.state = {
+      question: null,
+      markets: [],
+      error: null,
+      chainId: 0,
+    };
   }
 
   async componentDidMount() {
@@ -56,29 +64,30 @@ class RealitioDisplayInterface extends Component {
     }
 
     const question = {};
-
     const questionID = arbitrationCreatedLogs[0].returnValues._questionID;
     question.questionID = questionID;
 
-    const questionEventLog = await realitio.getPastEvents("LogNewQuestion", {
-      filter: {
-        question_id: questionID,
-      },
-      fromBlock: 0,
-      toBlock: "latest",
-    });
+    const [questionEventLog, markets] = await Promise.all([
+      realitio.getPastEvents("LogNewQuestion", {
+        filter: {
+          question_id: questionID,
+        },
+        fromBlock: 0,
+        toBlock: "latest",
+      }),
+      fetchRelatedMarkets({ questionID }),
+    ]);
 
     const questionText = questionEventLog[0].returnValues.question.split("\u241f");
     question.text = questionText[0];
 
-    const user = questionEventLog[0].returnValues.user;
-    question.user = user;
+    const homeChainID = await homeWeb3.eth.getChainId();
 
-    this.setState({ question });
+    this.setState({ question, markets, homeChainID });
   }
 
   render() {
-    const { question, error } = this.state;
+    const { question, markets, homeChainID, error } = this.state;
     if (error) {
       throw error;
     }
@@ -94,20 +103,39 @@ class RealitioDisplayInterface extends Component {
           <>
             <QuestionText>{question.text}</QuestionText>
             <QuestionLink
-              href={`https://reality.eth.link/app/#!/question/${question.questionID}/network/100`}
+              href={parseTemplate(REALITY_APP_URL_TEMPLATE, {
+                questionID: question.quesitonId,
+              })}
               target="_blank"
               rel="noopener noreferrer"
             >
               Question Details
             </QuestionLink>
-            <QuestionDisclaimer>
-              This realitio dispute has been created by Omen, we advise you to read the Omen Rules and consult the
-              evidence provided in the{" "}
-              <a href={`https://omen.eth.link/#/${question.user}`} target="_blank" rel="noreferrer noopener">
-                Market Comments
-              </a>
-              .
-            </QuestionDisclaimer>
+            {markets && markets.length > 0 ? (
+              <React.Fragment>
+                <Spacer />
+                <QuestionDisclaimer>
+                  This Realitio dispute has been created by Omen, we advise you to read the Omen Rules and consult the
+                  evidence provided in the Omen Markets below:
+                </QuestionDisclaimer>
+                <MarketList>
+                  {markets.map(({ id, title }) => (
+                    <MarketList.Item key={id}>
+                      <a
+                        href={parseTemplate(OMEN_URL_TEMPLATE, {
+                          address: id,
+                          chainID: homeChainID,
+                        })}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        {title}
+                      </a>
+                    </MarketList.Item>
+                  ))}
+                </MarketList>
+              </React.Fragment>
+            ) : null}
           </>
         ) : (
           <QuestionText>Loading question details...</QuestionText>
@@ -136,6 +164,43 @@ ErrorFallback.propTypes = {
   error: t.instanceOf(Error).isRequired,
 };
 
+function parseTemplate(template, data) {
+  return Object.entries(data).reduce(
+    (result, [key, value]) => result.replace(new RegExp(`{{${key}}}`, "g"), value),
+    template
+  );
+}
+
+async function fetchRelatedMarkets({ questionID }) {
+  const url = process.env.REACT_APP_OMEN_SUBGRAPH_ENDPOINT;
+  const payload = {
+    query: `
+    {
+      question(id: "${questionID}") {
+        indexedFixedProductMarketMakers {
+          id
+          title
+        }
+      }
+    }
+    `,
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await response.json();
+
+  const productMarketMakers = body.data && body.data.question && body.data.question.indexedFixedProductMarketMakers;
+  return productMarketMakers || [];
+}
+
 const QuestionText = styled.div`
   margin-bottom: 15px;
   font-family: "Roboto", sans-serif;
@@ -144,14 +209,6 @@ const QuestionText = styled.div`
   line-height: 1.5;
   color: rgba(0, 0, 0, 0.65);
   background-color: #fff;
-`;
-
-const QuestionDisclaimer = styled(QuestionText)`
-  font-size: 18px;
-`;
-
-const ErrorText = styled(QuestionText)`
-  color: red;
 `;
 
 const QuestionLink = styled.a`
@@ -165,10 +222,17 @@ const QuestionLink = styled.a`
   color: #2093ff;
 `;
 
+const QuestionDisclaimer = styled(QuestionText)`
+  font-size: 18px;
+`;
+
+const ErrorText = styled(QuestionText)`
+  color: red;
+`;
+
 const Header = styled.div`
   height: 80px;
   margin-bottom: 25px;
-  overflow-x: hidden;
 
   img {
     height: 100%;
@@ -196,4 +260,31 @@ const SquareRight = styled.div`
   background-color: #cae940;
   transform: rotate(4deg);
   z-index: -2;
+`;
+
+const Spacer = styled.div`
+  clear: both;
+  margin-bottom: 24px;
+`;
+
+const MarketList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin: 0;
+`;
+
+MarketList.Item = styled.li`
+  & + & {
+    margin-top: 8px;
+  }
+
+  > a {
+    font-family: "Roboto", sans-serif;
+    font-size: 14px;
+    font-variant: tabular-nums;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.65);
+    background-color: #fff;
+    color: #2093ff;
+  }
 `;

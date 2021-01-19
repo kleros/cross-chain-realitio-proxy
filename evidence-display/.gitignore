@@ -1,4 +1,5 @@
-# Tar balls
+# Tarballs
+*.tar
 *.tar.gz
 
 # CRA default build directory

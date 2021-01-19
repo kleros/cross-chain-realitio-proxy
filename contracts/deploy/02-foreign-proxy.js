@@ -9,7 +9,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     homeChainId: 77,
-    metaEvidence: "/ipfs/QmbiGmU35RhB8FziGs8M1oVyxY5pX5zDCFNtBjvHvf4NFe/realitio.json",
+    metaEvidence: "/ipfs/Qmc2cpRZgT5PmR4ZikDsVG54xejKF62qSBBnYf4R5bpiNH/realitio.json",
     termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
   },
   1: {
@@ -18,7 +18,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f4",
     homeChainId: 100,
-    metaEvidence: "",
+    metaEvidence: "/ipfs/QmekJhnjk7ZBQES33dsggp6nVGxAbxMWgsrhMvV8Ga761n/realitio.json",
     termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
   },
 };

@@ -5,16 +5,17 @@ const { client, batchWrite } = createEnhancedClient();
 
 const requestsTable = process.env.REQUESTS_TABLE_NAME;
 
-function normalizeData({ questionId, contestedAnswer, ...rest }) {
+function normalizeData({ questionId, contestedAnswer, chainId, ...rest }) {
   return {
-    requestId: `${questionId}/${contestedAnswer}`,
+    requestId: `${chainId}/${questionId}/${contestedAnswer}`,
+    chainId,
     ...rest,
   };
 }
 
 function denormalizeData({ requestId, ...rest }) {
-  const [questionId, contestedAnswer] = requestId.split("/");
-  return { questionId, contestedAnswer, ...rest };
+  const [chainId, questionId, contestedAnswer] = requestId.split("/");
+  return { questionId, contestedAnswer, chainId, ...rest };
 }
 
 const extractStoredData = pick(["requestId", "chainId", "status", "arbitratorAnswer", "latestAnswer"]);
@@ -97,7 +98,7 @@ export async function updateRequest(data) {
     })
     .promise();
 
-  return result.Attributes;
+  return map(denormalizeData, result.Attributes);
 }
 
 export async function removeRequest(data) {
@@ -114,5 +115,5 @@ export async function removeRequest(data) {
     })
     .promise();
 
-  return result.Attributes;
+  return map(denormalizeData, result.Attributes);
 }

@@ -1,10 +1,13 @@
 import { andThen, cond, map, pick, pipeWith, reduceBy } from "ramda";
+import deepMerge from "deepmerge";
 import { getBlockHeight, removeRequest, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
 import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
 import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
+
+const mergeOnChainOntoOffChain = ([offChainRequest, onChainRequest]) => deepMerge(offChainRequest, onChainRequest);
 
 export default async function checkRejectedRequests({ homeChainApi }) {
   const chainId = await homeChainApi.getChainId();
@@ -40,7 +43,7 @@ export default async function checkRejectedRequests({ homeChainApi }) {
   async function checkCurrentRejectedRequests() {
     const requestRemoved = ([_, onChainArbitration]) => onChainArbitration.status === Status.None;
     const removeOffChainRequest = asyncPipe([
-      ([_, onChainArbitration]) => onChainArbitration,
+      mergeOnChainOntoOffChain,
       removeRequest,
       (arbitration) => ({
         action: "REQUEST_REMOVED",
@@ -50,7 +53,7 @@ export default async function checkRejectedRequests({ homeChainApi }) {
 
     const requestStatusChanged = ([offChainRequest, onChainRequest]) => offChainRequest.status != onChainRequest.status;
     const updateOffChainRequest = asyncPipe([
-      ([_, onChainRequest]) => onChainRequest,
+      mergeOnChainOntoOffChain,
       updateRequest,
       (request) => ({
         action: "STATUS_CHANGED",
@@ -58,11 +61,20 @@ export default async function checkRejectedRequests({ homeChainApi }) {
       }),
     ]);
 
+    const requestRejected = ([_, onChainArbitration]) => onChainArbitration.status === Status.Rejected;
     const handleRejectedRequest = asyncPipe([
-      ([_, onChainRequest]) => onChainRequest,
+      mergeOnChainOntoOffChain,
       homeChainApi.handleRejectedRequest,
       (request) => ({
         action: "REJECTED_REQUEST_HANDLED",
+        payload: request,
+      }),
+    ]);
+
+    const noop = asyncPipe([
+      mergeOnChainOntoOffChain,
+      (request) => ({
+        action: "NO_OP",
         payload: request,
       }),
     ]);
@@ -72,26 +84,28 @@ export default async function checkRejectedRequests({ homeChainApi }) {
       cond([
         [requestRemoved, removeOffChainRequest],
         [requestStatusChanged, updateOffChainRequest],
-        [() => true, handleRejectedRequest],
+        [requestRejected, handleRejectedRequest],
+        [() => true, noop],
       ]),
     ]);
 
-    const rejectedRequests = await fetchRequestsByChainIdAndStatus({ status: Status.Rejected, chainId });
+    const rejectedRequests = await fetchRequestsByChainIdAndStatus({ chainId, status: Status.Rejected });
 
     console.info({ data: map(pick(["questionId", "contestedAnswer"]), rejectedRequests) }, "Fetched rejected requests");
 
     const results = await P.allSettled(map(pipeline, rejectedRequests));
 
-    const groupQuestionIdsOrErrorMessage = (acc, r) => {
+    const groupQuestionsOrErrorMessage = (acc, r) => {
       if (r.status === "rejected") {
         return [...acc, r.reason?.message];
       }
 
       const questionId = r.value?.payload?.questionId ?? "<not set>";
-      return [...acc, questionId];
+      const contestedAnswer = r.value?.payload?.contestedAnswer ?? "<not set>";
+      return [...acc, { questionId, contestedAnswer }];
     };
     const toTag = (r) => (r.status === "rejected" ? "FAILURE" : r.value?.action);
-    const stats = reduceBy(groupQuestionIdsOrErrorMessage, [], toTag, results);
+    const stats = reduceBy(groupQuestionsOrErrorMessage, [], toTag, results);
 
     console.info(stats, "Processed rejected requests");
 
@@ -99,9 +113,9 @@ export default async function checkRejectedRequests({ homeChainApi }) {
   }
 
   async function fetchOnChainCounterpart(offChainRequest) {
-    const { questionId } = offChainRequest;
+    const { questionId, contestedAnswer } = offChainRequest;
 
-    const onChainRequest = await homeChainApi.getRequestByQuestionId(questionId);
+    const onChainRequest = await homeChainApi.getRequest({ questionId, contestedAnswer });
 
     return [offChainRequest, onChainRequest];
   }

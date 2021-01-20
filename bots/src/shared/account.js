@@ -20,8 +20,8 @@ export async function getDefaultAccount(web3) {
 async function getPrivateKey() {
   const data = await s3
     .getObject({
-      Bucket: "kleros-bots-private-keys",
-      Key: "cross-chain-realitio-proxy.json",
+      Bucket: process.env.BOTS_PRIVATE_KEYS_BUCKET,
+      Key: process.env.BOTS_PRIVATE_KEYS_FILE,
     })
     .promise();
 

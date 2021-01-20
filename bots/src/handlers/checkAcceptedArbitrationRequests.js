@@ -1,10 +1,14 @@
-import { andThen, cond, map, pick, pipeWith, prop, reduceBy } from "ramda";
+import { andThen, cond, map, pick, pipeWith, reduceBy } from "ramda";
+import deepMerge from "deepmerge";
 import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
 import { fetchRequestsByChainId, removeRequest, saveRequests, updateRequest } from "~/off-chain-storage/requests";
 import { Status } from "~/on-chain-api/foreign-chain/entities";
 import * as P from "~/shared/promise";
 
 const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
+
+const mergeOnChainOntoOffChain = ([offChainArbitration, onChainArbitration]) =>
+  deepMerge(offChainArbitration, onChainArbitration);
 
 export default async function checkAcceptedArbitrationRequests({ foreignChainApi }) {
   const chainId = await foreignChainApi.getChainId();
@@ -38,9 +42,10 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
   }
 
   async function processArbitrationRequests() {
-    const requestRemoved = ([_, onChainArbitration]) => onChainArbitration.status === Status.None;
+    const requestRemovedOrRuled = ([_, onChainArbitration]) =>
+      [Status.None, Status.Ruled].includes(onChainArbitration.status);
     const removeOffChainRequest = asyncPipe([
-      ([_, onChainArbitration]) => onChainArbitration,
+      mergeOnChainOntoOffChain,
       removeRequest,
       (arbitration) => ({
         action: "ARBITRATION_REQUEST_REMOVED",
@@ -50,7 +55,7 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
 
     const disputeCreationFailed = ([_, onChainArbitration]) => onChainArbitration.status === Status.Failed;
     const handleFailedDisputeCreation = asyncPipe([
-      ([_, onChainArbitration]) => onChainArbitration,
+      mergeOnChainOntoOffChain,
       foreignChainApi.handleFailedDisputeCreation,
       (arbitration) => ({
         action: "FAILED_DISPUTE_CREATION_HANDLED",
@@ -61,7 +66,7 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
     const requestStatusChanged = ([offChainArbitration, onChainArbitration]) =>
       offChainArbitration.status != onChainArbitration.status;
     const updateOffChainRequest = asyncPipe([
-      ([_, onChainArbitration]) => onChainArbitration,
+      mergeOnChainOntoOffChain,
       updateRequest,
       (arbitration) => ({
         action: "STATUS_CHANGED",
@@ -70,7 +75,7 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
     ]);
 
     const noop = asyncPipe([
-      ([_, onChainArbitration]) => onChainArbitration,
+      mergeOnChainOntoOffChain,
       (arbtration) => ({
         action: "NO_OP",
         payload: arbtration,
@@ -80,7 +85,7 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
     const pipeline = asyncPipe([
       fetchOnChainCounterpart,
       cond([
-        [requestRemoved, removeOffChainRequest],
+        [requestRemovedOrRuled, removeOffChainRequest],
         [disputeCreationFailed, handleFailedDisputeCreation],
         [requestStatusChanged, updateOffChainRequest],
         [() => true, noop],
@@ -89,20 +94,24 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
 
     const requestedArbitrations = await fetchRequestsByChainId({ chainId });
 
-    console.info({ data: map(prop("questionId"), requestedArbitrations) }, "Fetched requested arbitrations");
+    console.info(
+      { data: map(pick(["questionId", "contestedAnswer"]), requestedArbitrations) },
+      "Fetched requested arbitrations"
+    );
 
     const results = await P.allSettled(map(pipeline, requestedArbitrations));
 
-    const groupQuestionIdsOrErrorMessage = (acc, r) => {
+    const groupQuestionsOrErrorMessage = (acc, r) => {
       if (r.status === "rejected") {
         return [...acc, r.reason?.message];
       }
 
       const questionId = r.value?.payload?.questionId ?? "<not set>";
-      return [...acc, questionId];
+      const contestedAnswer = r.value?.payload?.contestedAnswer ?? "<not set>";
+      return [...acc, { questionId, contestedAnswer }];
     };
     const toTag = (r) => (r.status === "rejected" ? "FAILURE" : r.value?.action);
-    const stats = reduceBy(groupQuestionIdsOrErrorMessage, [], toTag, results);
+    const stats = reduceBy(groupQuestionsOrErrorMessage, [], toTag, results);
 
     console.info(stats, "Processed requested arbitrations");
 
@@ -110,9 +119,9 @@ export default async function checkAcceptedArbitrationRequests({ foreignChainApi
   }
 
   async function fetchOnChainCounterpart(offChainArbitration) {
-    const { questionId } = offChainArbitration;
+    const { questionId, contestedAnswer } = offChainArbitration;
 
-    const onChainArbitration = await foreignChainApi.getArbitrationByQuestionId(questionId);
+    const onChainArbitration = await foreignChainApi.getArbitrationRequest({ questionId, contestedAnswer });
 
     return [offChainArbitration, onChainArbitration];
   }

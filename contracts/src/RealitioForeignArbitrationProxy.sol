@@ -54,13 +54,13 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         uint256 deposit;
     }
 
-    /// @dev Tracks arbitration requests for question ID.
+    /// @dev Tracks arbitration requests for question ID. arbitrationRequests[questionID][contestedAnswer]
     mapping(bytes32 => mapping(bytes32 => ArbitrationRequest)) public arbitrationRequests;
 
-    /// @dev Associates dispute ID to question ID and the contested answer.
+    /// @dev Associates dispute ID to question ID and the contested answer. disputeIDToQuestionAndAnswer[disputeID] -> [questionID,contestedAnswer]
     mapping(uint256 => bytes32[2]) public disputeIDToQuestionAndAnswer;
 
-    /// @dev Whether a dispute has already been created for the given question ID or not.
+    /// @dev Whether a dispute has already been created for the given question ID or not. questionIDToDisputeExists[questionID]
     mapping(bytes32 => bool) public questionIDToDisputeExists;
 
     modifier onlyArbitrator() {
@@ -77,7 +77,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @dev Contract will still require initialization before being usable.
      * @param _amb ArbitraryMessageBridge contract address.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
@@ -107,7 +106,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
-     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
@@ -210,7 +208,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /**
      * @notice Rules a specified dispute.
-     * @dev Note that 0 is reserved for "Unable/refused to arbitrate" and we map it to `bytes32(-1)` which has a similar connotation in Realitio.
+     * @dev Note that 0 is reserved for "Unable/refused to arbitrate" and we map it to `bytes32(-1)` which has a similar meaning in Realitio.
      * @param _disputeID The ID of the dispute in the ERC792 arbitrator.
      * @param _ruling The ruling given by the arbitrator.
      */

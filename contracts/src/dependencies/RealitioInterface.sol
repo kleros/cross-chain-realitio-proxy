@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol
 pragma solidity ^0.7.2;
 
 /* solhint-disable var-name-mixedcase */

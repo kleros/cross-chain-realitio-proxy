@@ -3,7 +3,7 @@ const { solidity } = require("ethereum-waffle");
 const { time } = require("@openzeppelin/test-helpers");
 const { generateAddress, bufferToHex, toChecksumAddress } = require("ethereumjs-util");
 const { use, expect } = require("chai");
-const getDeployAddress = require("../deploy-helpers/getDeployAddress");
+const getContractAddress = require("../deploy-helpers/getContractAddress");
 
 use(solidity);
 
@@ -25,8 +25,8 @@ const MAX_ANSWER = "115792089237316195423570985008687907853269984665640564039457
 
 const metaEvidence = "ipfs/X";
 const termsOfService = "ipfs/Y";
-const homeChainId = 0;
-const foreignChainId = 0;
+const homeChainId = hexZeroPad(0, 32);
+const foreignChainId = hexZeroPad(0, 32);
 const oneETH = BigNumber.from(BigInt(1e18));
 const ZERO_HASH = hexZeroPad(0, 32);
 const ZERO_ADDRESS = hexZeroPad(0, 20);
@@ -779,8 +779,8 @@ describe("Cross-chain arbitration with appeals", () => {
     const address = await signer.getAddress();
     const nonce = await signer.getTransactionCount();
 
-    const foreignProxyAddress = getDeployAddress(address, nonce);
-    const homeProxyAddress = getDeployAddress(address, nonce + 1);
+    const foreignProxyAddress = getContractAddress(address, nonce);
+    const homeProxyAddress = getContractAddress(address, nonce + 1);
 
     const foreignProxy = await ForeignProxy.deploy(
       amb.address,

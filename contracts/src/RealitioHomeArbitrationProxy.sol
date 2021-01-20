@@ -29,7 +29,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     address public immutable foreignProxy;
 
     /// @dev The chain ID where the foreign proxy is deployed.
-    uint256 public immutable foreignChainId;
+    bytes32 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
@@ -50,7 +50,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
     modifier onlyForeignProxy() {
         require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == bytes32(foreignChainId), "Only foreign chain allowed");
+        require(amb.messageSourceChainId() == foreignChainId, "Only foreign chain allowed");
         require(amb.messageSender() == foreignProxy, "Only foreign proxy allowed");
         _;
     }
@@ -65,7 +65,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     constructor(
         IAMB _amb,
         address _foreignProxy,
-        uint256 _foreignChainId,
+        bytes32 _foreignChainId,
         RealitioInterface _realitio
     ) {
         amb = _amb;

@@ -10,9 +10,9 @@
 
 pragma solidity ^0.7.2;
 
-import "@kleros/erc-792/contracts/IArbitrator.sol";
-import "./dependencies/IAMB.sol";
-import "./ArbitrationProxyInterfaces.sol";
+import {IArbitrator} from "@kleros/erc-792/contracts/IArbitrator.sol";
+import {IAMB} from "./dependencies/IAMB.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
@@ -26,7 +26,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     address public immutable homeProxy;
 
     /// @dev The chain ID where the home proxy is deployed.
-    uint256 public immutable homeChainId;
+    bytes32 public immutable homeChainId;
 
     /// @dev The address of the arbitrator. TRUSTED.
     IArbitrator public immutable arbitrator;
@@ -41,7 +41,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     uint256 public constant META_EVIDENCE_ID = 0;
 
     /// @dev The number of choices for the arbitrator.
-    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 2;
+    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max;
 
     enum Status {None, Requested, Created, Ruled, Failed}
 
@@ -70,7 +70,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     modifier onlyHomeProxy() {
         require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == bytes32(homeChainId), "Only home chain allowed");
+        require(amb.messageSourceChainId() == homeChainId, "Only home chain allowed");
         require(amb.messageSender() == homeProxy, "Only home proxy allowed");
         _;
     }
@@ -86,7 +86,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     constructor(
         IAMB _amb,
         address _homeProxy,
-        uint256 _homeChainId,
+        bytes32 _homeChainId,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -235,9 +235,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /**
      * @notice Gets the fee to create a dispute.
+     * @param _questionID the ID of the question.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(bytes32 questionID) external view override returns (uint256) {
+    function getDisputeFee(bytes32 _questionID) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 }

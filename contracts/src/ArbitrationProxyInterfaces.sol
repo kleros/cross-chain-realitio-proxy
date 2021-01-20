@@ -174,7 +174,8 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
 
     /**
      * @notice Gets the fee to create a dispute.
+     * @param _questionID the ID of the question.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(bytes32 questionID) external view returns (uint256);
+    function getDisputeFee(bytes32 _questionID) external view returns (uint256);
 }

@@ -10,10 +10,10 @@
 
 pragma solidity ^0.7.2;
 
-import "@kleros/arbitrable-proxy-contracts/contracts/IDisputeResolver.sol";
-import "@kleros/ethereum-libraries/contracts/CappedMath.sol";
-import "./dependencies/IAMB.sol";
-import "./ArbitrationProxyInterfaces.sol";
+import {IDisputeResolver, IArbitrator} from "@kleros/arbitrable-proxy-contracts/contracts/IDisputeResolver.sol";
+import {CappedMath} from "@kleros/ethereum-libraries/contracts/CappedMath.sol";
+import {IAMB} from "./dependencies/IAMB.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
@@ -23,7 +23,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     using CappedMath for uint256;
 
     /* Constants */
-    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 1; // The number of choices for the arbitrator.
+    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
 
     /* Storage */
@@ -56,7 +56,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
     address public homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
-    uint256 public homeChainId; // The chain ID where the home proxy is deployed.
+    bytes32 public homeChainId; // The chain ID where the home proxy is deployed.
 
     string public termsOfService; // The path for the Terms of Service for Kleros as an arbitrator for Realitio.
 
@@ -85,7 +85,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     modifier onlyHomeProxy() {
         require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == bytes32(homeChainId), "Only home chain allowed");
+        require(amb.messageSourceChainId() == homeChainId, "Only home chain allowed");
         require(amb.messageSender() == homeProxy, "Only home proxy allowed");
         _;
     }
@@ -104,7 +104,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     constructor(
         IAMB _amb,
         address _homeProxy,
-        uint256 _homeChainId,
+        bytes32 _homeChainId,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -488,6 +488,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Gets the fee to create a dispute.
+     * @param _questionID the ID of the question.
      * @return The fee to create a dispute.
      */
     function getDisputeFee(bytes32 _questionID) external view override returns (uint256) {

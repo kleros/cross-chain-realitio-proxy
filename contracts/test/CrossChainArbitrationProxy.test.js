@@ -1,7 +1,7 @@
 const { ethers } = require("hardhat");
 const { solidity } = require("ethereum-waffle");
 const { use, expect } = require("chai");
-const getDeployAddress = require("../deploy-helpers/getDeployAddress");
+const getContractAddress = require("../deploy-helpers/getContractAddress");
 
 use(solidity);
 
@@ -20,8 +20,8 @@ let asker;
 let answerer;
 let requester;
 
-const homeChainId = 0;
-const foreignChainId = 0;
+const homeChainId = hexZeroPad(0, 32);
+const foreignChainId = hexZeroPad(0, 32);
 
 const arbitrationFee = BigNumber.from(BigInt(1e18));
 const arbitratorExtraData = "0x00";
@@ -344,8 +344,8 @@ describe("Cross-Chain Arbitration", () => {
     const address = await signer.getAddress();
     const nonce = await signer.getTransactionCount();
 
-    const foreignProxyAddress = getDeployAddress(address, nonce);
-    const homeProxyAddress = getDeployAddress(address, nonce + 1);
+    const foreignProxyAddress = getContractAddress(address, nonce);
+    const homeProxyAddress = getContractAddress(address, nonce + 1);
 
     const foreignProxy = await ForeignProxy.deploy(
       amb.address,

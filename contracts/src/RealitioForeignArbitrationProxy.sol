@@ -40,8 +40,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /// @dev The ID of the MetaEvidence for disputes.
     uint256 public constant META_EVIDENCE_ID = 0;
 
-    /// @dev The number of choices for the arbitrator.
-    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max;
+    /// @dev The number of choices for the arbitrator. Kleros is currently able to provide ruling values of up to 2^256 - 2.
+    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max - 1;
 
     enum Status {None, Requested, Created, Ruled, Failed}
 

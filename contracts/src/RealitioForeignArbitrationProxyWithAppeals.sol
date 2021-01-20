@@ -23,7 +23,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     using CappedMath for uint256;
 
     /* Constants */
-    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
+    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max - 1; // The number of choices for the arbitrator. Kleros is currently able to provide ruling values of up to 2^256 - 2.
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
 
     /* Storage */

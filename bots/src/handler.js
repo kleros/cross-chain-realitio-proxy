@@ -1,7 +1,7 @@
-import checkArbitrationAnswersHandler from "./handlers/checkArbitrationAnswers";
+import checkArbitratorAnswersHandler from "./handlers/checkArbitratorAnswers";
 import checkNotifiedRequestsHandler from "./handlers/checkNotifiedRequests";
 import checkRejectedRequestsHandler from "./handlers/checkRejectedRequests";
-import checkAcceptedArbitrationRequestsHandler from "./handlers/checkAcceptedArbitrationRequests";
+import checkRequestedArbitrationsHandler from "./handlers/checkRequestedArbitrations";
 import createHomeChainApi from "./on-chain-api/home-chain/createApiInstance";
 import createForeignChainApi from "./on-chain-api/foreign-chain/createApiInstance";
 
@@ -13,10 +13,10 @@ export async function checkRejectedRequests() {
   await checkRejectedRequestsHandler({ homeChainApi: await createHomeChainApi() });
 }
 
-export async function checkArbitrationAnswers() {
-  await checkArbitrationAnswersHandler({ homeChainApi: await createHomeChainApi() });
+export async function checkArbitratorAnswers() {
+  await checkArbitratorAnswersHandler({ homeChainApi: await createHomeChainApi() });
 }
 
-export async function checkAcceptedArbitrationRequests() {
-  await checkAcceptedArbitrationRequestsHandler({ foreignChainApi: await createForeignChainApi() });
+export async function checkRequestedArbitrations() {
+  await checkRequestedArbitrationsHandler({ foreignChainApi: await createForeignChainApi() });
 }

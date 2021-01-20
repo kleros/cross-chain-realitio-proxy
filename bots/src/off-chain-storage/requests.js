@@ -50,13 +50,16 @@ export async function deleteAllRequests() {
     },
   });
 
-  const requestIds = await fetchAllRequestIds();
+  const data = await fetchAllRequestIds();
 
-  if (requestIds.length === 0) {
+  if (data.length === 0) {
     return;
   }
 
-  return compose(batchWrite(requestsTable), map(createDeleteRequest))(requestIds);
+  return compose(
+    batchWrite(requestsTable),
+    map(compose(createDeleteRequest, pick(["requestId", "chainId"], normalizeData)))
+  )(data);
 }
 
 export async function fetchRequestsByChainIdAndStatus({ chainId, status }) {
@@ -98,7 +101,7 @@ export async function updateRequest(data) {
     })
     .promise();
 
-  return map(denormalizeData, result.Attributes);
+  return denormalizeData(result.Attributes);
 }
 
 export async function removeRequest(data) {
@@ -115,5 +118,5 @@ export async function removeRequest(data) {
     })
     .promise();
 
-  return map(denormalizeData, result.Attributes);
+  return denormalizeData(result.Attributes);
 }

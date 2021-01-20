@@ -1,4 +1,4 @@
-import { andThen, cond, map, pick, pipeWith, reduceBy } from "ramda";
+import { andThen, cond, filter, map, pick, pipeWith, reduceBy } from "ramda";
 import deepMerge from "deepmerge";
 import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
 import { fetchRequestsByChainId, removeRequest, saveRequests, updateRequest } from "~/off-chain-storage/requests";
@@ -10,28 +10,31 @@ const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 const mergeOnChainOntoOffChain = ([offChainArbitration, onChainArbitration]) =>
   deepMerge(offChainArbitration, onChainArbitration);
 
-export default async function checkAcceptedArbitrationRequests({ foreignChainApi }) {
+export default async function checkRequestedArbitrations({ foreignChainApi }) {
   const chainId = await foreignChainApi.getChainId();
 
-  await checkNewRequestedArbitrations();
+  await checkUntrackedArbitrationRequests();
   await processArbitrationRequests();
 
-  async function checkNewRequestedArbitrations() {
+  async function checkUntrackedArbitrationRequests() {
     const [fromBlock, toBlock] = await P.all([
       getBlockHeight("ACCEPTED_ARBITRATION_REQUESTS"),
       foreignChainApi.getBlockNumber(),
     ]);
 
-    const newArbitrationRequests = await foreignChainApi.getRequestedArbitrations({ fromBlock, toBlock });
+    const untrackedArbitrationRequests = filter(
+      ({ status }) => status !== status.None,
+      await foreignChainApi.getRequestedArbitrations({ fromBlock, toBlock })
+    );
 
-    await saveRequests(newArbitrationRequests);
+    await saveRequests(untrackedArbitrationRequests);
 
     const blockHeight = toBlock + 1;
     await updateBlockHeight({ key: "ACCEPTED_ARBITRATION_REQUESTS", blockHeight });
     console.info({ blockHeight }, "Set ACCEPTED_ARBITRATION_REQUESTS block height");
 
     const stats = {
-      data: map(pick(["questionId", "contestedAnswer", "chainId", "status"]), newArbitrationRequests),
+      data: map(pick(["questionId", "contestedAnswer", "chainId", "status"]), untrackedArbitrationRequests),
       fromBlock,
       toBlock,
     };

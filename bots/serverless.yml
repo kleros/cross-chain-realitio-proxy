@@ -126,15 +126,15 @@ functions:
       - schedule:
           rate: cron(15/6 * * * ? *) # every 1 hour at hh:00
 
-  checkAcceptedArbitrationRequests:
-    handler: src/handler.checkAcceptedArbitrationRequests
+  checkRequestedArbitrations:
+    handler: src/handler.checkRequestedArbitrations
     timeout: 600
     events:
       - schedule:
           rate: cron(30/6 * * * ? *) # every hour at hh:45
 
-  checkArbitrationAnswers:
-    handler: src/handler.checkArbitrationAnswers
+  checkArbitratorAnswers:
+    handler: src/handler.checkArbitratorAnswers
     timeout: 600
     events:
       - schedule:

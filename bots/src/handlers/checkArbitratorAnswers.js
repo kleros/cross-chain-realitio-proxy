@@ -1,7 +1,7 @@
 import { andThen, cond, filter, map, pick, pipeWith, reduceBy } from "ramda";
 import deepMerge from "deepmerge";
+import { fetchRequestsByChainId, saveRequests, removeRequest } from "~/off-chain-storage/requests";
 import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
-import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
 import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
@@ -9,80 +9,84 @@ const asyncPipe = pipeWith((f, res) => andThen(f, P.resolve(res)));
 
 const mergeOnChainOntoOffChain = ([offChainRequest, onChainRequest]) => deepMerge(offChainRequest, onChainRequest);
 
-export default async function checkNotifiedRequests({ homeChainApi }) {
+export default async function checkArbitratorAnswers({ homeChainApi }) {
   const chainId = await homeChainApi.getChainId();
 
-  await checkUntrackedNotifiedRequests();
-  await checkCurrentNotifiedRequests();
+  await checkUntrackedArbitratorAnswers();
+  await checkCurrentArbitratorAnswers();
 
-  async function checkUntrackedNotifiedRequests() {
-    const [fromBlock, toBlock] = await P.all([getBlockHeight("NOTIFIED_REQUESTS"), homeChainApi.getBlockNumber()]);
+  async function checkUntrackedArbitratorAnswers() {
+    const [fromBlock, toBlock] = await P.all([getBlockHeight("RULED_REQUESTS"), homeChainApi.getBlockNumber()]);
 
     const untrackedNotifiedRequests = filter(
-      ({ status }) => status !== Status.None,
+      ({ status }) => [Status.AwaitingRuling, Status.Ruled].includes(status),
       await homeChainApi.getNotifiedRequests({ fromBlock, toBlock })
     );
 
     await saveRequests(untrackedNotifiedRequests);
 
     const blockHeight = toBlock + 1;
-    await updateBlockHeight({ key: "NOTIFIED_REQUESTS", blockHeight });
-    console.info({ blockHeight }, "Set NOTIFIED_REQUESTS block height");
+    await updateBlockHeight({ key: "RULED_REQUESTS", blockHeight });
+    console.info({ blockHeight }, "Set RULED_REQUESTS block height");
 
     const stats = {
-      data: map(pick(["questionId", "chainId", "status"]), untrackedNotifiedRequests),
+      data: map(pick(["questionId", "chainId"]), untrackedNotifiedRequests),
       fromBlock,
       toBlock,
     };
 
-    console.info(stats, "Found new notified arbitration requests");
+    console.info(stats, "Found new requests with arbitrator answers");
 
     return stats;
   }
 
-  async function checkCurrentNotifiedRequests() {
-    const requestNotified = ([_, onChainArbitration]) => onChainArbitration.status === Status.Notified;
-    const handleNotifiedRequest = asyncPipe([
+  async function checkCurrentArbitratorAnswers() {
+    const requestFinishedOrCanceled = ([_, onChainRequest]) =>
+      [Status.None, Status.Finished].includes(onChainRequest.status);
+    const removeOffChainRequest = asyncPipe([
       mergeOnChainOntoOffChain,
-      homeChainApi.handleNotifiedRequest,
+      removeRequest,
       (request) => ({
-        action: "NOTIFIED_REQUEST_HANDLED",
+        action: "OFF_CHAIN_REQUEST_REMOVED",
         payload: request,
       }),
     ]);
 
-    const requestStatusChanged = ([offChainRequest, onChainRequest]) => offChainRequest.status != onChainRequest.status;
-    const updateOffChainRequest = asyncPipe([
+    const requestRuled = ([_, onChainArbitration]) => onChainArbitration.status === Status.Ruled;
+    const reportArbitrationAnswer = asyncPipe([
       mergeOnChainOntoOffChain,
-      updateRequest,
+      homeChainApi.reportArbitrationAnswer,
       (request) => ({
-        action: "STATUS_CHANGED",
+        action: "ARBITRATION_ANSWER_REPORTED",
         payload: request,
       }),
     ]);
 
     const noop = asyncPipe([
       mergeOnChainOntoOffChain,
-      (request) => ({
+      (arbtration) => ({
         action: "NO_OP",
-        payload: request,
+        payload: arbtration,
       }),
     ]);
+
+    const requestsWithRuling = await fetchRequestsByChainId({ status: Status.Ruled, chainId });
+
+    console.info(
+      { data: map(pick(["questionId", "contestedAnswer"]), requestsWithRuling) },
+      "Fetched requests which received the arbitration ruling"
+    );
 
     const pipeline = asyncPipe([
       fetchOnChainCounterpart,
       cond([
-        [requestNotified, handleNotifiedRequest],
-        [requestStatusChanged, updateOffChainRequest],
+        [requestFinishedOrCanceled, removeOffChainRequest],
+        [requestRuled, reportArbitrationAnswer],
         [() => true, noop],
       ]),
     ]);
 
-    const notifiedRequests = await fetchRequestsByChainIdAndStatus({ status: Status.Notified, chainId });
-
-    console.info({ data: map(pick(["questionId", "contestedAnswer"]), notifiedRequests) }, "Fetched notified requests");
-
-    const results = await P.allSettled(map(pipeline, notifiedRequests));
+    const results = await P.allSettled(map(pipeline, requestsWithRuling));
 
     const groupQuestionsOrErrorMessage = (acc, r) => {
       if (r.status === "rejected") {
@@ -96,9 +100,7 @@ export default async function checkNotifiedRequests({ homeChainApi }) {
     const toTag = (r) => (r.status === "rejected" ? "FAILURE" : r.value?.action);
     const stats = reduceBy(groupQuestionsOrErrorMessage, [], toTag, results);
 
-    console.info(stats, "Processed notified requests");
-
-    return stats;
+    console.info(stats, "Processed requests with ruling");
   }
 
   async function fetchOnChainCounterpart(offChainRequest) {

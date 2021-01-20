@@ -1,7 +1,7 @@
-import { andThen, cond, map, pick, pipeWith, reduceBy } from "ramda";
 import deepMerge from "deepmerge";
-import { getBlockHeight, removeRequest, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
-import { fetchRequestsByChainIdAndStatus, saveRequests, updateRequest } from "~/off-chain-storage/requests";
+import { andThen, cond, filter, map, pick, pipeWith, reduceBy } from "ramda";
+import { getBlockHeight, updateBlockHeight } from "~/off-chain-storage/chainMetadata";
+import { fetchRequestsByChainIdAndStatus, removeRequest, saveRequests } from "~/off-chain-storage/requests";
 import { Status } from "~/on-chain-api/home-chain/entities";
 import * as P from "~/shared/promise";
 
@@ -12,25 +12,28 @@ const mergeOnChainOntoOffChain = ([offChainRequest, onChainRequest]) => deepMerg
 export default async function checkRejectedRequests({ homeChainApi }) {
   const chainId = await homeChainApi.getChainId();
 
-  await checkNewRejectedRequests();
+  await checkUntrackedRejectedRequests();
   await checkCurrentRejectedRequests();
 
-  async function checkNewRejectedRequests() {
+  async function checkUntrackedRejectedRequests() {
     const [fromBlock, toBlock] = await Promise.all([
       getBlockHeight("REJECTED_REQUESTS"),
       homeChainApi.getBlockNumber(),
     ]);
 
-    const newRequests = await homeChainApi.getRejectedRequests({ fromBlock, toBlock });
+    const untrackedRejectedRequests = filter(
+      ({ status }) => status === Status.Rejected,
+      await homeChainApi.getRejectedRequests({ fromBlock, toBlock })
+    );
 
-    await saveRequests(newRequests);
+    await saveRequests(untrackedRejectedRequests);
 
     const blockHeight = toBlock + 1;
     await updateBlockHeight({ key: "REJECTED_REQUESTS", blockHeight });
     console.info({ blockHeight }, "Set REJECTED_REQUESTS block height");
 
     const stats = {
-      data: map(pick(["questionId", "chainId", "status"]), newRequests),
+      data: map(pick(["questionId", "contestedAnswer"]), untrackedRejectedRequests),
       fromBlock,
       toBlock,
     };
@@ -48,16 +51,6 @@ export default async function checkRejectedRequests({ homeChainApi }) {
       (arbitration) => ({
         action: "REQUEST_REMOVED",
         payload: arbitration,
-      }),
-    ]);
-
-    const requestStatusChanged = ([offChainRequest, onChainRequest]) => offChainRequest.status != onChainRequest.status;
-    const updateOffChainRequest = asyncPipe([
-      mergeOnChainOntoOffChain,
-      updateRequest,
-      (request) => ({
-        action: "STATUS_CHANGED",
-        payload: request,
       }),
     ]);
 
@@ -83,7 +76,6 @@ export default async function checkRejectedRequests({ homeChainApi }) {
       fetchOnChainCounterpart,
       cond([
         [requestRemoved, removeOffChainRequest],
-        [requestStatusChanged, updateOffChainRequest],
         [requestRejected, handleRejectedRequest],
         [() => true, noop],
       ]),

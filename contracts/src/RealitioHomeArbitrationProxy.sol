@@ -45,7 +45,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         bytes32 arbitratorAnswer;
     }
 
-    /// @dev Associates an arbitration request with a question ID and a contested answer.
+    /// @dev Associates an arbitration request with a question ID and a contested answer. requests[questionID][constestedAnswer]
     mapping(bytes32 => mapping(bytes32 => Request)) public requests;
 
     /// @dev Associates a question ID with the contested answer that led to the arbitration be requested.
@@ -101,16 +101,15 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
             } catch {
                 /*
                  * Will fail if:
-                 *  - The question does not exist
-                 *  - The question was not answered yet
-                 *  - The contested answer is different from the current best answer
-                 *  - Another request was already accepted
+                 *  - The question does not exist.
+                 *  - The question was not answered yet.
+                 *  - Another request was already accepted.
                  */
                 request.status = Status.Rejected;
 
                 emit RequestRejected(_questionID, _contestedAnswer, _requester);
             }
-        } else {
+        } else { // The contested answer is different from the current best answer.
             request.status = Status.Rejected;
 
             emit RequestRejected(_questionID, _contestedAnswer, _requester);

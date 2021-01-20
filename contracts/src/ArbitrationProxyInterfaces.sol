@@ -110,7 +110,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _contestedAnswer The answer provided by the requester.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      * @param _requester The requester.
      */
     event ArbitrationRequested(
@@ -122,7 +122,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Should be emitted when the dispute is created.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _contestedAnswer The answer provided by the requester.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      * @param _disputeID The ID of the dispute.
      */
     event ArbitrationCreated(bytes32 indexed _questionID, bytes32 indexed _contestedAnswer, uint256 indexed _disputeID);
@@ -132,14 +132,14 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
      * @dev This will happen if there is an increase in the arbitration fees
      * between the time the arbitration is made and the time it is acknowledged.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _contestedAnswer The answer provided by the requester.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     event ArbitrationFailed(bytes32 indexed _questionID, bytes32 indexed _contestedAnswer);
 
     /**
      * @notice Should be emitted when the arbitration is canceled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _contestedAnswer The answer provided by the requester.
+     * @param _contestedAnswer The answer the requester deems to be incorrect.
      */
     event ArbitrationCanceled(bytes32 indexed _questionID, bytes32 indexed _contestedAnswer);
 

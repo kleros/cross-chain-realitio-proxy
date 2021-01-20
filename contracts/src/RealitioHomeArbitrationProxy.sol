@@ -10,18 +10,15 @@
 
 pragma solidity ^0.7.2;
 
-import "./dependencies/IAMB.sol";
-import "./dependencies/RealitioInterface.sol";
-import "./ArbitrationProxyInterfaces.sol";
+import {IAMB} from "./dependencies/IAMB.sol";
+import {RealitioInterface} from "./dependencies/RealitioInterface.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
  * @dev This contract is meant to be deployed to side-chains (i.e.: xDAI) in which Reality.eth is deployed.
  */
 contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
-    /// @dev The contract governor. TRUSTED.
-    address public governor = msg.sender;
-
     /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
     RealitioInterface public immutable realitio;
 
@@ -29,10 +26,10 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     IAMB public immutable amb;
 
     /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
-    address public foreignProxy;
+    address public immutable foreignProxy;
 
     /// @dev The chain ID where the foreign proxy is deployed.
-    uint256 public foreignChainId;
+    uint256 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
@@ -48,7 +45,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Associates an arbitration request with a question ID and a contested answer. requests[questionID][constestedAnswer]
     mapping(bytes32 => mapping(bytes32 => Request)) public requests;
 
-    /// @dev Associates a question ID with the contested answer that led to the arbitration be requested.
+    /// @dev Associates a question ID with the contested answer that led to the arbitration be requested. questionIDToContestedAnswer[questionID]
     mapping(bytes32 => bytes32) public questionIDToContestedAnswer;
 
     modifier onlyForeignProxy() {
@@ -109,7 +106,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
                 emit RequestRejected(_questionID, _contestedAnswer, _requester);
             }
-        } else { // The contested answer is different from the current best answer.
+        } else {
+            // The contested answer is different from the current best answer.
             request.status = Status.Rejected;
 
             emit RequestRejected(_questionID, _contestedAnswer, _requester);

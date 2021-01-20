@@ -23,10 +23,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     IAMB public immutable amb;
 
     /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
-    address public homeProxy;
+    address public immutable homeProxy;
 
     /// @dev The chain ID where the home proxy is deployed.
-    uint256 public homeChainId;
+    uint256 public immutable homeChainId;
 
     /// @dev The address of the arbitrator. TRUSTED.
     IArbitrator public immutable arbitrator;
@@ -34,14 +34,14 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /// @dev The extra data used to raise a dispute in the arbitrator.
     bytes public arbitratorExtraData;
 
+    /// @dev The path for the Terms of Service for Kleros as an arbitrator for Realitio.
+    string public termsOfService;
+
     /// @dev The ID of the MetaEvidence for disputes.
     uint256 public constant META_EVIDENCE_ID = 0;
 
     /// @dev The number of choices for the arbitrator.
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = (2**256) - 2;
-
-    /// @dev The path for the Terms of Service for Kleros as an arbitrator for Realitio.
-    string public termsOfService;
 
     enum Status {None, Requested, Created, Ruled, Failed}
 
@@ -57,7 +57,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /// @dev Tracks arbitration requests for question ID. arbitrationRequests[questionID][contestedAnswer]
     mapping(bytes32 => mapping(bytes32 => ArbitrationRequest)) public arbitrationRequests;
 
-    /// @dev Associates dispute ID to question ID and the contested answer. disputeIDToQuestionAndAnswer[disputeID] -> [questionID,contestedAnswer]
+    /// @dev Associates dispute ID to question ID and the contested answer. disputeIDToQuestionAndAnswer[disputeID] -> [questionID, contestedAnswer]
     mapping(uint256 => bytes32[2]) public disputeIDToQuestionAndAnswer;
 
     /// @dev Whether a dispute has already been created for the given question ID or not. questionIDToDisputeExists[questionID]
@@ -92,8 +92,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         string memory _metaEvidence,
         string memory _termsOfService
     ) {
-        require(_homeProxy != address(0), "Invalid Home Proxy");
-
         amb = _amb;
         homeProxy = _homeProxy;
         homeChainId = _homeChainId;

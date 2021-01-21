@@ -19,23 +19,23 @@ async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethe
   const { providers } = ethers;
   const { hexZeroPad } = ethers.utils;
 
-  const foreignNetworks = {
-    77: config.networks.kovan,
-    100: config.networks.mainnet,
-  };
-
   const accounts = await getNamedAccounts();
   const { deployer, counterPartyDeployer } = accounts;
   const chainId = await getChainId();
 
+  const foreignNetworks = {
+    77: config.networks.kovan,
+    100: config.networks.mainnet,
+  };
   const { url } = foreignNetworks[chainId];
   const foreignChainProvider = new providers.JsonRpcProvider(url);
   const nonce = await foreignChainProvider.getTransactionCount(counterPartyDeployer);
+
+  const { amb, foreignChainId, realitio } = paramsByChainId[chainId];
+
   // Foreign proxy deploy will happen AFTER this, so the nonce on that account should be the current transaction count
   const foreignProxyAddress = getContractAddress(counterPartyDeployer, nonce);
   const foreignChainIdAsBytes32 = hexZeroPad(foreignChainId, 32);
-
-  const { amb, foreignChainId, realitio } = paramsByChainId[chainId];
 
   const homeProxy = await deploy("RealitioHomeArbitrationProxy", {
     from: deployer,

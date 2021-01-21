@@ -11,6 +11,7 @@ const paramsByChainId = {
     homeChainId: 77,
     metaEvidence: "/ipfs/Qmc2cpRZgT5PmR4ZikDsVG54xejKF62qSBBnYf4R5bpiNH/realitio.json",
     termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
+    gasPrice: "5000000000",
   },
   1: {
     amb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
@@ -20,6 +21,7 @@ const paramsByChainId = {
     homeChainId: 100,
     metaEvidence: "/ipfs/QmekJhnjk7ZBQES33dsggp6nVGxAbxMWgsrhMvV8Ga761n/realitio.json",
     termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
+    gasPrice: "80000000000",
   },
 };
 
@@ -28,28 +30,31 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
   const { providers } = ethers;
   const { hexZeroPad } = ethers.utils;
 
-  const homeNetworks = {
-    42: config.networks.sokol,
-    1: config.networks.xdai,
-  };
-
   const accounts = await getNamedAccounts();
   const { deployer, counterPartyDeployer } = accounts;
   const chainId = await getChainId();
 
+  const homeNetworks = {
+    42: config.networks.sokol,
+    1: config.networks.xdai,
+  };
   const { url } = homeNetworks[chainId];
   const homeChainProvider = new providers.JsonRpcProvider(url);
   const nonce = await homeChainProvider.getTransactionCount(counterPartyDeployer);
+
+  const { amb, arbitrator, arbitratorExtraData, homeChainId, metaEvidence, termsOfService, gasPrice } = paramsByChainId[
+    chainId
+  ];
+
   // Foreign Proxy deploy will happen AFTER the Home Proxy deploy, so we need to subtract 1 from the nonce
   const homeProxyAddress = getContractAddress(counterPartyDeployer, nonce - 1);
   const homeChainIdAsBytes32 = hexZeroPad(homeChainId, 32);
 
-  const { amb, arbitrator, arbitratorExtraData, homeChainId, metaEvidence, termsOfService } = paramsByChainId[chainId];
-
   const foreignProxy = await deploy("RealitioForeignArbitrationProxy", {
     from: deployer,
-    gas: 8000000,
     args: [amb, homeProxyAddress, homeChainIdAsBytes32, arbitrator, arbitratorExtraData, metaEvidence, termsOfService],
+    gas: 8000000,
+    gasPrice,
   });
 
   console.log("Home Proxy:", homeProxyAddress);

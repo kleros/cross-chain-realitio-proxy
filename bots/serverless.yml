@@ -117,28 +117,28 @@ functions:
     timeout: 600
     events:
       - schedule:
-          rate: cron(0/6 * * * ? *) # every 1 hour at hh:00
+          rate: cron(0,20,40 * * * ? *)
 
   checkRejectedRequests:
     handler: src/handler.checkRejectedRequests
     timeout: 600
     events:
       - schedule:
-          rate: cron(15/6 * * * ? *) # every 1 hour at hh:00
+          rate: cron(10,30,50 * * * ? *)
 
   checkRequestedArbitrations:
     handler: src/handler.checkRequestedArbitrations
     timeout: 600
     events:
       - schedule:
-          rate: cron(30/6 * * * ? *) # every hour at hh:45
+          rate: cron(20,40,0 * * * ? *)
 
   checkArbitratorAnswers:
     handler: src/handler.checkArbitratorAnswers
     timeout: 600
     events:
       - schedule:
-          rate: cron(45/6 * * * ? *) # every hour at hh:45
+          rate: cron(30,50,10 * * * ? *)
 
 # you can add CloudFormation resource templates here
 resources:

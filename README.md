@@ -29,15 +29,7 @@ Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB
 
 ## Deployed Addresses
 
-### Home Proxy
-
-- Sokol: [deployment](contracts/deployments/sokol/RealitioHomeArbitrationProxy.json#L2).
-- xDai: `<none>`
-
-### Foreign Proxy
-
-- Kovan: [deployment](contracts/deployments/kovan/RealitioForeignArbitrationProxy.json#L2).
-- Mainnet: `<none>`
+See [contracts/README.md](contracts/README.md).
 
 ## Contributing
 

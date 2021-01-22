@@ -29,7 +29,7 @@ Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB
 
 ## Deployed Addresses
 
-See [contracts/README.md](contracts/README.md).
+See [contracts/README.md](contracts/README.md#deployed-addresses).
 
 ## Contributing
 

@@ -52,42 +52,40 @@ yarn fix
 
 **NOTICE:** the commands bellow work only if you are inside the `contracts/` directory.
 
-#### 1. Deploy the Home Proxy
+#### 0. Set the Environment Variables
+
+Copy `.env.example` file as `.env` and edit it accordingly.
 
 ```
-yarn deploy --network <sokol|xdai> --reset
+cp .env.example .env
 ```
 
-#### 2. Deploy the Foreign Proxy
+The following env vars are required:
+- `PRIVATE_KEY`: the private key of the deployer account used for xDAI, Sokol and Kovan.
+- `MAINNET_PRIVATE_KEY`: the private key of the deployer account used for Mainnet.
+- `INFURA_API_KEY`: the API key for infura.
 
-```
-yarn deploy --network <kovan|mainnet> --reset
-```
+The ones below are optional:
+- `ETHERSCAN_API_KEY`: used only if you wish to verify the source of the newly deployed contracts on Etherscan.
 
-#### 3. Link the Proxies Together
+#### 1. Deploy the Proxies
 
-Instead of providing the specific network, here you must pass the _environment_ of the contracts:
-
-- **staging**: means the Kovan/Sokol pair
-- **production**: means the Mainnet/xDAI pair
-
-```
-y hardhat link-proxies --env <staging|production>
+```sh
+yarn deploy:staging # to deploy to Sokol/Kovan
+# yarn deploy:production # to deploy to xDAI/Mainnet
 ```
 
-Answer _yes_ for the questions.
+The deployed addresses should be output to the screen after the deployment is complete.
+If you miss that, you can always go to the `deployments/<network>` directory and look for the respective file.
 
-#### 4. Initialize the Foreign Proxy
+#### 2. Verify the Source Code for Contracts
 
-The Foreign Proxy must be properly initialized before being able to receive arbitration requests.
+This must be done for each network separately.
 
-Instead of providing the specific network, here you must pass the _environment_ of the contracts:
+For `Kovan` or `Mainnet` you can use the `etherscan-verify` command from `hardhat`:
 
-- **staging**: means the Kovan/Sokol pair
-- **production**: means the Mainnet/xDAI pair
-
-```
-y hardhat initialize-foreign-proxy --env <staging|production> --meta-evidence <IPFS path for the meta evidence> --terms-of-service <IPFS path for the terms of service>
+```sh
+yarn hardhat --network <kovan|mainnet> etherscan-verify
 ```
 
-Answer _yes_ for the questions.
+For `Sokol` and `xDAI` the process currently must be done manually through [Blockscout](https://blockscout.com/).

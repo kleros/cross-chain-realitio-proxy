@@ -19,9 +19,9 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f4",
     homeChainId: 100,
-    metaEvidence: "/ipfs/QmekJhnjk7ZBQES33dsggp6nVGxAbxMWgsrhMvV8Ga761n/realitio.json",
-    termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
-    gasPrice: "80000000000",
+    metaEvidence: "/ipfs/Qmc6bWTzPMFeRx9VWHwnDpDXfimwNsvnEgJo3gymg37rRd/realitio.json",
+    termsOfService: "/ipfs/QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
+    gasPrice: "65000000000",
   },
 };
 

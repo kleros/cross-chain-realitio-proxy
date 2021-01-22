@@ -56,7 +56,7 @@ yarn fix
 
 Copy `.env.example` file as `.env` and edit it accordingly.
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -68,9 +68,13 @@ The following env vars are required:
 The ones below are optional:
 - `ETHERSCAN_API_KEY`: used only if you wish to verify the source of the newly deployed contracts on Etherscan.
 
-#### 1. Deploy the Proxies
+#### 1. Update the Constructor Parameters (optional)
 
-```sh
+If some of the constructor parameters (such as the Meta Evidence) needs to change, you need to update the files in the `deploy/` directory.
+
+#### 2. Deploy the Proxies
+
+```bash
 yarn deploy:staging # to deploy to Sokol/Kovan
 # yarn deploy:production # to deploy to xDAI/Mainnet
 ```
@@ -78,13 +82,13 @@ yarn deploy:staging # to deploy to Sokol/Kovan
 The deployed addresses should be output to the screen after the deployment is complete.
 If you miss that, you can always go to the `deployments/<network>` directory and look for the respective file.
 
-#### 2. Verify the Source Code for Contracts
+#### 3. Verify the Source Code for Contracts
 
 This must be done for each network separately.
 
 For `Kovan` or `Mainnet` you can use the `etherscan-verify` command from `hardhat`:
 
-```sh
+```bash
 yarn hardhat --network <kovan|mainnet> etherscan-verify
 ```
 

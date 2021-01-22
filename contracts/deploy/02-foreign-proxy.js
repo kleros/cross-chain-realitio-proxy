@@ -11,7 +11,6 @@ const paramsByChainId = {
     homeChainId: 77,
     metaEvidence: "/ipfs/Qmc2cpRZgT5PmR4ZikDsVG54xejKF62qSBBnYf4R5bpiNH/realitio.json",
     termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
-    gasPrice: "5000000000",
   },
   1: {
     amb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
@@ -21,7 +20,6 @@ const paramsByChainId = {
     homeChainId: 100,
     metaEvidence: "/ipfs/Qmc6bWTzPMFeRx9VWHwnDpDXfimwNsvnEgJo3gymg37rRd/realitio.json",
     termsOfService: "/ipfs/QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
-    gasPrice: "65000000000",
   },
 };
 
@@ -42,9 +40,7 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
   const homeChainProvider = new providers.JsonRpcProvider(url);
   const nonce = await homeChainProvider.getTransactionCount(counterPartyDeployer);
 
-  const { amb, arbitrator, arbitratorExtraData, homeChainId, metaEvidence, termsOfService, gasPrice } = paramsByChainId[
-    chainId
-  ];
+  const { amb, arbitrator, arbitratorExtraData, homeChainId, metaEvidence, termsOfService } = paramsByChainId[chainId];
 
   // Foreign Proxy deploy will happen AFTER the Home Proxy deploy, so we need to subtract 1 from the nonce
   const homeProxyAddress = getContractAddress(counterPartyDeployer, nonce - 1);
@@ -54,7 +50,6 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
     from: deployer,
     args: [amb, homeProxyAddress, homeChainIdAsBytes32, arbitrator, arbitratorExtraData, metaEvidence, termsOfService],
     gas: 8000000,
-    gasPrice,
   });
 
   console.log("Home Proxy:", homeProxyAddress);

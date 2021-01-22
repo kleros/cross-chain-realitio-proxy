@@ -62,7 +62,7 @@ module.exports = {
     },
     mainnet: {
       chainId: 1,
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.MAINNET_PRIVATE_KEY, process.env.PRIVATE_KEY],
       live: true,
       saveDeployments: true,

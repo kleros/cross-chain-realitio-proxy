@@ -16,6 +16,8 @@ contract MockRealitio is RealitioInterface {
         address answerer;
         string description;
         bytes32 answer;
+        uint256 bond;
+        uint256 accumulatedBond;
     }
 
     address public arbitrator;
@@ -57,16 +59,23 @@ contract MockRealitio is RealitioInterface {
     ) external payable {
         Question storage question = questions[uint256(_questionId)];
         require(question.status == Status.Open, "Question is not open");
+        require(msg.value > question.bond, "Bond must increase");
 
         question.answer = _answer;
         question.answerer = msg.sender;
+        question.bond = msg.value;
+        question.accumulatedBond += msg.value;
 
-        emit MockNewAnswer(_answer, _questionId, bytes32(0), msg.sender, 0, block.timestamp, false);
+        emit MockNewAnswer(_answer, _questionId, bytes32(0), msg.sender, question.bond, block.timestamp, false);
     }
 
     function finalizeQuestion(bytes32 _questionId) external {
         Question storage question = questions[uint256(_questionId)];
+        require(question.status == Status.Open, "Question is not Open");
+
         question.status = Status.Finalized;
+
+        payable(question.answerer).send(question.accumulatedBond);
 
         emit MockFinalize(_questionId, question.answer);
     }
@@ -78,7 +87,10 @@ contract MockRealitio is RealitioInterface {
     ) external override {
         Question storage question = questions[uint256(_questionId)];
         require(question.status == Status.Open, "Invalid question status");
-        require(question.answerer != address(0), "Question not answered");
+        require(question.bond > 0, "Question not answered");
+        if (_maxPrevious > 0) {
+            require(question.bond <= _maxPrevious, "Bond has changed");
+        }
 
         question.status = Status.PendingArbitration;
 
@@ -112,10 +124,8 @@ contract MockRealitio is RealitioInterface {
             question.answerer = _payeeIfWrong;
         }
 
-        emit MockFinalize(_questionId, _answer);
-    }
+        payable(question.answerer).send(question.accumulatedBond);
 
-    function getBestAnswer(bytes32 _questionId) external view override returns (bytes32) {
-        return questions[uint256(_questionId)].answer;
+        emit MockFinalize(_questionId, _answer);
     }
 }

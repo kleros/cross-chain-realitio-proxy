@@ -30,13 +30,17 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     enum Status {None, Requested, Created, Ruled, Failed}
 
-    struct Arbitration {
+    struct ArbitrationRequest {
         Status status; // Status of the arbitration.
-        address payable requester; // Address that made the arbitration request.
         uint256 deposit; // The deposit paid by the requester at the time of the arbitration.
         uint256 disputeID; // The ID of the dispute in arbitrator contract.
         uint256 answer; // The answer given by the arbitrator shifted by -1 to match Realitio format.
         Round[] rounds; // Tracks each appeal round of a dispute.
+    }
+
+    struct DisputeDetails {
+        uint256 arbitrationID; // The ID of the arbitration.
+        address requester; // The address of the requester who managed to go through with the arbitration request.
     }
 
     // Round struct stores the contributions made to particular answers.
@@ -55,8 +59,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     uint256 public META_EVIDENCE_ID; // The ID of the MetaEvidence for disputes.
 
     IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
-    address public homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
-    bytes32 public homeChainId; // The chain ID where the home proxy is deployed.
+    address public immutable homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
+    bytes32 public immutable homeChainId; // The chain ID where the home proxy is deployed.
 
     string public termsOfService; // The path for the Terms of Service for Kleros as an arbitrator for Realitio.
 
@@ -64,10 +68,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     uint64 private winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
     uint64 private loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
 
-    mapping(uint256 => mapping(uint256 => Arbitration)) public arbitrationRequests; // Maps arbitration ID to its data.
-    mapping(uint256 => uint256[2]) public disputeIDToArbitrationIDAndAnswerID; // Maps external dispute ids to local arbitration ID and contested answer that led to the dispute.
+    mapping(uint256 => mapping(address => ArbitrationRequest)) public arbitrationRequests; // Maps arbitration ID to its data.
+    mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
-    mapping(uint256 => uint256) public arbitrationIDToAnswerID; // Maps arbitration ID to the constested answer that led to the dispute.
+    mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
 
     /* Events */
 
@@ -155,39 +159,42 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     // ************************ //
 
     /**
-     * @notice Requests arbitration for a given question ID.
+     * @notice Requests arbitration for the given question and contested answer.
+     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be incorrect.
+     * @param _maxPrevious The maximum value of the previous bond for the question.
      */
-    function requestArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external payable override {
+    function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
         require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
 
-        Arbitration storage arbitration = arbitrationRequests[uint256(_questionID)][uint256(_contestedAnswer)];
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
         arbitration.status = Status.Requested;
-        arbitration.requester = msg.sender;
         arbitration.deposit = msg.value;
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _contestedAnswer, msg.sender);
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        emit ArbitrationRequested(_questionID, _contestedAnswer, msg.sender);
+        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
 
     /**
-     * @notice Creates a dispute for a given question ID.
+     * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be incorrect.
+     * @param _requester The requester.
      */
-    function acknowledgeArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external override onlyHomeProxy {
+    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
+        external
+        override
+        onlyHomeProxy
+    {
         uint256 arbitrationID = uint256(_questionID);
-        uint256 answerID = uint256(_contestedAnswer);
-        Arbitration storage arbitration = arbitrationRequests[arbitrationID][answerID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
@@ -196,10 +203,12 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             try
                 arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData)
             returns (uint256 disputeID) {
-                disputeIDToArbitrationIDAndAnswerID[disputeID][0] = arbitrationID;
-                disputeIDToArbitrationIDAndAnswerID[disputeID][1] = answerID;
-                arbitrationIDToAnswerID[arbitrationID] = answerID;
+                DisputeDetails storage disputeDetails = disputeIDToDisputeDetails[disputeID];
+                disputeDetails.arbitrationID = arbitrationID;
+                disputeDetails.requester = _requester;
+
                 arbitrationIDToDisputeExists[arbitrationID] = true;
+                arbitrationIDToRequester[arbitrationID] = _requester;
 
                 // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
                 uint256 remainder = arbitration.deposit - arbitrationCost;
@@ -210,59 +219,57 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    arbitration.requester.send(remainder);
+                    payable(_requester).send(remainder);
                 }
 
-                emit ArbitrationCreated(_questionID, _contestedAnswer, disputeID);
+                emit ArbitrationCreated(_questionID, _requester, disputeID);
                 emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, arbitrationID);
             } catch {
                 arbitration.status = Status.Failed;
-                emit ArbitrationFailed(_questionID, _contestedAnswer);
+                emit ArbitrationFailed(_questionID, _requester);
             }
         } else {
             arbitration.status = Status.Failed;
-            emit ArbitrationFailed(_questionID, _contestedAnswer);
+            emit ArbitrationFailed(_questionID, _requester);
         }
     }
 
     /**
-     * @notice Cancels the arbitration.
+     * @notice Receives the cancelation of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be incorrect.
+     * @param _requester The requester.
      */
-    function cancelArbitration(bytes32 _questionID, bytes32 _contestedAnswer) external override onlyHomeProxy {
+    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyHomeProxy {
         uint256 arbitrationID = uint256(_questionID);
-        uint256 answerID = uint256(_contestedAnswer);
-        Arbitration storage arbitration = arbitrationRequests[arbitrationID][answerID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
-        arbitration.requester.send(arbitration.deposit);
+        payable(_requester).send(arbitration.deposit);
 
-        delete arbitrationRequests[arbitrationID][answerID];
+        delete arbitrationRequests[arbitrationID][_requester];
 
-        emit ArbitrationCanceled(_questionID, _contestedAnswer);
+        emit ArbitrationCanceled(_questionID, _requester);
     }
 
     /**
      * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
-     * @param _contestedAnswer The answer the requester deems to be incorrect.
+     * @param _requester The requester.
      */
-    function handleFailedDisputeCreation(bytes32 _questionID, bytes32 _contestedAnswer) external override {
+    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external override {
         uint256 arbitrationID = uint256(_questionID);
-        uint256 answerID = uint256(_contestedAnswer);
-        Arbitration storage arbitration = arbitrationRequests[arbitrationID][answerID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        arbitration.requester.send(arbitration.deposit);
+        payable(_requester).send(arbitration.deposit);
 
-        delete arbitrationRequests[arbitrationID][answerID];
+        delete arbitrationRequests[arbitrationID][_requester];
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _contestedAnswer);
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        emit ArbitrationCanceled(_questionID, _contestedAnswer);
+        emit ArbitrationCanceled(_questionID, _requester);
     }
 
     // ********************************* //
@@ -276,8 +283,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @return Whether the answer was fully funded or not.
      */
     function fundAppeal(uint256 _arbitrationID, uint256 _answer) external payable override returns (bool) {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         require(arbitration.status == Status.Created, "No dispute to appeal.");
         (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitrator.appealPeriod(arbitration.disputeID);
         require(block.timestamp >= appealPeriodStart && block.timestamp < appealPeriodEnd, "Appeal period is over.");
@@ -342,8 +349,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _round,
         uint256 _answer
     ) public override returns (uint256 reward) {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
         require(arbitration.status == Status.Ruled, "Dispute not resolved");
         // Allow to reimburse if funding of the round was unsuccessful.
@@ -403,8 +410,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         address payable _beneficiary,
         uint256[] memory _contributedTo
     ) external override {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
 
         for (uint256 roundNumber = 0; roundNumber < arbitration.rounds.length; roundNumber++) {
             withdrawFeesAndRewardsForMultipleRulings(_arbitrationID, _beneficiary, roundNumber, _contributedTo);
@@ -417,8 +424,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _evidenceURI Link to evidence.
      */
     function submitEvidence(uint256 _arbitrationID, string calldata _evidenceURI) external override {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         require(arbitration.status == Status.Created, "The status should be Created.");
 
         if (bytes(_evidenceURI).length > 0) {
@@ -433,9 +440,11 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _ruling The ruling given by the arbitrator.
      */
     function rule(uint256 _disputeID, uint256 _ruling) external override onlyArbitrator {
-        uint256 arbitrationID = disputeIDToArbitrationIDAndAnswerID[_disputeID][0];
-        uint256 answerID = disputeIDToArbitrationIDAndAnswerID[_disputeID][1];
-        Arbitration storage arbitration = arbitrationRequests[arbitrationID][answerID];
+        DisputeDetails storage disputeDetails = disputeIDToDisputeDetails[_disputeID];
+        uint256 arbitrationID = disputeDetails.arbitrationID;
+        address requester = disputeDetails.requester;
+
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][requester];
         require(arbitration.status == Status.Created, "Invalid arbitration status");
         uint256 finalRuling = _ruling;
 
@@ -501,8 +510,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @return The number of rounds.
      */
     function getNumberOfRounds(uint256 _arbitrationID) external view returns (uint256) {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         return arbitration.rounds.length;
     }
 
@@ -523,8 +532,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             uint256[] memory fundedAnswers
         )
     {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
         fundedAnswers = round.fundedAnswers;
 
@@ -550,8 +559,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _round,
         uint256 _answer
     ) external view returns (uint256 raised, bool fullyFunded) {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
 
         raised = round.paidFees[_answer];
@@ -571,8 +580,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _round,
         address _contributor
     ) external view returns (uint256[] memory fundedAnswers, uint256[] memory contributions) {
-        uint256 answerID = arbitrationIDToAnswerID[_arbitrationID];
-        Arbitration storage arbitration = arbitrationRequests[_arbitrationID][answerID];
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
 
         fundedAnswers = round.fundedAnswers;
@@ -598,6 +607,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @return localDisputeID Dispute id as in arbitrable contract.
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256 localDisputeID) {
-        return disputeIDToArbitrationIDAndAnswerID[_externalDisputeID][0];
+        return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
     }
 }

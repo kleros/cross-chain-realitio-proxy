@@ -2,6 +2,14 @@
 // Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol
 pragma solidity ^0.7.2;
 
+/**
+ *  @authors: [@hbarcelos]
+ *  @reviewers: []
+ *  @auditors: []
+ *  @bounties: []
+ *  @deployments: []
+ */
+
 /* solhint-disable var-name-mixedcase */
 interface RealitioInterface {
     event LogNewAnswer(
@@ -67,11 +75,4 @@ interface RealitioInterface {
         bytes32 last_answer_or_commitment_id,
         address last_answerer
     ) external;
-
-    /**
-     * @notice Returns the current best answer.
-     * @param question_id The ID of the question.
-     * @return The current best answer.
-     */
-    function getBestAnswer(bytes32 question_id) external view returns (bytes32);
 }

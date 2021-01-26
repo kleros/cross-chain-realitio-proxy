@@ -26,9 +26,9 @@ export default async function createApiInstance() {
     return Number(await web3.eth.getChainId());
   }
 
-  async function getRequest({ questionId, contestedAnswer }) {
+  async function getRequest({ questionId, requester }) {
     const [request, chainId] = await Promise.all([
-      homeProxy.methods.requests(questionId, contestedAnswer).call(),
+      homeProxy.methods.requests(questionId, requester).call(),
       getChainId(),
     ]);
 
@@ -36,7 +36,7 @@ export default async function createApiInstance() {
       ...request,
       chainId,
       questionId,
-      contestedAnswer,
+      requester,
       status: Number(request.status),
     };
   }
@@ -49,7 +49,7 @@ export default async function createApiInstance() {
         ({ returnValues }) =>
           getRequest({
             questionId: returnValues._questionID,
-            contestedAnswer: returnValues._contestedAnswer,
+            requester: returnValues._requester,
           }),
         events
       )
@@ -68,7 +68,7 @@ export default async function createApiInstance() {
         ({ returnValues }) =>
           getRequest({
             questionId: returnValues._questionID,
-            contestedAnswer: returnValues._contestedAnswer,
+            requester: returnValues._requester,
           }),
         events
       )
@@ -80,7 +80,7 @@ export default async function createApiInstance() {
 
   async function handleNotifiedRequest(request) {
     await batchSend({
-      args: [request.questionId, request.contestedAnswer],
+      args: [request.questionId, request.requester],
       method: homeProxy.methods.handleNotifiedRequest,
       to: homeProxy.options.address,
     });
@@ -89,7 +89,7 @@ export default async function createApiInstance() {
 
   async function handleChangedAnswer(request) {
     await batchSend({
-      args: [request.questionId, request.contestedAnswer],
+      args: [request.questionId, request.requester],
       method: homeProxy.methods.handleChangedAnswer,
       to: homeProxy.options.address,
     });
@@ -98,7 +98,7 @@ export default async function createApiInstance() {
 
   async function handleFinalizedQuestion(request) {
     await batchSend({
-      args: [request.questionId, request.contestedAnswer],
+      args: [request.questionId, request.requester],
       method: homeProxy.methods.handleFinalizedQuestion,
       to: homeProxy.options.address,
     });
@@ -107,7 +107,7 @@ export default async function createApiInstance() {
 
   async function handleRejectedRequest(request) {
     await batchSend({
-      args: [request.questionId, request.contestedAnswer],
+      args: [request.questionId, request.requester],
       method: homeProxy.methods.handleRejectedRequest,
       to: homeProxy.options.address,
     });

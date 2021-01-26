@@ -1,5 +1,5 @@
 import ForeignProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json";
-import { compose, filter, into, map, path, prop, propEq } from "ramda";
+import { compose, filter, into, map, prop, propEq } from "ramda";
 import { createBatchSend } from "~/shared/batchSend";
 import { getContract } from "~/shared/contract";
 import { getPastEvents } from "~/shared/events";
@@ -22,9 +22,9 @@ export default async function createApiInstance() {
     return Number(await web3.eth.getChainId());
   }
 
-  async function getArbitrationRequest({ questionId, contestedAnswer }) {
+  async function getArbitrationRequest({ questionId, requester }) {
     const [arbitration, chainId] = await P.all([
-      foreignProxy.methods.arbitrationRequests(questionId, contestedAnswer).call(),
+      foreignProxy.methods.arbitrationRequests(questionId, requester).call(),
       getChainId(),
     ]);
 
@@ -32,7 +32,7 @@ export default async function createApiInstance() {
       ...arbitration,
       chainId,
       questionId,
-      contestedAnswer,
+      requester,
       status: Number(arbitration.status),
     };
   }
@@ -45,7 +45,7 @@ export default async function createApiInstance() {
         ({ returnValues }) =>
           getArbitrationRequest({
             questionId: returnValues._questionID,
-            contestedAnswer: returnValues._contestedAnswer,
+            requester: returnValues._requester,
           }),
         events
       )
@@ -57,7 +57,7 @@ export default async function createApiInstance() {
 
   async function handleFailedDisputeCreation(arbitration) {
     await batchSend({
-      args: [arbitration.questionId, arbitration.contestedAnswer],
+      args: [arbitration.questionId, arbitration.requester],
       method: foreignProxy.methods.handleFailedDisputeCreation,
       to: foreignProxy.options.address,
     });

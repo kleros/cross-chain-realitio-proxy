@@ -34,7 +34,7 @@ export default async function checkRequestedArbitrations({ foreignChainApi }) {
     console.info({ blockHeight }, "Set ACCEPTED_ARBITRATION_REQUESTS block height");
 
     const stats = {
-      data: map(pick(["questionId", "contestedAnswer", "chainId", "status"]), untrackedArbitrationRequests),
+      data: map(pick(["questionId", "requester", "chainId", "status"]), untrackedArbitrationRequests),
       fromBlock,
       toBlock,
     };
@@ -98,7 +98,7 @@ export default async function checkRequestedArbitrations({ foreignChainApi }) {
     const requestedArbitrations = await fetchRequestsByChainId({ chainId });
 
     console.info(
-      { data: map(pick(["questionId", "contestedAnswer"]), requestedArbitrations) },
+      { data: map(pick(["questionId", "requester"]), requestedArbitrations) },
       "Fetched requested arbitrations"
     );
 
@@ -110,8 +110,8 @@ export default async function checkRequestedArbitrations({ foreignChainApi }) {
       }
 
       const questionId = r.value?.payload?.questionId ?? "<not set>";
-      const contestedAnswer = r.value?.payload?.contestedAnswer ?? "<not set>";
-      return [...acc, { questionId, contestedAnswer }];
+      const requester = r.value?.payload?.requester ?? "<not set>";
+      return [...acc, { questionId, requester }];
     };
     const toTag = (r) => (r.status === "rejected" ? "FAILURE" : r.value?.action);
     const stats = reduceBy(groupQuestionsOrErrorMessage, [], toTag, results);
@@ -122,9 +122,9 @@ export default async function checkRequestedArbitrations({ foreignChainApi }) {
   }
 
   async function fetchOnChainCounterpart(offChainArbitration) {
-    const { questionId, contestedAnswer } = offChainArbitration;
+    const { questionId, requester } = offChainArbitration;
 
-    const onChainArbitration = await foreignChainApi.getArbitrationRequest({ questionId, contestedAnswer });
+    const onChainArbitration = await foreignChainApi.getArbitrationRequest({ questionId, requester });
 
     return [offChainArbitration, onChainArbitration];
   }

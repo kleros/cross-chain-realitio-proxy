@@ -33,7 +33,7 @@ export default async function checkRejectedRequests({ homeChainApi }) {
     console.info({ blockHeight }, "Set REJECTED_REQUESTS block height");
 
     const stats = {
-      data: map(pick(["questionId", "contestedAnswer"]), untrackedRejectedRequests),
+      data: map(pick(["questionId", "requester"]), untrackedRejectedRequests),
       fromBlock,
       toBlock,
     };
@@ -83,7 +83,7 @@ export default async function checkRejectedRequests({ homeChainApi }) {
 
     const rejectedRequests = await fetchRequestsByChainIdAndStatus({ chainId, status: Status.Rejected });
 
-    console.info({ data: map(pick(["questionId", "contestedAnswer"]), rejectedRequests) }, "Fetched rejected requests");
+    console.info({ data: map(pick(["questionId", "requester"]), rejectedRequests) }, "Fetched rejected requests");
 
     const results = await P.allSettled(map(pipeline, rejectedRequests));
 
@@ -93,8 +93,8 @@ export default async function checkRejectedRequests({ homeChainApi }) {
       }
 
       const questionId = r.value?.payload?.questionId ?? "<not set>";
-      const contestedAnswer = r.value?.payload?.contestedAnswer ?? "<not set>";
-      return [...acc, { questionId, contestedAnswer }];
+      const requester = r.value?.payload?.requester ?? "<not set>";
+      return [...acc, { questionId, requester }];
     };
     const toTag = (r) => (r.status === "rejected" ? "FAILURE" : r.value?.action);
     const stats = reduceBy(groupQuestionsOrErrorMessage, [], toTag, results);
@@ -105,9 +105,9 @@ export default async function checkRejectedRequests({ homeChainApi }) {
   }
 
   async function fetchOnChainCounterpart(offChainRequest) {
-    const { questionId, contestedAnswer } = offChainRequest;
+    const { questionId, requester } = offChainRequest;
 
-    const onChainRequest = await homeChainApi.getRequest({ questionId, contestedAnswer });
+    const onChainRequest = await homeChainApi.getRequest({ questionId, requester });
 
     return [offChainRequest, onChainRequest];
   }

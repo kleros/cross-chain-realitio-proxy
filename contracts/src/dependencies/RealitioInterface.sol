@@ -1,15 +1,14 @@
 /* solhint-disable var-name-mixedcase */
 // SPDX-License-Identifier: MIT
 
-/**
- *  @authors: [@hbarcelos]
- *  @reviewers: []
+/** Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol original contract is to be reviewed.
+ *  @reviewers: [@hbarcelos]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
  */
 
-// Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol
+
 pragma solidity ^0.7.2;
 
 interface RealitioInterface {

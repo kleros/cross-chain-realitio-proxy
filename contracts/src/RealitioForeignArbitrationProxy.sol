@@ -131,7 +131,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the arbittration requester.
+     * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
         external
@@ -178,7 +178,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Receives the cancelation of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the arbittration requester.
+     * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyHomeProxy {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
@@ -195,7 +195,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the arbittration requester.
+     * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external override {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];

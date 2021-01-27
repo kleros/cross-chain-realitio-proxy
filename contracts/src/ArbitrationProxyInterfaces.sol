@@ -8,7 +8,7 @@ interface IHomeArbitrationProxy {
     /**
      * @notice To be emitted when the Realitio contract has been notified of an arbitration request.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the previous bond for the question.
      */
     event RequestNotified(bytes32 indexed _questionID, address indexed _requester, uint256 _maxPrevious);
@@ -18,7 +18,7 @@ interface IHomeArbitrationProxy {
      * @dev This can happen if the current bond for the question is higher than maxPrevious
      * or if the question is already finalized.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the current bond for the question.
      * @param _reason The reason why the request was rejected.
      */
@@ -32,14 +32,14 @@ interface IHomeArbitrationProxy {
     /**
      * @notice To be emitted when the arbitration request acknowledgement is sent to the Foreign Chain.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      */
     event RequestAcknowledged(bytes32 indexed _questionID, address indexed _requester);
 
     /**
      * @notice To be emitted when the arbitration request is canceled.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      */
     event RequestCanceled(bytes32 indexed _questionID, address indexed _requester);
 
@@ -47,7 +47,7 @@ interface IHomeArbitrationProxy {
      * @notice To be emitted when the dispute could not be created on the Foreign Chain.
      * @dev This will happen if the arbitration fee increases in between the arbitration request and acknowledgement.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      */
     event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);
 
@@ -67,7 +67,7 @@ interface IHomeArbitrationProxy {
     /**
      * @dev Receives the requested arbitration for a question. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function receiveArbitrationRequest(
@@ -80,7 +80,7 @@ interface IHomeArbitrationProxy {
      * @notice Handles arbitration request after it has been notified to Realitio for a given question.
      * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      */
     function handleNotifiedRequest(bytes32 _questionID, address _requester) external;
 
@@ -93,7 +93,7 @@ interface IHomeArbitrationProxy {
      *  - The quesiton bond value changed while the arbitrtion was being requested
      *  - Another request was already accepted
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      */
     function handleRejectedRequest(bytes32 _questionID, address _requester) external;
 
@@ -101,7 +101,7 @@ interface IHomeArbitrationProxy {
      * @notice Receives a failed attempt to request arbitration. TRUSTED.
      * @dev Currently this can happen only if the arbitration cost increased.
      * @param _questionID The ID of the question.
-     * @param _requester The address of the user that requested arbitration.
+     * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationFailure(bytes32 _questionID, address _requester) external;
 
@@ -117,7 +117,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     event ArbitrationRequested(bytes32 indexed _questionID, address indexed _requester, uint256 _maxPrevious);
@@ -125,7 +125,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Should be emitted when the dispute is created.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      * @param _disputeID The ID of the dispute.
      */
     event ArbitrationCreated(bytes32 indexed _questionID, address indexed _requester, uint256 indexed _disputeID);
@@ -133,7 +133,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Should be emitted when the arbitration is canceled by the Home Chain.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      */
     event ArbitrationCanceled(bytes32 indexed _questionID, address indexed _requester);
 
@@ -142,7 +142,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
      * @dev This will happen if there is an increase in the arbitration fees
      * between the time the arbitration is made and the time it is acknowledged.
      * @param _questionID The ID of the question to be arbitrated.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      */
     event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);
 
@@ -157,21 +157,21 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) external;
 
     /**
      * @notice Receives the cancelation of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external;
 
     /**
      * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external;
 

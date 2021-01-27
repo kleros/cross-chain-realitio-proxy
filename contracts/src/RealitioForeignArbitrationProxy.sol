@@ -47,7 +47,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     struct ArbitrationRequest {
         Status status; // Status of the arbitration.
-        uint256 deposit; // The deposit paid by the requester at the time of the arbitration.
+        uint248 deposit; // The deposit paid by the requester at the time of the arbitration.
     }
 
     struct DisputeDetails {
@@ -107,7 +107,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
      * @notice Requests arbitration for the given question and contested answer.
      * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
-     * @param _maxPrevious The maximum value of the previous bond for the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
         require(!questionIDToDisputeExists[_questionID], "Dispute already exists");
@@ -119,7 +119,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
         arbitration.status = Status.Requested;
-        arbitration.deposit = msg.value;
+        arbitration.deposit = uint248(msg.value);
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
@@ -131,7 +131,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The requester.
+     * @param _requester The address of the arbittration requester.
      */
     function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
         external
@@ -178,7 +178,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Receives the cancelation of the arbitration request for the given question and requester. TRUSTED.
      * @param _questionID The ID of the question.
-     * @param _requester The requester.
+     * @param _requester The address of the arbittration requester.
      */
     function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyHomeProxy {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
@@ -195,7 +195,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
-     * @param _requester The answer the requester deems to be incorrect.
+     * @param _requester The address of the arbittration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external override {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];

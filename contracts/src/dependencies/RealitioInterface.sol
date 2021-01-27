@@ -1,6 +1,5 @@
+/* solhint-disable var-name-mixedcase */
 // SPDX-License-Identifier: MIT
-// Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol
-pragma solidity ^0.7.2;
 
 /**
  *  @authors: [@hbarcelos]
@@ -10,7 +9,9 @@ pragma solidity ^0.7.2;
  *  @deployments: []
  */
 
-/* solhint-disable var-name-mixedcase */
+// Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol
+pragma solidity ^0.7.2;
+
 interface RealitioInterface {
     event LogNewAnswer(
         bytes32 answer,

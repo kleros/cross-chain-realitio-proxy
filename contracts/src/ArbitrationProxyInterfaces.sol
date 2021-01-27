@@ -15,11 +15,11 @@ interface IHomeArbitrationProxy {
 
     /**
      * @notice To be emitted when arbitration request is rejected.
-     * @dev This can happen if the contested answer is different from the current best answer,
-     * if the notification of arbitration request fails or if the question is already finalized.
+     * @dev This can happen if the current bond for the question is higher than maxPrevious
+     * or if the question is already finalized.
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
-     * @param _maxPrevious The maximum value of the previous bond for the question.
+     * @param _maxPrevious The maximum value of the current bond for the question.
      * @param _reason The reason why the request was rejected.
      */
     event RequestRejected(
@@ -68,7 +68,7 @@ interface IHomeArbitrationProxy {
      * @dev Receives the requested arbitration for a question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
-     * @param _maxPrevious The maximum value of the previous bond for the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function receiveArbitrationRequest(
         bytes32 _questionID,
@@ -118,7 +118,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
      * @notice Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question to be arbitrated.
      * @param _requester The requester.
-     * @param _maxPrevious The maximum value of the previous bond for the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     event ArbitrationRequested(bytes32 indexed _questionID, address indexed _requester, uint256 _maxPrevious);
 
@@ -147,10 +147,10 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);
 
     /**
-     * @notice Requests arbitration for the given question and contested answer.
+     * @notice Requests arbitration for the given question.
      * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
-     * @param _maxPrevious The maximum value of the previous bond for the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable;
 

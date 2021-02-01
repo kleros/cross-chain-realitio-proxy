@@ -90,7 +90,7 @@ interface IHomeArbitrationProxy {
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
-     *  - The quesiton bond value changed while the arbitrtion was being requested
+     *  - The quesiton bond value changed while the arbitration was being requested
      *  - Another request was already accepted
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
@@ -116,7 +116,7 @@ interface IHomeArbitrationProxy {
 interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     /**
      * @notice Should be emitted when the arbitration is requested.
-     * @param _questionID The ID of the question to be arbitrated.
+     * @param _questionID The ID of the question with the request for arbitration.
      * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
@@ -124,7 +124,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
 
     /**
      * @notice Should be emitted when the dispute is created.
-     * @param _questionID The ID of the question to be arbitrated.
+     * @param _questionID The ID of the question with the request for arbitration.
      * @param _requester The address of the arbitration requester.
      * @param _disputeID The ID of the dispute.
      */
@@ -132,7 +132,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
 
     /**
      * @notice Should be emitted when the arbitration is canceled by the Home Chain.
-     * @param _questionID The ID of the question to be arbitrated.
+     * @param _questionID The ID of the question with the request for arbitration.
      * @param _requester The address of the arbitration requester.
      */
     event ArbitrationCanceled(bytes32 indexed _questionID, address indexed _requester);
@@ -141,14 +141,13 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
      * @notice Should be emitted when the dispute could not be created.
      * @dev This will happen if there is an increase in the arbitration fees
      * between the time the arbitration is made and the time it is acknowledged.
-     * @param _questionID The ID of the question to be arbitrated.
+     * @param _questionID The ID of the question with the request for arbitration.
      * @param _requester The address of the arbitration requester.
      */
     event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);
 
     /**
      * @notice Requests arbitration for the given question.
-     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */

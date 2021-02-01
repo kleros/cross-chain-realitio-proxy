@@ -136,7 +136,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
-     *  - The quesiton bond value changed while the arbitrtion was being requested
+     *  - The quesiton bond value changed while the arbitration was being requested
      *  - Another request was already accepted
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
@@ -165,7 +165,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
-        delete requests[_questionID][_requester];
+        // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
+        request.status = Status.None;
 
         realitio.cancelArbitration(_questionID);
 

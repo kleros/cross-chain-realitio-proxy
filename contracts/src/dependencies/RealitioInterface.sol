@@ -62,7 +62,7 @@ interface RealitioInterface {
      * @dev Doesn't require (or allow) a bond.
      * @param question_id The ID of the question
      * @param answer The answer, encoded into bytes32
-     * @param payee_if_wrong The account to by credited as winner if the last answer given is wrong, usually the account that paid the arbitrator
+     * @param payee_if_wrong The account to be credited as winner if the last answer given is wrong, usually the account that paid the arbitrator
      * @param last_history_hash The history hash before the final one
      * @param last_answer_or_commitment_id The last answer given, or the commitment ID if it was a commitment.
      * @param last_answerer The address that supplied the last answer

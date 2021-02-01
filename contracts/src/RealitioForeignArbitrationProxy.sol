@@ -79,6 +79,8 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
      * @param _amb ArbitraryMessageBridge contract address.
+     * @param _homeProxy The address of the proxy contract in the counter-party Home Chain (i.e.: xDAI)
+     * @param _homeChainId The ID of the counter-party Home Chain.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -105,7 +107,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
-     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */

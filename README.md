@@ -4,16 +4,15 @@ Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB
 
 ## High-Level Flow Description
 
-1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the current answer she deems to be **incorrect**.
+1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the maximum value of the bond for the question.
 1. The ETH proxy communicates the request (questionID, currentAnswer) to the xDAI proxy through the AMB.
-1. The xDAI proxy looks at the current answer on Realitio:
-   1. If it **is the same** as the one pointed by Alice and it **is not** final then:
-      1. Notify Realitio of the dispute.
+1. The xDAI ties to notify Realitio of the arbitration request and forwards the maxium value of the bond:
+   1. If the bond has not changed, the arbitration request will be accepted.
       1. Notify the ETH proxy through the AMB.
-   1. Otherwise, if it became a **different answer** then:
+   1. Otherwise, if it changed then:
       1. Notify the ETH proxy through the AMB.
       1. The ETH proxy refunds Alice. **END**
-1. At this point Realitio has been notified of arbitration. However arbitration fees might have changed:
+1. In the mean time while Realitio was being notified of the arbitration request, the arbitration fees might have changed:
    1. If the fees stayed the same (most common case) then:
       1. Create a dispute on Kleros Court.
    1. If the fees have decreased then:

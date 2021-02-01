@@ -12,7 +12,7 @@
     "deploy": "file-to-ipfs -f dist/realitio-dynamic-script.js -r realitio.js"
   },
   "dependencies": {
-    "@kleros/cross-chain-realitio-contracts": "~0.4.0",
+    "@kleros/cross-chain-realitio-contracts": "~0.5.0",
     "@realitio/realitio-lib": "^1.0.2",
     "web3": "1.2.6",
     "webpack": "^4.19.0"

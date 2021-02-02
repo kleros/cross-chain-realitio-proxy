@@ -4,9 +4,9 @@ Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB
 
 ## High-Level Flow Description
 
-1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the maximum value of the bond for the question.
+1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the maximum value of the bond for the question (A.K.A. `max_previous`.
 1. The ETH proxy communicates the request to the xDAI proxy through the AMB.
-1. The xDAI ties to notify Realitio of the arbitration request and forwards the maxium value of the bond:
+1. The xDAI tries to notify Realitio of the arbitration request and forwards the `max_previous` value:
    1. If the bond has not changed, the arbitration request will be accepted.
       1. Notify the ETH proxy through the AMB.
    1. Otherwise, if it changed then:

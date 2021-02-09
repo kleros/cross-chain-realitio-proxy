@@ -17,6 +17,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
+ * This version of the contract has an appeal support.
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
 contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver {
@@ -25,6 +26,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     /* Constants */
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max - 1; // The number of choices for the arbitrator. Kleros is currently able to provide ruling values of up to 2^256 - 2.
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
+    uint256 public constant META_EVIDENCE_ID = 0; // The ID of the MetaEvidence for disputes.
 
     /* Storage */
 
@@ -32,7 +34,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     struct ArbitrationRequest {
         Status status; // Status of the arbitration.
-        uint256 deposit; // The deposit paid by the requester at the time of the arbitration.
+        uint248 deposit; // The deposit paid by the requester at the time of the arbitration.
         uint256 disputeID; // The ID of the dispute in arbitrator contract.
         uint256 answer; // The answer given by the arbitrator shifted by -1 to match Realitio format.
         Round[] rounds; // Tracks each appeal round of a dispute.
@@ -56,7 +58,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
-    uint256 public META_EVIDENCE_ID; // The ID of the MetaEvidence for disputes.
 
     IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
     address public immutable homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
@@ -65,22 +66,16 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     string public termsOfService; // The path for the Terms of Service for Kleros as an arbitrator for Realitio.
 
     // Multipliers are in basis points.
-    uint64 private winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
-    uint64 private loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
+    uint256 private winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
+    uint256 private loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
+    uint256 private loserAppealPeriodMultiplier; // Multiplier for calculating the duration of the appeal period for the loser, in basis points.
 
     mapping(uint256 => mapping(address => ArbitrationRequest)) public arbitrationRequests; // Maps arbitration ID to its data.
     mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
 
-    /* Events */
-
     /* Modifiers */
-
-    modifier onlyArbitrator() {
-        require(msg.sender == address(arbitrator), "Only arbitrator allowed");
-        _;
-    }
 
     modifier onlyGovernor() {
         require(msg.sender == governor, "Only governor allowed");
@@ -96,14 +91,16 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @dev Contract will still require initialization before being usable.
      * @param _amb ArbitraryMessageBridge contract address.
      * @param _homeProxy The address of the proxy.
      * @param _homeChainId The chain ID where the home proxy is deployed.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
+     * @param _metaEvidence The URI of the meta evidence file.
+     * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
      * @param _loserMultiplier Multiplier for calculation the appeal cost of the losing answer.
+     * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(
         IAMB _amb,
@@ -113,8 +110,9 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         string memory _termsOfService,
-        uint64 _winnerMultiplier,
-        uint64 _loserMultiplier
+        uint256 _winnerMultiplier,
+        uint256 _loserMultiplier,
+        uint256 _loserAppealPeriodMultiplier
     ) {
         amb = _amb;
         homeProxy = _homeProxy;
@@ -124,6 +122,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         termsOfService = _termsOfService;
         winnerMultiplier = _winnerMultiplier;
         loserMultiplier = _loserMultiplier;
+        loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
 
         emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
@@ -131,7 +130,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     /* External and public */
 
     /**
-     * @notice Changes the address of a new governor.
+     * @notice Changes the address of the governor.
      * @param _governor The address of the new governor.
      */
     function changeGovernor(address _governor) external onlyGovernor {
@@ -154,15 +153,21 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         loserMultiplier = _loserMultiplier;
     }
 
+    /** @dev Changes the multiplier for calculating the duration of the appeal period for loser.
+     *  @param _loserAppealPeriodMultiplier The new loser multiplier for the appeal period, in basis points.
+     */
+    function changeLoserAppealPeriodMultiplier(uint256 _loserAppealPeriodMultiplier) external onlyGovernor {
+        loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
+    }
+
     // ************************ //
     // *    Realitio logic    * //
     // ************************ //
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
-     * @dev Can be executed only if the contract has been initialized.
      * @param _questionID The ID of the question.
-     * @param _maxPrevious The maximum value of the previous bond for the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
         require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
@@ -174,7 +179,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
         arbitration.status = Status.Requested;
-        arbitration.deposit = msg.value;
+        arbitration.deposit = uint248(msg.value);
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
@@ -243,10 +248,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
-
-        payable(_requester).send(arbitration.deposit);
+        uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
+        payable(_requester).send(deposit);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -254,16 +259,16 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     /**
      * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
-     * @param _requester The requester.
+     * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external override {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
-
-        payable(_requester).send(arbitration.deposit);
+        uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
+        payable(_requester).send(deposit);
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
@@ -278,33 +283,41 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Takes up to the total amount required to fund an answer. Reimburses the rest. Creates an appeal if at least two answers are funded.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _arbitrationID The ID of the arbitration, which is questionID cast into uint256.
      * @param _answer One of the possible rulings the arbitrator can give that the funder considers to be the correct answer to the question.
+     * Note that the answer has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
+     * Also note that '0' answer can be funded.
      * @return Whether the answer was fully funded or not.
      */
     function fundAppeal(uint256 _arbitrationID, uint256 _answer) external payable override returns (bool) {
-        address requester = arbitrationIDToRequester[_arbitrationID];
-        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
+        require(_answer <= NUMBER_OF_CHOICES_FOR_ARBITRATOR, "Answer is out of bounds");
+        ArbitrationRequest storage arbitration =
+            arbitrationRequests[_arbitrationID][arbitrationIDToRequester[_arbitrationID]];
         require(arbitration.status == Status.Created, "No dispute to appeal.");
-        (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitrator.appealPeriod(arbitration.disputeID);
+
+        uint256 disputeID = arbitration.disputeID;
+        (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitrator.appealPeriod(disputeID);
         require(block.timestamp >= appealPeriodStart && block.timestamp < appealPeriodEnd, "Appeal period is over.");
 
-        // Answer is equal to ruling - 1.
-        uint256 winner = arbitrator.currentRuling(arbitration.disputeID);
         uint256 multiplier;
-        if (winner == _answer + 1) {
-            multiplier = winnerMultiplier;
-        } else {
-            require(
-                block.timestamp - appealPeriodStart < (appealPeriodEnd - appealPeriodStart) / 2,
-                "Appeal period is over for loser."
-            );
-            multiplier = loserMultiplier;
+        {
+            uint256 winner = arbitrator.currentRuling(disputeID);
+            if (winner == _answer) {
+                multiplier = winnerMultiplier;
+            } else {
+                require(
+                    block.timestamp - appealPeriodStart <
+                        (appealPeriodEnd - appealPeriodStart).mulCap(loserAppealPeriodMultiplier) / MULTIPLIER_DIVISOR,
+                    "Appeal period is over for loser"
+                );
+                multiplier = loserMultiplier;
+            }
         }
 
+        uint256 lastRoundID = arbitration.rounds.length - 1;
         Round storage round = arbitration.rounds[arbitration.rounds.length - 1];
         require(!round.hasPaid[_answer], "Appeal fee is already paid.");
-        uint256 appealCost = arbitrator.appealCost(arbitration.disputeID, arbitratorExtraData);
+        uint256 appealCost = arbitrator.appealCost(disputeID, arbitratorExtraData);
         uint256 totalCost = appealCost.addCap((appealCost.mulCap(multiplier)) / MULTIPLIER_DIVISOR);
 
         // Take up to the amount necessary to fund the current round at the current costs.
@@ -312,7 +325,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             totalCost.subCap(round.paidFees[_answer]) > msg.value
                 ? msg.value
                 : totalCost.subCap(round.paidFees[_answer]);
-        emit Contribution(_arbitrationID, arbitration.rounds.length - 1, _answer + 1, msg.sender, contribution);
+        emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
 
         round.contributions[msg.sender][_answer] += contribution;
         round.paidFees[_answer] += contribution;
@@ -320,7 +333,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             round.feeRewards += round.paidFees[_answer];
             round.fundedAnswers.push(_answer);
             round.hasPaid[_answer] = true;
-            emit RulingFunded(_arbitrationID, arbitration.rounds.length - 1, _answer + 1);
+            emit RulingFunded(_arbitrationID, lastRoundID, _answer);
         }
 
         if (round.fundedAnswers.length > 1) {
@@ -328,7 +341,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             arbitration.rounds.push();
 
             round.feeRewards = round.feeRewards.subCap(appealCost);
-            arbitrator.appeal{value: appealCost}(arbitration.disputeID, arbitratorExtraData);
+            arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
         msg.sender.transfer(msg.value.subCap(contribution)); // Sending extra value back to contributor.
@@ -364,23 +377,22 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
                     (round.paidFees[round.fundedAnswers[0]] + round.paidFees[round.fundedAnswers[1]])
                 : 0;
         } else if (arbitration.answer == _answer) {
+            uint256 paidFees = round.paidFees[_answer];
             // Reward the winner.
-            reward = round.paidFees[_answer] > 0
-                ? (round.contributions[_beneficiary][_answer] * round.feeRewards) / round.paidFees[_answer]
-                : 0;
+            reward = paidFees > 0 ? (round.contributions[_beneficiary][_answer] * round.feeRewards) / paidFees : 0;
         }
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
             _beneficiary.transfer(reward);
-            emit Withdrawal(_arbitrationID, _round, _answer + 1, _beneficiary, reward);
+            emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }
 
     /**
      * @notice Allows to withdraw any reimbursable fees or rewards after the dispute gets solved for multiple ruling options (answers) at once.
      * @dev This function is O(n) where n is the number of queried answers.
-     * @dev This could exceed gas limits, therefore this function should be used only as a utility and not be relied upon by other contracts.
+     * @dev This could exceed the gas limit, therefore this function should be used only as a utility and not be relied upon by other contracts.
      * @param _arbitrationID The ID of the arbitration.
      * @param _beneficiary The address that made contributions.
      * @param _round The round from which to withdraw.
@@ -400,7 +412,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     /**
      * @notice Allows to withdraw any rewards or reimbursable fees for multiple rulings options (answers) and for all rounds at once.
      * @dev This function is O(n*m) where n is the total number of rounds and m is the number of queried answers.
-     * @dev This could exceed gas limits, therefore this function should be used only as a utility and not be relied upon by other contracts.
+     * @dev This could exceed the gas limit, therefore this function should be used only as a utility and not be relied upon by other contracts.
      * @param _arbitrationID The ID of the arbitration.
      * @param _beneficiary The address that made contributions.
      * @param _contributedTo Answers that received contributions from contributor.
@@ -427,40 +439,38 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         require(arbitration.status == Status.Created, "The status should be Created.");
-
-        if (bytes(_evidenceURI).length > 0) {
-            emit Evidence(arbitrator, _arbitrationID, msg.sender, _evidenceURI);
-        }
+        emit Evidence(arbitrator, _arbitrationID, msg.sender, _evidenceURI);
     }
 
     /**
-     * @notice Rules a specified dispute.
-     * @dev Note that 0 is reserved for "Unable/refused to arbitrate" and we shift it to `uint(-1)` which has a similar connotation in Realitio.
+     * @notice Rules a specified dispute. Can only be called by the arbitrator.
+     * @dev Accounts for the situation where the winner loses a case due to paying less appeal fees than expected.
      * @param _disputeID The ID of the dispute in the ERC792 arbitrator.
      * @param _ruling The ruling given by the arbitrator.
      */
-    function rule(uint256 _disputeID, uint256 _ruling) external override onlyArbitrator {
+    function rule(uint256 _disputeID, uint256 _ruling) external override {
         DisputeDetails storage disputeDetails = disputeIDToDisputeDetails[_disputeID];
         uint256 arbitrationID = disputeDetails.arbitrationID;
         address requester = disputeDetails.requester;
 
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][requester];
+        require(msg.sender == address(arbitrator), "Only arbitrator allowed");
         require(arbitration.status == Status.Created, "Invalid arbitration status");
         uint256 finalRuling = _ruling;
 
         // If one side paid its fees, the ruling is in its favor. Note that if the other side had also paid, an appeal would have been created.
         Round storage round = arbitration.rounds[arbitration.rounds.length - 1];
-        if (round.fundedAnswers.length == 1) finalRuling = round.fundedAnswers[0] + 1;
+        if (round.fundedAnswers.length == 1) finalRuling = round.fundedAnswers[0];
 
-        // Realitio ruling is shifted by 1 compared to Kleros.
-        arbitration.answer = finalRuling - 1;
+        arbitration.answer = finalRuling;
         arbitration.status = Status.Ruled;
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(arbitration.answer));
+        // Realitio ruling is shifted by 1 compared to Kleros.
+        bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(finalRuling - 1));
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        emit Ruling(arbitrator, _disputeID, _ruling);
+        emit Ruling(arbitrator, _disputeID, finalRuling);
     }
 
     /* External Views */
@@ -469,7 +479,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @notice Returns stake multipliers.
      * @return winner Winners stake multiplier.
      * @return loser Losers stake multiplier.
-     * @return shared Multiplier when it's a tie. Is not used in this contract.
+     * @return loserAppealPeriod Multiplier for calculating an appeal period duration for the losing side.
      * @return divisor Multiplier divisor.
      */
     function getMultipliers()
@@ -479,11 +489,11 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         returns (
             uint256 winner,
             uint256 loser,
-            uint256 shared,
+            uint256 loserAppealPeriod,
             uint256 divisor
         )
     {
-        return (winnerMultiplier, loserMultiplier, 0, MULTIPLIER_DIVISOR);
+        return (winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier, MULTIPLIER_DIVISOR);
     }
 
     /**
@@ -506,7 +516,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Gets the number of rounds of the specific question.
-     * @param _arbitrationID The ID of the arbitration.
+     * @param _arbitrationID The ID of the arbitration related to the question.
      * @return The number of rounds.
      */
     function getNumberOfRounds(uint256 _arbitrationID) external view returns (uint256) {
@@ -593,6 +603,51 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     }
 
     /**
+     * @notice Returns the sum of withdrawable amount.
+     * @dev This function is O(n*m) where n is the total number of rounds and m is the number of queried answers.
+     * @dev This could exceed the gas limit, therefore this function should be used only as a utility and not be relied upon by other contracts.
+     * @param _arbitrationID The ID of the arbitration.
+     * @param _beneficiary The contributor for which to query.
+     * @param _contributedTo Answers that received contributions from contributor.
+     * @return sum The total amount available to withdraw.
+     */
+    function getTotalWithdrawableAmount(
+        uint256 _arbitrationID,
+        address payable _beneficiary,
+        uint256[] memory _contributedTo
+    ) public view override returns (uint256 sum) {
+        address requester = arbitrationIDToRequester[_arbitrationID];
+        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
+        if (arbitration.status < Status.Ruled) return sum;
+
+        uint256 finalAnswer = arbitration.answer;
+        uint256 noOfRounds = arbitration.rounds.length;
+        for (uint256 roundNumber = 0; roundNumber < noOfRounds; roundNumber++) {
+            for (uint256 contributionNumber = 0; contributionNumber < _contributedTo.length; contributionNumber++) {
+                Round storage round = arbitration.rounds[roundNumber];
+                uint256 answer = _contributedTo[contributionNumber];
+
+                if (!round.hasPaid[answer]) {
+                    // Allow to reimburse if funding was unsuccessful for this answer option.
+                    sum += round.contributions[_beneficiary][answer];
+                } else if (!round.hasPaid[finalAnswer]) {
+                    // Reimburse unspent fees proportionally if the ultimate winner didn't pay appeal fees fully.
+                    // Note that if only one side is funded it will become a winner and this part of the condition won't be reached.
+                    sum += round.fundedAnswers.length > 1
+                        ? (round.contributions[_beneficiary][answer] * round.feeRewards) /
+                            (round.paidFees[round.fundedAnswers[0]] + round.paidFees[round.fundedAnswers[1]])
+                        : 0;
+                } else if (finalAnswer == answer) {
+                    uint256 paidFees = round.paidFees[answer];
+                    // Reward the winner.
+                    sum += paidFees > 0 ? (round.contributions[_beneficiary][answer] * round.feeRewards) / paidFees : 0;
+                }
+            }
+        }
+        return sum;
+    }
+
+    /**
      * @notice Casts question ID into uint256 thus returning the related arbitration ID.
      * @param _questionID The ID of the question.
      * @return The ID of the arbitration.
@@ -602,11 +657,11 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     }
 
     /**
-     * @dev Maps external (arbitrator side) dispute id to local (arbitrable) dispute id.
+     * @notice Maps external (arbitrator side) dispute id to local (arbitrable) dispute id.
      * @param _externalDisputeID Dispute id as in arbitrator side.
      * @return localDisputeID Dispute id as in arbitrable contract.
      */
-    function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256 localDisputeID) {
+    function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
     }
 }

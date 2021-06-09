@@ -73,6 +73,7 @@ describe("Cross-Chain Arbitration", () => {
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
         await expect(txPromise).to.emit(foreignProxy, "Dispute").withArgs(arbitrator.address, "0", "0", questionId);
+        await expect(txPromise).to.emit(foreignProxy, "DisputeIDToQuestionID").withArgs("0", questionId);
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
       });
     });

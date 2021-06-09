@@ -116,6 +116,8 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress(), 2)
       .to.emit(foreignProxy, "Dispute")
       .withArgs(arbitrator.address, 2, 0, 0) // Arbitrator, DisputeID, MetaevidenceID, ArbitrationID
+      .to.emit(foreignProxy, "DisputeIDToQuestionID")
+      .withArgs(2, questionID)
       .to.emit(homeProxy, "RequestAcknowledged")
       .withArgs(questionID, await requester.getAddress());
 

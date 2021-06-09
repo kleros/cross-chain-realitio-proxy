@@ -2,7 +2,7 @@
 
 /**
  *  @authors: [@hbarcelos, @unknownunknown1]
- *  @reviewers: [@MerlinEgalite]
+ *  @reviewers: [@MerlinEgalite, @shalzz]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
@@ -10,7 +10,7 @@
 
 pragma solidity ^0.7.2;
 
-import {IDisputeResolver, IArbitrator} from "@kleros/arbitrable-proxy-contracts/contracts/IDisputeResolver.sol";
+import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract/contracts/solc-0.7.x/IDisputeResolver.sol";
 import {CappedMath} from "@kleros/ethereum-libraries/contracts/CappedMath.sol";
 import {IAMB} from "./dependencies/IAMB.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
@@ -74,7 +74,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
-
+    
     /* Modifiers */
 
     modifier onlyGovernor() {
@@ -229,6 +229,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
                 emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, arbitrationID);
+                emit DisputeIDToQuestionID(disputeID, _questionID);
             } catch {
                 arbitration.status = Status.Failed;
                 emit ArbitrationFailed(_questionID, _requester);
@@ -315,7 +316,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         }
 
         uint256 lastRoundID = arbitration.rounds.length - 1;
-        Round storage round = arbitration.rounds[arbitration.rounds.length - 1];
+        Round storage round = arbitration.rounds[lastRoundID];
         require(!round.hasPaid[_answer], "Appeal fee is already paid.");
         uint256 appealCost = arbitrator.appealCost(disputeID, arbitratorExtraData);
         uint256 totalCost = appealCost.addCap((appealCost.mulCap(multiplier)) / MULTIPLIER_DIVISOR);
@@ -344,7 +345,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        msg.sender.transfer(msg.value.subCap(contribution)); // Sending extra value back to contributor.
+        msg.sender.send(msg.value.subCap(contribution)); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
         return round.hasPaid[_answer];
     }
 
@@ -384,7 +385,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.transfer(reward);
+            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }
@@ -498,19 +499,17 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Returns number of possible ruling options. Valid rulings are [0, return value].
-     * @param _arbitrationID The ID of the arbitration.
      * @return count The number of ruling options.
      */
-    function numberOfRulingOptions(uint256 _arbitrationID) external pure override returns (uint256) {
+    function numberOfRulingOptions(uint256 /* _arbitrationID */) external pure override returns (uint256) {
         return NUMBER_OF_CHOICES_FOR_ARBITRATOR;
     }
 
     /**
      * @notice Gets the fee to create a dispute.
-     * @param _questionID the ID of the question.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(bytes32 _questionID) external view override returns (uint256) {
+    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 
@@ -615,7 +614,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _arbitrationID,
         address payable _beneficiary,
         uint256[] memory _contributedTo
-    ) public view override returns (uint256 sum) {
+    ) external view override returns (uint256 sum) {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         if (arbitration.status < Status.Ruled) return sum;

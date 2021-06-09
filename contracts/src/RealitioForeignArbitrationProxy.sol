@@ -2,10 +2,10 @@
 
 /**
  *  @authors: [@hbarcelos]
- *  @reviewers: [@ferittuncer, @fnanni-0, @nix1g, @epiqueras*, @clesaege, @unknownunknown1, @MerlinEgalite]
+ *  @reviewers: [@ferittuncer, @fnanni-0, @nix1g, @epiqueras*, @clesaege, @unknownunknown1, @MerlinEgalite, @shalzz]
  *  @auditors: []
  *  @bounties: []
- *  @deployments: []
+ *  @deployments: [0x79d0464Ec27F67663DADf761432fC8DD0AeA3D49]
  */
 
 pragma solidity ^0.7.2;
@@ -246,10 +246,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /**
      * @notice Gets the fee to create a dispute.
-     * @param _questionID the ID of the question.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(bytes32 _questionID) external view override returns (uint256) {
+    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 }

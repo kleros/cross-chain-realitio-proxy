@@ -146,13 +146,6 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
      */
     event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);
 
-    /** @dev Emitted when a dispute is created, to link dispute identifier to question identifier for dynamic script that is used in metaevidence.
-     *  See https://github.com/kleros/realitio-script/blob/master/src/index.js
-     *  @param _disputeID The ID of the dispute in the ERC792 arbitrator.
-     *  @param _questionID The ID of the question.
-     */
-    event DisputeIDToQuestionID(uint256 indexed _disputeID, bytes32 _questionID);
-
     /**
      * @notice Requests arbitration for the given question.
      * @param _questionID The ID of the question.

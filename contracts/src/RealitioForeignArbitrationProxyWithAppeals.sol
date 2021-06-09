@@ -229,7 +229,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
                 emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, arbitrationID);
-                emit DisputeIDToQuestionID(disputeID, _questionID);
             } catch {
                 arbitration.status = Status.Failed;
                 emit ArbitrationFailed(_questionID, _requester);

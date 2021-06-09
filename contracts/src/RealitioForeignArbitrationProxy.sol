@@ -5,7 +5,7 @@
  *  @reviewers: [@ferittuncer, @fnanni-0, @nix1g, @epiqueras*, @clesaege, @unknownunknown1, @MerlinEgalite, @shalzz]
  *  @auditors: []
  *  @bounties: []
- *  @deployments: []
+ *  @deployments: [0x79d0464Ec27F67663DADf761432fC8DD0AeA3D49]
  */
 
 pragma solidity ^0.7.2;

@@ -17,7 +17,7 @@
     "test:watch": "mocha -r hardhat/register -t 20000 --watch-files '**/*.js,**/*.sol' --watch"
   },
   "dependencies": {
-    "@kleros/dispute-resolver-interface-contract": "^1.0.2",
+    "@kleros/dispute-resolver-interface-contract": "^2.0.0",
     "@kleros/ethereum-libraries": "^7.0.0"
   },
   "devDependencies": {

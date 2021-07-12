@@ -13,7 +13,8 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "fix": "run-p -s fix:*",
     "fix:js": "eslint --fix '**/*.js'",
-    "fix:sol": "prettier --write 'contracts/**/*.sol'"
+    "fix:sol": "prettier --write 'contracts/**/*.sol'",
+    "prepare": "husky install"
   },
   "workspaces": [
     "bots",
@@ -27,8 +28,8 @@
     "eslint-import-resolver-parcel": "^1.10.5",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-prettier": "^3.1.4",
-    "husky": "^4.3.0",
-    "lint-staged": "^10.4.2",
+    "husky": "^7.0.1",
+    "lint-staged": "^11.0.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.15",

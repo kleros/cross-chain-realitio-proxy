@@ -9,7 +9,12 @@ import "../dependencies/RealitioInterface.sol";
  * This code only exists for purposes of testing and SHOULD NOT be used in production environments.
  */
 contract MockRealitio is RealitioInterface {
-    enum Status {None, Open, PendingArbitration, Finalized}
+    enum Status {
+        None,
+        Open,
+        PendingArbitration,
+        Finalized
+    }
 
     struct Question {
         Status status;

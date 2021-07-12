@@ -8,7 +8,6 @@
  *  @deployments: []
  */
 
-
 pragma solidity ^0.7.2;
 
 interface RealitioInterface {

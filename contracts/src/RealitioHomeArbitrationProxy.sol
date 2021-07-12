@@ -34,7 +34,14 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
 
-    enum Status {None, Rejected, Notified, AwaitingRuling, Ruled, Finished}
+    enum Status {
+        None,
+        Rejected,
+        Notified,
+        AwaitingRuling,
+        Ruled,
+        Finished
+    }
 
     struct Request {
         Status status;

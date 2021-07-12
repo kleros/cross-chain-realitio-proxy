@@ -2187,36 +2187,6 @@
     node-fetch "^2.6.0"
     yargs "^16.2.0"
 
-"@kleros/kleros-interaction@^0.10.0":
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/@kleros/kleros-interaction/-/kleros-interaction-0.10.0.tgz#98fa38bc73b82e8f320ad39e03a556b0ea37446e"
-  integrity sha512-EK+36dqh0fyuZh7jnw2rFE5j/CzFG5FNy9JX4hfY+mELvW8wtHdXRNXeakmSh8Cyr9UjNuuS19pROjQT9jVvqw==
-  dependencies:
-    "@kleros/kleros" "^0.1.2"
-    "@realitio/realitio-contracts" "^2.0.5"
-    minimetoken "^0.2.0"
-    openzeppelin-solidity "^1.12.0"
-    web3-utils "^1.2.1"
-
-"@kleros/kleros-interaction@^0.9.0":
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/@kleros/kleros-interaction/-/kleros-interaction-0.9.3.tgz#c75879a835cc2e8885263ced5a5756d4498f0efa"
-  integrity sha512-DhRCUn/XqRUTgBCeOaTY/RCtDjewdk/NEOXqI7LN0heU+uGP2Q2t2YdQoXtFOp9/wz8iicMNMAwnhPMoXJOKPw==
-  dependencies:
-    "@kleros/kleros" "^0.1.2"
-    "@realitio/realitio-contracts" "^2.0.5"
-    minimetoken "^0.2.0"
-    openzeppelin-solidity "^1.12.0"
-    web3-utils "^1.2.1"
-
-"@kleros/kleros@^0.1.2":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@kleros/kleros/-/kleros-0.1.5.tgz#e2ca9f69317c43603894b473e61bbfbdb761ed01"
-  integrity sha512-aq3tGWzF5no52l67qKKAThsuS26VQTP+EeuKufMRV0aliViQ41MMk2mD2KmL7SZNz7H90SjbNuuzyPEvHgFcZA==
-  dependencies:
-    "@kleros/kleros-interaction" "^0.9.0"
-    minimetoken "^0.2.0"
-
 "@kwsites/file-exists@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@kwsites/file-exists/-/file-exists-1.1.1.tgz#ad1efcac13e1987d8dbaf235ef3be5b0d96faa99"
@@ -2376,11 +2346,6 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha1-p3c2C1s5oaLlEG+OhY8v0tBgxXA=
-
-"@realitio/realitio-contracts@^2.0.5":
-  version "2.2.9"
-  resolved "https://registry.yarnpkg.com/@realitio/realitio-contracts/-/realitio-contracts-2.2.9.tgz#4274dd0ceca6d1b64a13553fe458312c920680d7"
-  integrity sha512-Ka4oMm6a7+W4kVcDjPa4Ov0pstd4nGk+2/rt8ShL6COwLFIgeybJmoZYBSCqLDrqfYk9N1glCjpBbU0EojTRTg==
 
 "@realitio/realitio-contracts@git+https://github.com/realitio/realitio-contracts.git":
   version "2.2.9"
@@ -8342,7 +8307,7 @@ escope@^3.6.0:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
 
-eslint-config-prettier@^6.14.0, eslint-config-prettier@^6.15.0:
+eslint-config-prettier@^6.14.0:
   version "6.15.0"
   resolved "https://registry.yarnpkg.com/eslint-config-prettier/-/eslint-config-prettier-6.15.0.tgz#7f93f6cb7d45a92f1537a70ecc06366e1ac6fed9"
   integrity sha512-a1+kOYLR8wMGustcgAjdydMsQ2A/2ipRPwRKUmfYaSxc9ZPcrku080Ctl6zrZzZNs/U82MjSv+qKREkoq3bJaw==
@@ -8747,13 +8712,6 @@ eth-block-tracker@^3.0.0:
     json-rpc-engine "^3.6.0"
     pify "^2.3.0"
     tape "^4.6.3"
-
-eth-contract-class@0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/eth-contract-class/-/eth-contract-class-0.0.6.tgz#398b8952149cc747cb959fa8b5d480288c7a8bce"
-  integrity sha1-OYuJUhScx0fLlZ+otdSAKIx6i84=
-  dependencies:
-    web3-core-promievent "^1.0.0-beta.21"
 
 eth-ens-namehash@2.0.8, eth-ens-namehash@^2.0.8:
   version "2.0.8"
@@ -14294,13 +14252,6 @@ minimatch@3.0.4, minimatch@^3.0.2, minimatch@^3.0.3, minimatch@^3.0.4:
   dependencies:
     brace-expansion "^1.1.7"
 
-minimetoken@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/minimetoken/-/minimetoken-0.2.0.tgz#c182231eae93e752e5d8801c2967e6d6ef6a0e6f"
-  integrity sha512-oRwMg4tbr4sAznQ8+eS6ZQbrIQNt2Qn0wTFHQJVlPCCQ1cgq24h1B2KIaUtqIUu/eKZi7a5NE1MOcv0tZQxYFQ==
-  dependencies:
-    eth-contract-class "0.0.6"
-
 minimist@^1.1.1, minimist@^1.2.0, minimist@^1.2.5, minimist@~1.2.5:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
@@ -15253,11 +15204,6 @@ opencollective-postinstall@^2.0.2:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/opencollective-postinstall/-/opencollective-postinstall-2.0.3.tgz#7a0fff978f6dbfa4d006238fbac98ed4198c3259"
   integrity sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==
-
-openzeppelin-solidity@^1.12.0:
-  version "1.12.0"
-  resolved "https://registry.yarnpkg.com/openzeppelin-solidity/-/openzeppelin-solidity-1.12.0.tgz#7b9c55975e73370d4541e3442b30cb3d91ac973a"
-  integrity sha512-WlorzMXIIurugiSdw121RVD5qA3EfSI7GybTn+/Du0mPNgairjt29NpVTAaH8eLjAeAwlw46y7uQKy0NYem/gA==
 
 opn@5.4.0:
   version "5.4.0"
@@ -16637,7 +16583,7 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier-plugin-solidity@^1.0.0-alpha.56, prettier-plugin-solidity@^1.0.0-alpha.59:
+prettier-plugin-solidity@^1.0.0-beta.15:
   version "1.0.0-beta.15"
   resolved "https://registry.yarnpkg.com/prettier-plugin-solidity/-/prettier-plugin-solidity-1.0.0-beta.15.tgz#ca7388e17e2620dc6251746e405150479abdc0a3"
   integrity sha512-5+pM/Z1BgQN6xMCe/AfXmiVhoteaVgruVoGT8aa0zJMRiNOiK+SeaW2kOyzTI6sgg3QsUW58+ahf1hxlc/Adbw==
@@ -16654,7 +16600,7 @@ prettier@^1.14.3:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.19.1.tgz#f7d7f5ff8a9cd872a7be4ca142095956a60797cb"
   integrity sha512-s7PoyDv/II1ObgQunCbB9PdLmUcBZcnWOcxDh7O0N/UwDEsHyqkW+Qh28jW+mVuCdx7gLB0BotYI1Y6uI9iyew==
 
-prettier@^2.1.2:
+prettier@^2.1.2, prettier@^2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.3.2.tgz#ef280a05ec253712e486233db5c6f23441e7342d"
   integrity sha512-lnJzDfJ66zkMy58OL5/NY5zp70S7Nz6KqcKkXYzn2tMVrNxvbqaBpg7H3qHaLxCJ5lNMsGuM8+ohS7cZrthdLQ==
@@ -19151,13 +19097,6 @@ solc@^0.6.3:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solhint-plugin-prettier@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/solhint-plugin-prettier/-/solhint-plugin-prettier-0.0.4.tgz#ab55ff776d64ff665c52bed41a3b4795c391c9d8"
-  integrity sha512-JVxh8ZkD4ydb0EndbNcstpFU+vWzUvX3jr9z6u72+Srg/zjD8JQ1tIMjMn0H1PnsNLItZqPZ6RYIPJB6HOsVMg==
-  dependencies:
-    prettier-linter-helpers "^1.0.0"
-
 solhint-plugin-prettier@^0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/solhint-plugin-prettier/-/solhint-plugin-prettier-0.0.5.tgz#e3b22800ba435cd640a9eca805a7f8bc3e3e6a6b"
@@ -19165,7 +19104,7 @@ solhint-plugin-prettier@^0.0.5:
   dependencies:
     prettier-linter-helpers "^1.0.0"
 
-solhint@^3.2.0, solhint@^3.3.1:
+solhint@^3.3.6:
   version "3.3.6"
   resolved "https://registry.yarnpkg.com/solhint/-/solhint-3.3.6.tgz#abe9af185a9a7defefba480047b3e42cbe9a1210"
   integrity sha512-HWUxTAv2h7hx3s3hAab3ifnlwb02ZWhwFU/wSudUHqteMS3ll9c+m1FlGn9V8ztE2rf3Z82fQZA005Wv7KpcFA==
@@ -21173,7 +21112,7 @@ web3-core-promievent@1.3.1:
   dependencies:
     eventemitter3 "4.0.4"
 
-web3-core-promievent@1.4.0, web3-core-promievent@^1.0.0-beta.21:
+web3-core-promievent@1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/web3-core-promievent/-/web3-core-promievent-1.4.0.tgz#531644dab287e83653d983aeb3d9daa0f894f775"
   integrity sha512-YEwko22kcry7lHwbe0k80BrjXCZ+73jMdvZtptRH5k2B+XZ1XtmXwYL1PFIlZy9V0zgZijdg+3GabCnAHjVXAw==
@@ -21945,7 +21884,7 @@ web3-utils@1.3.1:
     underscore "1.9.1"
     utf8 "3.0.0"
 
-web3-utils@1.4.0, web3-utils@^1.0.0-beta.31, web3-utils@^1.2.1, web3-utils@^1.2.5:
+web3-utils@1.4.0, web3-utils@^1.0.0-beta.31, web3-utils@^1.2.5:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/web3-utils/-/web3-utils-1.4.0.tgz#e8cb381c81b242dc1d4ecb397200356d404410e6"
   integrity sha512-b8mEhwh/J928Xk+SQFjtqrR2EGPhpknWLcIt9aCpVPVRXiqjUGo/kpOHKz0azu9c6/onEJ9tWXZt0cVjmH0N5Q==
@@ -21999,7 +21938,7 @@ web3@1.3.1:
     web3-shh "1.3.1"
     web3-utils "1.3.1"
 
-web3@1.4.0, web3@^1.2.5, web3@^1.3.0:
+web3@1.4.0, web3@^1.2.5, web3@^1.4.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/web3/-/web3-1.4.0.tgz#717c01723226daebab9274be5cb56644de860688"
   integrity sha512-faT3pIX+1tuo+wqmUFQPe10MUGaB1UvRYxw9dmVJFLxaRAIfXErSilOf3jFhSwKbbPNkwG0bTiudCLN9JgeS7A==

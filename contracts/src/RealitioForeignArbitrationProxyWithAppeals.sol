@@ -312,7 +312,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        msg.sender.send(msg.value.subCap(contribution)); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value.subCap(contribution) > 0) msg.sender.send(msg.value.subCap(contribution)); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
         return round.hasPaid[_answer];
     }
 

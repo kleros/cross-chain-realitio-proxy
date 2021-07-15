@@ -62,7 +62,6 @@ describe("Cross-chain arbitration with appeals", () => {
   });
 
   it("Should correctly set the initial values", async () => {
-    expect(await foreignProxy.governor()).to.equal(await governor.getAddress());
     expect(await foreignProxy.amb()).to.equal(amb.address);
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.address);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
@@ -682,35 +681,6 @@ describe("Cross-chain arbitration with appeals", () => {
     await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text"))
       .to.emit(foreignProxy, "Evidence")
       .withArgs(arbitrator.address, arbitrationID, await other.getAddress(), "text");
-  });
-
-  it("Should make governance changes", async () => {
-    await expect(foreignProxy.connect(other).changeWinnerMultiplier(99)).to.be.revertedWith("Only governor allowed");
-    await foreignProxy.connect(governor).changeWinnerMultiplier(99);
-    // 0 - winner, 1 - loser.
-    let multipliers = await foreignProxy.getMultipliers();
-    expect(multipliers[0]).to.equal(99, "Incorrect winner multiplier value");
-
-    await expect(foreignProxy.connect(other).changeLoserMultiplier(101)).to.be.revertedWith("Only governor allowed");
-    await foreignProxy.connect(governor).changeLoserMultiplier(101);
-
-    await expect(foreignProxy.connect(other).changeLoserAppealPeriodMultiplier(5123)).to.be.revertedWith(
-      "Only governor allowed"
-    );
-    await foreignProxy.connect(governor).changeLoserAppealPeriodMultiplier(5123);
-
-    multipliers = await foreignProxy.getMultipliers();
-    expect(multipliers[1]).to.equal(101, "Incorrect loser multiplier value");
-    expect(multipliers[2]).to.equal(5123, "Incorrect loserAppealPeriod multiplier value");
-
-    await expect(foreignProxy.connect(other).changeGovernor(await other.getAddress())).to.be.revertedWith(
-      "Only governor allowed"
-    );
-    await foreignProxy.connect(governor).changeGovernor(await other.getAddress());
-    expect(await foreignProxy.governor()).to.equal(await other.getAddress(), "Incorrect governor address");
-    await expect(foreignProxy.connect(governor).changeGovernor(await governor.getAddress())).to.be.revertedWith(
-      "Only governor allowed"
-    );
   });
 
   it("Should forbid requesting arbitration after a dispute has been created for the given question", async () => {

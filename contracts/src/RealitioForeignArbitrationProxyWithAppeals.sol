@@ -60,8 +60,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
-    address public governor = msg.sender; // The contract governor. TRUSTED.
-
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
 
@@ -72,9 +70,9 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     string public termsOfService; // The path for the Terms of Service for Kleros as an arbitrator for Realitio.
 
     // Multipliers are in basis points.
-    uint256 private winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
-    uint256 private loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
-    uint256 private loserAppealPeriodMultiplier; // Multiplier for calculating the duration of the appeal period for the loser, in basis points.
+    uint256 public immutable winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
+    uint256 public immutable loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
+    uint256 public immutable loserAppealPeriodMultiplier; // Multiplier for calculating the duration of the appeal period for the loser, in basis points.
 
     mapping(uint256 => mapping(address => ArbitrationRequest)) public arbitrationRequests; // Maps arbitration ID to its data.
     mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
@@ -82,11 +80,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
 
     /* Modifiers */
-
-    modifier onlyGovernor() {
-        require(msg.sender == governor, "Only governor allowed");
-        _;
-    }
 
     modifier onlyHomeProxy() {
         require(msg.sender == address(amb), "Only AMB allowed");
@@ -134,37 +127,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     }
 
     /* External and public */
-
-    /**
-     * @notice Changes the address of the governor.
-     * @param _governor The address of the new governor.
-     */
-    function changeGovernor(address _governor) external onlyGovernor {
-        governor = _governor;
-    }
-
-    /**
-     * @notice Changes the proportion of appeal fees that must be added to appeal cost for the winning party.
-     * @param _winnerMultiplier The new winner multiplier value in basis points.
-     */
-    function changeWinnerMultiplier(uint64 _winnerMultiplier) external onlyGovernor {
-        winnerMultiplier = _winnerMultiplier;
-    }
-
-    /**
-     * @notice Changes the proportion of appeal fees that must be added to appeal cost for the losing party.
-     * @param _loserMultiplier The new loser multiplier value in basis points.
-     */
-    function changeLoserMultiplier(uint64 _loserMultiplier) external onlyGovernor {
-        loserMultiplier = _loserMultiplier;
-    }
-
-    /** @dev Changes the multiplier for calculating the duration of the appeal period for loser.
-     *  @param _loserAppealPeriodMultiplier The new loser multiplier for the appeal period, in basis points.
-     */
-    function changeLoserAppealPeriodMultiplier(uint256 _loserAppealPeriodMultiplier) external onlyGovernor {
-        loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
-    }
 
     // ************************ //
     // *    Realitio logic    * //

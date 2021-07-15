@@ -673,10 +673,6 @@ describe("Cross-chain arbitration with appeals", () => {
   it("Should correctly submit evidence", async () => {
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
 
-    await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text")).to.be.revertedWith(
-      "The status should be Created."
-    );
-
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
     await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text"))
       .to.emit(foreignProxy, "Evidence")
@@ -685,10 +681,6 @@ describe("Cross-chain arbitration with appeals", () => {
 
   it("Should forbid requesting arbitration after a dispute has been created for the given question", async () => {
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
-
-    await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text")).to.be.revertedWith(
-      "The status should be Created."
-    );
 
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
 

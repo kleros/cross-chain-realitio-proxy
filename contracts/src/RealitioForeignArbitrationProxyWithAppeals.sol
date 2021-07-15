@@ -373,7 +373,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
 
-        for (uint256 roundNumber = 0; roundNumber < arbitration.rounds.length; roundNumber++) {
+        uint256 numberOfRounds = arbitration.rounds.length;
+        for (uint256 roundNumber = 0; roundNumber < numberOfRounds; roundNumber++) {
             withdrawFeesAndRewards(_arbitrationID, _beneficiary, roundNumber, _contributedTo);
         }
     }

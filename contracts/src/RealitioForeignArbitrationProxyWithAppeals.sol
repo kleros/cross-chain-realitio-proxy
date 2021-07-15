@@ -631,7 +631,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
                     : 0;
             }
         }
-        return sum;
     }
 
     /**

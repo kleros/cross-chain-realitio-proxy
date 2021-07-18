@@ -43,7 +43,13 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /// @dev The number of choices for the arbitrator. Kleros is currently able to provide ruling values of up to 2^256 - 2.
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max - 1;
 
-    enum Status {None, Requested, Created, Ruled, Failed}
+    enum Status {
+        None,
+        Requested,
+        Created,
+        Ruled,
+        Failed
+    }
 
     struct ArbitrationRequest {
         Status status; // Status of the arbitration.
@@ -248,7 +254,9 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
+    function getDisputeFee(
+        bytes32 /* _questionID */
+    ) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 }

@@ -62,7 +62,6 @@ describe("Cross-chain arbitration with appeals", () => {
   });
 
   it("Should correctly set the initial values", async () => {
-    expect(await foreignProxy.governor()).to.equal(await governor.getAddress());
     expect(await foreignProxy.amb()).to.equal(amb.address);
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.address);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
@@ -608,74 +607,6 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(newBalance).to.equal(oldBalance.add(705), "The balance of the crowdfunder2 is incorrect"); // 1000 * 12000 / 17000.
   });
 
-  it("Should correctly withdraw appeal fees for multiple answers", async () => {
-    let oldBalance;
-    let newBalance;
-
-    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
-
-    await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
-
-    await arbitrator.giveAppealableRuling(2, 17, appealCost, appealTimeOut);
-
-    // LoserFee = 8500. AppealCost = 5000.
-    await foreignProxy.connect(requester).fundAppeal(arbitrationID, 1, { value: 5000 });
-    await foreignProxy.connect(crowdfunder1).fundAppeal(arbitrationID, 1, { value: 3500 });
-
-    // Not fully funded answers.
-    await foreignProxy.connect(requester).fundAppeal(arbitrationID, 41, { value: 17 });
-    await foreignProxy.connect(requester).fundAppeal(arbitrationID, 45, { value: 22 });
-    //
-
-    await foreignProxy.connect(requester).fundAppeal(arbitrationID, 2, { value: 1000 });
-    await foreignProxy.connect(crowdfunder1).fundAppeal(arbitrationID, 2, { value: 10000 });
-
-    // Final answer was not funded.
-    await arbitrator.giveAppealableRuling(2, 17, appealCost, appealTimeOut);
-    await time.increase(appealTimeOut + 1);
-
-    await arbitrator.executeRuling(2);
-
-    oldBalance = await requester.getBalance();
-    await foreignProxy.withdrawFeesAndRewardsForMultipleRulings(arbitrationID, await requester.getAddress(), 0, [1, 2]);
-
-    newBalance = await requester.getBalance();
-    // 5000 * 12000 / 17000 + 1000 * 12000 / 17000 = 3529 + 705
-    expect(newBalance).to.equal(oldBalance.add(4234), "The balance of the requester is incorrect");
-
-    oldBalance = await requester.getBalance();
-    await foreignProxy.withdrawFeesAndRewardsForMultipleRulings(arbitrationID, await requester.getAddress(), 0, [
-      41,
-      45,
-    ]);
-    newBalance = await requester.getBalance();
-    expect(newBalance).to.equal(
-      oldBalance.add(39),
-      "The balance of the requester is incorrect after withdrawing not fully funded answers"
-    );
-
-    oldBalance = await crowdfunder1.getBalance();
-    await foreignProxy.withdrawFeesAndRewardsForMultipleRulings(arbitrationID, await crowdfunder1.getAddress(), 0, [
-      1,
-      2,
-    ]);
-    newBalance = await crowdfunder1.getBalance();
-
-    // 3500 * 12000 / 17000 + 7500 * 12000 / 17000 = 2470 + 5294
-    expect(newBalance).to.equal(oldBalance.add(7764), "The balance of the crowdfunder1 is incorrect");
-
-    oldBalance = await crowdfunder1.getBalance();
-    await foreignProxy.withdrawFeesAndRewardsForMultipleRulings(arbitrationID, await crowdfunder1.getAddress(), 0, [
-      1,
-      2,
-    ]);
-    newBalance = await crowdfunder1.getBalance();
-    expect(newBalance).to.equal(
-      oldBalance,
-      "The balance of the crowdfunder1 should stay the same after withdrawing the 2nd time"
-    );
-  });
-
   it("Should correctly withdraw appeal fees for multiple rounds", async () => {
     let oldBalance;
     let newBalance;
@@ -704,13 +635,20 @@ describe("Cross-chain arbitration with appeals", () => {
     await arbitrator.executeRuling(2);
 
     oldBalance = await requester.getBalance();
-    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), [1, 3, 41]);
+
+    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), 1);
+    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), 3);
+    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), 41);
+
     newBalance = await requester.getBalance();
     // 1000 * 10000 / 6500 + 17 = 1538 + 17
     expect(newBalance).to.equal(oldBalance.add(1555), "The balance of the requester is incorrect");
 
     oldBalance = await crowdfunder1.getBalance();
-    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), [1, 3, 45]);
+    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), 1);
+    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), 3);
+    await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), 45);
+
     newBalance = await crowdfunder1.getBalance();
     // 5500 * 10000 / 6500 + 22 = 8461 + 22
     expect(newBalance).to.equal(oldBalance.add(8483), "The balance of the crowdfunder1 is incorrect");
@@ -735,51 +673,14 @@ describe("Cross-chain arbitration with appeals", () => {
   it("Should correctly submit evidence", async () => {
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
 
-    await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text")).to.be.revertedWith(
-      "The status should be Created."
-    );
-
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
     await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text"))
       .to.emit(foreignProxy, "Evidence")
       .withArgs(arbitrator.address, arbitrationID, await other.getAddress(), "text");
   });
 
-  it("Should make governance changes", async () => {
-    await expect(foreignProxy.connect(other).changeWinnerMultiplier(99)).to.be.revertedWith("Only governor allowed");
-    await foreignProxy.connect(governor).changeWinnerMultiplier(99);
-    // 0 - winner, 1 - loser.
-    let multipliers = await foreignProxy.getMultipliers();
-    expect(multipliers[0]).to.equal(99, "Incorrect winner multiplier value");
-
-    await expect(foreignProxy.connect(other).changeLoserMultiplier(101)).to.be.revertedWith("Only governor allowed");
-    await foreignProxy.connect(governor).changeLoserMultiplier(101);
-
-    await expect(foreignProxy.connect(other).changeLoserAppealPeriodMultiplier(5123)).to.be.revertedWith(
-      "Only governor allowed"
-    );
-    await foreignProxy.connect(governor).changeLoserAppealPeriodMultiplier(5123);
-
-    multipliers = await foreignProxy.getMultipliers();
-    expect(multipliers[1]).to.equal(101, "Incorrect loser multiplier value");
-    expect(multipliers[2]).to.equal(5123, "Incorrect loserAppealPeriod multiplier value");
-
-    await expect(foreignProxy.connect(other).changeGovernor(await other.getAddress())).to.be.revertedWith(
-      "Only governor allowed"
-    );
-    await foreignProxy.connect(governor).changeGovernor(await other.getAddress());
-    expect(await foreignProxy.governor()).to.equal(await other.getAddress(), "Incorrect governor address");
-    await expect(foreignProxy.connect(governor).changeGovernor(await governor.getAddress())).to.be.revertedWith(
-      "Only governor allowed"
-    );
-  });
-
   it("Should forbid requesting arbitration after a dispute has been created for the given question", async () => {
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
-
-    await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text")).to.be.revertedWith(
-      "The status should be Created."
-    );
 
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
 

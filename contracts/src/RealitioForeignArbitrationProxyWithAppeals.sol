@@ -385,8 +385,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _evidenceURI Link to evidence.
      */
     function submitEvidence(uint256 _arbitrationID, string calldata _evidenceURI) external override {
-        address requester = arbitrationIDToRequester[_arbitrationID];
-        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         emit Evidence(arbitrator, _arbitrationID, msg.sender, _evidenceURI);
     }
 

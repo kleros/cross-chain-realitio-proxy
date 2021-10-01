@@ -11,7 +11,7 @@
 pragma solidity ^0.7.2;
 
 import {IArbitrator} from "@kleros/erc-792/contracts/IArbitrator.sol";
-import {IAMB} from "./dependencies/IAMB.sol";
+import {IBridge} from "./bridges/IBridge.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
@@ -20,13 +20,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  */
 contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public immutable amb;
-
-    /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
-    address public immutable homeProxy;
-
-    /// @dev The chain ID where the home proxy is deployed.
-    bytes32 public immutable homeChainId;
+    IBridge public immutable amb;
 
     /// @dev The address of the arbitrator. TRUSTED.
     IArbitrator public immutable arbitrator;
@@ -76,34 +70,26 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     }
 
     modifier onlyHomeProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == homeChainId, "Only home chain allowed");
-        require(amb.messageSender() == homeProxy, "Only home proxy allowed");
+        amb.onlyHomeProxy();
         _;
     }
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
      * @param _amb ArbitraryMessageBridge contract address.
-     * @param _homeProxy The address of the proxy contract in the counter-party Home Chain (i.e.: xDAI)
-     * @param _homeChainId The ID of the counter-party Home Chain.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
      * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
      */
     constructor(
-        IAMB _amb,
-        address _homeProxy,
-        bytes32 _homeChainId,
+        IBridge _amb,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         string memory _termsOfService
     ) {
         amb = _amb;
-        homeProxy = _homeProxy;
-        homeChainId = _homeChainId;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
@@ -130,7 +116,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        amb.sendMessage(amb.homeProxy(), data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -215,7 +201,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        amb.sendMessage(amb.homeProxy(), data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -245,7 +231,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, questionID, answer);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        amb.sendMessage(amb.homeProxy(), data);
 
         emit Ruling(arbitrator, _disputeID, _ruling);
     }

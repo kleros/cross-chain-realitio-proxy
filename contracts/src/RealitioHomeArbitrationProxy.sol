@@ -10,7 +10,7 @@
 
 pragma solidity ^0.7.2;
 
-import {IAMB} from "./dependencies/IAMB.sol";
+import {IBridge} from "./bridges/IBridge.sol";
 import {RealitioInterface} from "./dependencies/RealitioInterface.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
@@ -23,13 +23,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     RealitioInterface public immutable realitio;
 
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public immutable amb;
-
-    /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
-    address public immutable foreignProxy;
-
-    /// @dev The chain ID where the foreign proxy is deployed.
-    bytes32 public immutable foreignChainId;
+    IBridge public immutable amb;
 
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
@@ -55,9 +49,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     mapping(bytes32 => address) public questionIDToRequester;
 
     modifier onlyForeignProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == foreignChainId, "Only foreign chain allowed");
-        require(amb.messageSender() == foreignProxy, "Only foreign proxy allowed");
+        amb.onlyForeignProxy();
         _;
     }
 
@@ -69,14 +61,12 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _realitio Realitio contract address.
      */
     constructor(
-        IAMB _amb,
+        IBridge _amb,
         address _foreignProxy,
         bytes32 _foreignChainId,
         RealitioInterface _realitio
     ) {
         amb = _amb;
-        foreignProxy = _foreignProxy;
-        foreignChainId = _foreignChainId;
         realitio = _realitio;
     }
 
@@ -132,7 +122,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
+        amb.sendMessage(amb.foreignProxy(), data);
 
         emit RequestAcknowledged(_questionID, _requester);
     }
@@ -157,7 +147,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
+        amb.sendMessage(amb.foreignProxy(), data);
 
         emit RequestCanceled(_questionID, _requester);
     }

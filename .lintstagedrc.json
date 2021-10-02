@@ -2,7 +2,6 @@
   "*.js": "eslint --cache --fix",
   "*.{md,html,json}": "prettier --write",
   "*.sol": [
-    "prettier --write",
-    "solhint --fix"
+    "prettier --write"
   ]
 }

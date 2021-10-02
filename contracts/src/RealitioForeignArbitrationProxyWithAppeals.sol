@@ -12,7 +12,7 @@ pragma solidity ^0.7.2;
 
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract/contracts/solc-0.7.x/IDisputeResolver.sol";
 import {CappedMath} from "@kleros/ethereum-libraries/contracts/CappedMath.sol";
-import {IAMB} from "./dependencies/IAMB.sol";
+import {FxBaseRootTunnel} from "./dependencies/FxBaseRootTunnel.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
@@ -20,7 +20,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  * This version of the contract has an appeal support.
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver {
+contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver, FxBaseRootTunnel {
     using CappedMath for uint256;
 
     /* Constants */
@@ -63,10 +63,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
 
-    IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
-    address public immutable homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
-    bytes32 public immutable homeChainId; // The chain ID where the home proxy is deployed.
-
     string public termsOfService; // The path for the Terms of Service for Kleros as an arbitrator for Realitio.
 
     // Multipliers are in basis points.
@@ -79,20 +75,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
 
-    /* Modifiers */
-
-    modifier onlyHomeProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == homeChainId, "Only home chain allowed");
-        require(amb.messageSender() == homeProxy, "Only home proxy allowed");
-        _;
-    }
-
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @param _amb ArbitraryMessageBridge contract address.
-     * @param _homeProxy The address of the proxy.
-     * @param _homeChainId The chain ID where the home proxy is deployed.
+     * @param _checkpointManager For Polygon FX-portal bridge
+     * @param _fxRoot Address of the FxRoot contract of the Polygon bridge
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -102,9 +88,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(
-        IAMB _amb,
-        address _homeProxy,
-        bytes32 _homeChainId,
+        address _checkpointManager,
+        address _fxRoot,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -112,10 +97,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _winnerMultiplier,
         uint256 _loserMultiplier,
         uint256 _loserAppealPeriodMultiplier
-    ) {
-        amb = _amb;
-        homeProxy = _homeProxy;
-        homeChainId = _homeChainId;
+    ) FxBaseRootTunnel(_checkpointManager, _fxRoot) {
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
@@ -151,7 +133,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        sendMessageToChild(data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -164,7 +146,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
         external
         override
-        onlyHomeProxy
+    // onlyHomeProxy
     {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
@@ -212,7 +194,10 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyHomeProxy {
+    function receiveArbitrationCancelation(
+        bytes32 _questionID,
+        address _requester // onlyHomeProxy
+    ) external override {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -240,7 +225,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        sendMessageToChild(data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -414,7 +399,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         // Realitio ruling is shifted by 1 compared to Kleros.
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(finalRuling - 1));
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        sendMessageToChild(data);
 
         emit Ruling(arbitrator, _disputeID, finalRuling);
     }
@@ -609,5 +594,13 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
+    }
+
+    function _processMessageFromChild(bytes memory data) internal override {
+        // TODO
+    }
+
+    function sendMessageToChild(bytes memory message) public {
+        _sendMessageToChild(message);
     }
 }

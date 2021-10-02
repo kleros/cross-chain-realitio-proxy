@@ -10,7 +10,7 @@
 
 pragma solidity ^0.7.2;
 
-import {IAMB} from "./dependencies/IAMB.sol";
+import {FxBaseChildTunnel} from "./dependencies/FxBaseChildTunnel.sol";
 import {RealitioInterface} from "./dependencies/RealitioInterface.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
@@ -18,18 +18,9 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
  * @dev This contract is meant to be deployed to side-chains (i.e.: xDAI) in which Reality.eth is deployed.
  */
-contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
+contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunnel {
     /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
     RealitioInterface public immutable realitio;
-
-    /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public immutable amb;
-
-    /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
-    address public immutable foreignProxy;
-
-    /// @dev The chain ID where the foreign proxy is deployed.
-    bytes32 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
@@ -54,29 +45,12 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
-    modifier onlyForeignProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == foreignChainId, "Only foreign chain allowed");
-        require(amb.messageSender() == foreignProxy, "Only foreign proxy allowed");
-        _;
-    }
-
     /**
      * @notice Creates an arbitration proxy on the home chain.
-     * @param _amb ArbitraryMessageBridge contract address.
-     * @param _foreignProxy The address of the proxy.
-     * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
+     * @param _fxChild Address of the FxChild contract of the Polygon bridge
      * @param _realitio Realitio contract address.
      */
-    constructor(
-        IAMB _amb,
-        address _foreignProxy,
-        bytes32 _foreignChainId,
-        RealitioInterface _realitio
-    ) {
-        amb = _amb;
-        foreignProxy = _foreignProxy;
-        foreignChainId = _foreignChainId;
+    constructor(address _fxChild, RealitioInterface _realitio) FxBaseChildTunnel(_fxChild) {
         realitio = _realitio;
     }
 
@@ -89,8 +63,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     function receiveArbitrationRequest(
         bytes32 _questionID,
         address _requester,
-        uint256 _maxPrevious
-    ) external override onlyForeignProxy {
+        uint256 _maxPrevious // onlyForeignProxy
+    ) external override {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.None, "Request already exists");
 
@@ -132,7 +106,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
+        sendMessageToRoot(data);
 
         emit RequestAcknowledged(_questionID, _requester);
     }
@@ -157,7 +131,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
+        sendMessageToRoot(data);
 
         emit RequestCanceled(_questionID, _requester);
     }
@@ -168,7 +142,10 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxy {
+    function receiveArbitrationFailure(
+        bytes32 _questionID,
+        address _requester //onlyForeignProxy
+    ) external override {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -185,7 +162,10 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
-    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
+    function receiveArbitrationAnswer(
+        bytes32 _questionID,
+        bytes32 _answer // onlyForeignProxy
+    ) external override {
         address requester = questionIDToRequester[_questionID];
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
@@ -228,5 +208,17 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
+    }
+
+    function _processMessageFromRoot(
+        uint256 stateId,
+        address sender,
+        bytes memory data
+    ) internal override validateSender(sender) {
+        // TODO
+    }
+
+    function sendMessageToRoot(bytes memory message) public {
+        _sendMessageToRoot(message);
     }
 }

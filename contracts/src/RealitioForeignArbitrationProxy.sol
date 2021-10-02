@@ -11,23 +11,14 @@
 pragma solidity ^0.7.2;
 
 import {IArbitrator} from "@kleros/erc-792/contracts/IArbitrator.sol";
-import {IAMB} from "./dependencies/IAMB.sol";
+import {FxBaseRootTunnel} from "./dependencies/FxBaseRootTunnel.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
-    /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public immutable amb;
-
-    /// @dev Address of the counter-party proxy on the Home Chain. TRUSTED.
-    address public immutable homeProxy;
-
-    /// @dev The chain ID where the home proxy is deployed.
-    bytes32 public immutable homeChainId;
-
+contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRootTunnel {
     /// @dev The address of the arbitrator. TRUSTED.
     IArbitrator public immutable arbitrator;
 
@@ -75,35 +66,23 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         _;
     }
 
-    modifier onlyHomeProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == homeChainId, "Only home chain allowed");
-        require(amb.messageSender() == homeProxy, "Only home proxy allowed");
-        _;
-    }
-
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @param _amb ArbitraryMessageBridge contract address.
-     * @param _homeProxy The address of the proxy contract in the counter-party Home Chain (i.e.: xDAI)
-     * @param _homeChainId The ID of the counter-party Home Chain.
+     * @param _checkpointManager For Polygon FX-portal bridge
+     * @param _fxRoot Address of the FxRoot contract of the Polygon bridge
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
      * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
      */
     constructor(
-        IAMB _amb,
-        address _homeProxy,
-        bytes32 _homeChainId,
+        address _checkpointManager,
+        address _fxRoot,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         string memory _termsOfService
-    ) {
-        amb = _amb;
-        homeProxy = _homeProxy;
-        homeChainId = _homeChainId;
+    ) FxBaseRootTunnel(_checkpointManager, _fxRoot) {
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
@@ -130,7 +109,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        sendMessageToChild(data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -143,7 +122,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
         external
         override
-        onlyHomeProxy
+    //   onlyHomeProxy
     {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -187,7 +166,10 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyHomeProxy {
+    function receiveArbitrationCancelation(
+        bytes32 _questionID,
+        address _requester // onlyHomeProxy
+    ) external override {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
         uint256 deposit = arbitration.deposit;
@@ -215,7 +197,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        sendMessageToChild(data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -245,7 +227,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, questionID, answer);
-        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+        sendMessageToChild(data);
 
         emit Ruling(arbitrator, _disputeID, _ruling);
     }
@@ -258,5 +240,13 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
         bytes32 /* _questionID */
     ) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
+    }
+
+    function _processMessageFromChild(bytes memory data) internal override {
+        // TODO
+    }
+
+    function sendMessageToChild(bytes memory message) public {
+        _sendMessageToChild(message);
     }
 }

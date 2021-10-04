@@ -242,11 +242,13 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 
-    function _processMessageFromChild(bytes memory data) internal override {
-        // TODO
+    function _processMessageFromChild(bytes memory _data) internal override {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = address(this).call(_data);
+        require(success, "Failed to call contract");
     }
 
-    function sendMessageToChild(bytes memory message) public {
-        _sendMessageToChild(message);
+    function sendMessageToChild(bytes memory _message) public {
+        _sendMessageToChild(_message);
     }
 }

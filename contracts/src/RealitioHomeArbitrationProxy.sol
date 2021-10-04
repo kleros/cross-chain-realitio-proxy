@@ -213,12 +213,14 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
     function _processMessageFromRoot(
         uint256 stateId,
         address sender,
-        bytes memory data
+        bytes memory _data
     ) internal override validateSender(sender) {
-        // TODO
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = address(this).call(_data);
+        require(success, "Failed to call contract");
     }
 
-    function sendMessageToRoot(bytes memory message) public {
-        _sendMessageToRoot(message);
+    function sendMessageToRoot(bytes memory _message) public {
+        _sendMessageToRoot(_message);
     }
 }

@@ -1,23 +1,23 @@
 const getContractAddress = require("../deploy-helpers/getContractAddress");
 
-const FOREIGN_CHAIN_IDS = [42, 1];
+const FOREIGN_CHAIN_IDS = [5];
 const paramsByChainId = {
-  42: {
+  5: {
+    checkpointManager: "0x2890bA17EfE978480615e330ecB65333b880928e",
+    fxRoot: "0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA",
     amb: "0xFe446bEF1DbF7AFE24E81e05BC8B271C1BA9a560",
-    // arbitrator: "0xA8243657a1E6ad1AAf2b59c4CCDFE85fC6fD7a8B",
-    arbitrator: "0x3b261920Ba47f0C0c6162e592181bbE2244b63AE",
+    arbitrator: "0x3b261920Ba47f0C0c6162e592181bbE2244b63AE", // TODO
     arbitratorExtraData:
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    homeChainId: 77,
     metaEvidence: "/ipfs/Qmc2cpRZgT5PmR4ZikDsVG54xejKF62qSBBnYf4R5bpiNH/realitio.json",
     termsOfService: "/ipfs/Qmf67KPWvFLSQEczsb8Kh9HtGUevNtSSVELqTS8yTe95GW/omen-rules.pdf",
   },
   1: {
-    amb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
+    checkpointManager: "0x86e4dc95c7fbdbf52e33d563bbdb00823894c287",
+    fxRoot: "0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2",
     arbitrator: "0x988b3a538b618c7a603e1c11ab82cd16dbe28069", // KlerosLiquid address
     arbitratorExtraData:
       "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f4",
-    homeChainId: 100,
     metaEvidence: "/ipfs/Qmc6bWTzPMFeRx9VWHwnDpDXfimwNsvnEgJo3gymg37rRd/realitio.json",
     termsOfService: "/ipfs/QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
   },
@@ -26,29 +26,28 @@ const paramsByChainId = {
 async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, ethers, config }) {
   const { deploy } = deployments;
   const { providers } = ethers;
-  const { hexZeroPad } = ethers.utils;
 
   const accounts = await getNamedAccounts();
   const { deployer, counterPartyDeployer } = accounts;
   const chainId = await getChainId();
 
   const homeNetworks = {
-    42: config.networks.sokol,
-    1: config.networks.xdai,
+    5: config.networks.mumbai,
+    1: config.networks.polygon,
   };
   const { url } = homeNetworks[chainId];
   const homeChainProvider = new providers.JsonRpcProvider(url);
   const nonce = await homeChainProvider.getTransactionCount(counterPartyDeployer);
 
-  const { amb, arbitrator, arbitratorExtraData, homeChainId, metaEvidence, termsOfService } = paramsByChainId[chainId];
+  const { checkpointManager, fxRoot, arbitrator, arbitratorExtraData, metaEvidence, termsOfService } =
+    paramsByChainId[chainId];
 
   // Foreign Proxy deploy will happen AFTER the Home Proxy deploy, so we need to subtract 1 from the nonce
   const homeProxyAddress = getContractAddress(counterPartyDeployer, nonce - 1);
-  const homeChainIdAsBytes32 = hexZeroPad(homeChainId, 32);
 
   const foreignProxy = await deploy("RealitioForeignArbitrationProxy", {
     from: deployer,
-    args: [amb, homeProxyAddress, homeChainIdAsBytes32, arbitrator, arbitratorExtraData, metaEvidence, termsOfService],
+    args: [checkpointManager, fxRoot, homeProxyAddress, arbitrator, arbitratorExtraData, metaEvidence, termsOfService],
     gas: 8000000,
   });
 

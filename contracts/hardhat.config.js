@@ -31,6 +31,16 @@ module.exports = {
     sources: "./src",
   },
   networks: {
+    mumbai: {
+      chainId: 80001,
+      url: `https://rpc-mumbai.maticvigil.com/v1/${process.env.MATIC_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+    },
+    polygon: {
+      chainId: 137,
+      url: `https://rpc-mainnet.maticvigil.com/v1/${process.env.MATIC_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+    },
     sokol: {
       chainId: 77,
       url: "https://sokol.poa.network/",
@@ -40,6 +50,11 @@ module.exports = {
       chainId: 100,
       url: "https://rpc.xdaichain.com/",
       accounts: [process.env.PRIVATE_KEY, process.env.MAINNET_PRIVATE_KEY],
+    },
+    goerli: {
+      chainId: 5,
+      url: `https://goerli.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
     },
     kovan: {
       chainId: 42,

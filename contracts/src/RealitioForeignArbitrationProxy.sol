@@ -70,6 +70,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
      * @notice Creates an arbitration proxy on the foreign chain.
      * @param _checkpointManager For Polygon FX-portal bridge
      * @param _fxRoot Address of the FxRoot contract of the Polygon bridge
+     * @param _homeProxy The address of the proxy.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -78,11 +79,12 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
     constructor(
         address _checkpointManager,
         address _fxRoot,
+        address _homeProxy,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         string memory _termsOfService
-    ) FxBaseRootTunnel(_checkpointManager, _fxRoot) {
+    ) FxBaseRootTunnel(_checkpointManager, _fxRoot, _homeProxy) {
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;

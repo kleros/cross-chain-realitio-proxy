@@ -66,6 +66,11 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
         _;
     }
 
+    modifier onlyBridge() {
+        require(msg.sender == address(this), "Can only be called via bridge");
+        _;
+    }
+
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
      * @param _checkpointManager For Polygon FX-portal bridge
@@ -111,7 +116,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        sendMessageToChild(data);
+        _sendMessageToChild(data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -121,11 +126,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
-        external
-        override
-    //   onlyHomeProxy
-    {
+    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) public override onlyBridge {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
@@ -168,10 +169,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function receiveArbitrationCancelation(
-        bytes32 _questionID,
-        address _requester // onlyHomeProxy
-    ) external override {
+    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) public override onlyBridge {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
         uint256 deposit = arbitration.deposit;
@@ -199,7 +197,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        sendMessageToChild(data);
+        _sendMessageToChild(data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -229,7 +227,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, questionID, answer);
-        sendMessageToChild(data);
+        _sendMessageToChild(data);
 
         emit Ruling(arbitrator, _disputeID, _ruling);
     }
@@ -248,9 +246,5 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = address(this).call(_data);
         require(success, "Failed to call contract");
-    }
-
-    function sendMessageToChild(bytes memory _message) public {
-        _sendMessageToChild(_message);
     }
 }

@@ -75,6 +75,11 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
 
+    modifier onlyBridge() {
+        require(msg.sender == address(this), "Can only be called via bridge");
+        _;
+    }
+
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
      * @param _checkpointManager For Polygon FX-portal bridge
@@ -135,7 +140,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        sendMessageToChild(data);
+        _sendMessageToChild(data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -145,11 +150,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
-        external
-        override
-    // onlyHomeProxy
-    {
+    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) public override onlyBridge {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -196,10 +197,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationCancelation(
-        bytes32 _questionID,
-        address _requester // onlyHomeProxy
-    ) external override {
+    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) public override onlyBridge {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -227,7 +225,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        sendMessageToChild(data);
+        _sendMessageToChild(data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -401,7 +399,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         // Realitio ruling is shifted by 1 compared to Kleros.
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(finalRuling - 1));
-        sendMessageToChild(data);
+        _sendMessageToChild(data);
 
         emit Ruling(arbitrator, _disputeID, finalRuling);
     }
@@ -602,9 +600,5 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = address(this).call(_data);
         require(success, "Failed to call contract");
-    }
-
-    function sendMessageToChild(bytes memory _message) public {
-        _sendMessageToChild(_message);
     }
 }

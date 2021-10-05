@@ -59,6 +59,4 @@ contract XDaiBridge is IBridge {
     function sendMessage(address _recipient, bytes memory _data) external override {
         amb.requireToPassMessage(_recipient, _data, amb.maxGasPerTx());
     }
-
-    function receiveMessage(address _sender, bytes memory _data) external override {}
 }

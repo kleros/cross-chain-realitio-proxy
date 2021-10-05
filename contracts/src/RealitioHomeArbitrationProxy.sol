@@ -68,8 +68,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
     function receiveArbitrationRequest(
         bytes32 _questionID,
         address _requester,
-        uint256 _maxPrevious // onlyForeignProxy
-    ) external override {
+        uint256 _maxPrevious
+    ) public override {
+        require(msg.sender == address(this), "Can only be called via bridge");
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.None, "Request already exists");
 
@@ -111,7 +112,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        sendMessageToRoot(data);
+        _sendMessageToRoot(data);
 
         emit RequestAcknowledged(_questionID, _requester);
     }
@@ -136,7 +137,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        sendMessageToRoot(data);
+        _sendMessageToRoot(data);
 
         emit RequestCanceled(_questionID, _requester);
     }
@@ -147,10 +148,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(
-        bytes32 _questionID,
-        address _requester //onlyForeignProxy
-    ) external override {
+    function receiveArbitrationFailure(bytes32 _questionID, address _requester) public override {
+        require(msg.sender == address(this), "Can only be called via bridge");
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -167,10 +166,8 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
-    function receiveArbitrationAnswer(
-        bytes32 _questionID,
-        bytes32 _answer // onlyForeignProxy
-    ) external override {
+    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) public override {
+        require(msg.sender == address(this), "Can only be called via bridge");
         address requester = questionIDToRequester[_questionID];
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
@@ -223,9 +220,5 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, ) = address(this).call(_data);
         require(success, "Failed to call contract");
-    }
-
-    function sendMessageToRoot(bytes memory _message) public {
-        _sendMessageToRoot(_message);
     }
 }

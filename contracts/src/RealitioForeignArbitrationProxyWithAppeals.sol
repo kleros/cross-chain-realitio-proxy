@@ -20,7 +20,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  * This version of the contract has an appeal support.
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver, FxBaseRootTunnel {
+contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver {
     using CappedMath for uint256;
 
     /* Constants */
@@ -60,6 +60,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
+    FxBaseRootTunnel amb;
+
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
 
@@ -77,8 +79,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @param _checkpointManager For Polygon FX-portal bridge
-     * @param _fxRoot Address of the FxRoot contract of the Polygon bridge
      * @param _homeProxy The address of the proxy.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
@@ -89,8 +89,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(
-        address _checkpointManager,
-        address _fxRoot,
+        FxBaseRootTunnel _amb,
         address _homeProxy,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
@@ -99,7 +98,8 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         uint256 _winnerMultiplier,
         uint256 _loserMultiplier,
         uint256 _loserAppealPeriodMultiplier
-    ) FxBaseRootTunnel(_checkpointManager, _fxRoot, _homeProxy) {
+    ) {
+        amb = _amb;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
@@ -135,7 +135,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        _sendMessageToChild(data);
+        amb.sendMessageToChild(data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -222,7 +222,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        _sendMessageToChild(data);
+        amb.sendMessageToChild(data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -396,7 +396,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         // Realitio ruling is shifted by 1 compared to Kleros.
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(finalRuling - 1));
-        _sendMessageToChild(data);
+        amb.sendMessageToChild(data);
 
         emit Ruling(arbitrator, _disputeID, finalRuling);
     }
@@ -591,11 +591,5 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
-    }
-
-    function _processMessageFromChild(bytes memory _data) internal override {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = address(this).call(_data);
-        require(success, "Failed to call contract");
     }
 }

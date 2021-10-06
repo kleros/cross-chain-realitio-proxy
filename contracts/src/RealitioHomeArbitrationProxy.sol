@@ -18,7 +18,9 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
  * @dev This contract is meant to be deployed to side-chains (i.e.: xDAI) in which Reality.eth is deployed.
  */
-contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunnel {
+contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
+    FxBaseChildTunnel amb;
+
     /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
     RealitioInterface public immutable realitio;
 
@@ -52,10 +54,12 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
      * @param _realitio Realitio contract address.
      */
     constructor(
+        FxBaseChildTunnel _amb,
         address _fxChild,
         address _foreignProxy,
         RealitioInterface _realitio
-    ) FxBaseChildTunnel(_fxChild, _foreignProxy) {
+    ) {
+        amb = _amb;
         realitio = _realitio;
     }
 
@@ -112,7 +116,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        _sendMessageToRoot(data);
+        amb.sendMessageToRoot(data);
 
         emit RequestAcknowledged(_questionID, _requester);
     }
@@ -137,7 +141,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
 
         bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        _sendMessageToRoot(data);
+        amb.sendMessageToRoot(data);
 
         emit RequestCanceled(_questionID, _requester);
     }
@@ -210,15 +214,5 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy, FxBaseChildTunne
         request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
-    }
-
-    function _processMessageFromRoot(
-        uint256 stateId,
-        address sender,
-        bytes memory _data
-    ) internal override validateSender(sender) {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = address(this).call(_data);
-        require(success, "Failed to call contract");
     }
 }

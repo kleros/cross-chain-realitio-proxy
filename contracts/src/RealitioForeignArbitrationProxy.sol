@@ -18,7 +18,9 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProx
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRootTunnel {
+contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
+    FxBaseRootTunnel amb;
+
     /// @dev The address of the arbitrator. TRUSTED.
     IArbitrator public immutable arbitrator;
 
@@ -68,8 +70,6 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @param _checkpointManager For Polygon FX-portal bridge
-     * @param _fxRoot Address of the FxRoot contract of the Polygon bridge
      * @param _homeProxy The address of the proxy.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
@@ -77,14 +77,14 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
      * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
      */
     constructor(
-        address _checkpointManager,
-        address _fxRoot,
+        FxBaseRootTunnel _amb,
         address _homeProxy,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         string memory _termsOfService
-    ) FxBaseRootTunnel(_checkpointManager, _fxRoot, _homeProxy) {
+    ) {
+        amb = _amb;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         termsOfService = _termsOfService;
@@ -111,7 +111,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationRequest.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        _sendMessageToChild(data);
+        amb.sendMessageToChild(data);
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
@@ -122,7 +122,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
      * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) public override {
-        require(msg.sender == address(this), "Can only be called via bridge");
+        require(msg.sender == address(amb), "Can only be called via bridge");
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
@@ -166,7 +166,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
      * @param _requester The address of the arbitration requester.
      */
     function receiveArbitrationCancelation(bytes32 _questionID, address _requester) public override {
-        require(msg.sender == address(this), "Can only be called via bridge");
+        require(msg.sender == address(amb), "Can only be called via bridge");
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
         uint256 deposit = arbitration.deposit;
@@ -194,7 +194,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        _sendMessageToChild(data);
+        amb.sendMessageToChild(data);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -224,7 +224,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, questionID, answer);
-        _sendMessageToChild(data);
+        amb.sendMessageToChild(data);
 
         emit Ruling(arbitrator, _disputeID, _ruling);
     }
@@ -237,11 +237,5 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy, FxBaseRoot
         bytes32 /* _questionID */
     ) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
-    }
-
-    function _processMessageFromChild(bytes memory _data) internal override {
-        // solhint-disable-next-line avoid-low-level-calls
-        (bool success, ) = address(this).call(_data);
-        require(success, "Failed to call contract");
     }
 }

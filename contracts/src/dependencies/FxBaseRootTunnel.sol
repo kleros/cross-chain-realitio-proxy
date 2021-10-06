@@ -25,7 +25,7 @@ contract ICheckpointManager {
     mapping(uint256 => HeaderBlock) public headerBlocks;
 }
 
-abstract contract FxBaseRootTunnel {
+contract FxBaseRootTunnel {
     using RLPReader for bytes;
     using RLPReader for RLPReader.RLPItem;
     using Merkle for bytes32;
@@ -39,6 +39,7 @@ abstract contract FxBaseRootTunnel {
     ICheckpointManager public checkpointManager;
     // child tunnel contract which receives and sends messages
     address public fxChildTunnel;
+    address public homeProxy;
 
     // storage to avoid duplicate exits
     mapping(bytes32 => bool) public processedExits;
@@ -46,11 +47,13 @@ abstract contract FxBaseRootTunnel {
     constructor(
         address _checkpointManager,
         address _fxRoot,
-        address _fxChildTunnel
+        address _fxChildTunnel,
+        address _homeProxy
     ) {
         checkpointManager = ICheckpointManager(_checkpointManager);
         fxRoot = IFxStateSender(_fxRoot);
         fxChildTunnel = _fxChildTunnel;
+        homeProxy = _homeProxy;
     }
 
     /**
@@ -174,7 +177,16 @@ abstract contract FxBaseRootTunnel {
      * @dev function needs to be implemented to handle message as per requirement
      * This is called by onStateReceive function.
      * Since it is called via a system call, any event will not be emitted during its execution.
-     * @param message bytes message that was sent from Child Tunnel
+     * @param _data bytes message that was sent from Child Tunnel
      */
-    function _processMessageFromChild(bytes memory message) internal virtual;
+    function _processMessageFromChild(bytes memory _data) internal {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = address(homeProxy).call(_data);
+        require(success, "Failed to call contract");
+    }
+
+    function sendMessageToChild(bytes memory _message) external {
+        require(msg.sender == homeProxy, "Only Home Proxy");
+        _sendMessageToChild(_message);
+    }
 }

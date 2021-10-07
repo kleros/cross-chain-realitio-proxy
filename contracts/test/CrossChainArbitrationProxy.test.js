@@ -21,9 +21,6 @@ let answerer;
 let requester;
 let other;
 
-const homeChainId = hexZeroPad(0, 32);
-const foreignChainId = hexZeroPad(0, 32);
-
 const arbitrationFee = BigNumber.from(BigInt(1e18));
 const arbitratorExtraData = "0x00";
 const metaEvidence = "ipfs/X";
@@ -359,16 +356,16 @@ describe("Cross-Chain Arbitration", () => {
     const homeProxyAddress = getContractAddress(address, nonce + 1);
 
     const foreignProxy = await ForeignProxy.deploy(
+      ADDRESS_ZERO,
       amb.address,
       homeProxyAddress,
-      homeChainId,
       arbitrator.address,
       arbitratorExtraData,
       metaEvidence,
       termsOfService
     );
 
-    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address);
+    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, realitio.address);
 
     return {
       amb,

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *  @authors: [@hbarcelos, @unknownunknown1]
- *  @reviewers: [@MerlinEgalite, @shalzz, @jaybuidl]
+ *  @authors: [@hbarcelos*, @unknownunknown1]
+ *  @reviewers: [@MerlinEgalite*, @shalzz*, @jaybuidl*]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
@@ -24,7 +24,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
     using CappedMath for uint256;
 
     /* Constants */
-    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max - 1; // The number of choices for the arbitrator. Kleros is currently able to provide ruling values of up to 2^256 - 2.
+    uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
     uint256 public constant META_EVIDENCE_ID = 0; // The ID of the MetaEvidence for disputes.
 
@@ -258,7 +258,6 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
      * @return Whether the answer was fully funded or not.
      */
     function fundAppeal(uint256 _arbitrationID, uint256 _answer) external payable override returns (bool) {
-        require(_answer <= NUMBER_OF_CHOICES_FOR_ARBITRATOR, "Answer is out of bounds");
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][
             arbitrationIDToRequester[_arbitrationID]
         ];
@@ -413,6 +412,7 @@ contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy,
 
         bytes4 methodSelector = IHomeArbitrationProxy(0).receiveArbitrationAnswer.selector;
         // Realitio ruling is shifted by 1 compared to Kleros.
+        // Note that this shifting won't work in the latest compiler versions (0.8.0 and further), because of the innate underflow checks.
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(finalRuling - 1));
         amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 

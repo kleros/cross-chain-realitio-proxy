@@ -37,7 +37,7 @@ async function getContracts({ env, ethers }) {
     homeWallet
   );
 
-  const RealitioForeignArbitrationProxy = require(`../../deployments/${networks.foreign.name}/RealitioForeignArbitrationProxy.json`);
+  const RealitioForeignArbitrationProxy = require(`../../deployments/${networks.foreign.name}/RealitioForeignArbitrationProxyWithAppeals.json`);
   const foreignProvider = new ethers.providers.JsonRpcProvider(networks.foreign.url);
   const foreignWallet = new ethers.Wallet(
     env === "staging" ? process.env.PRIVATE_KEY : process.env.MAINNET_PRIVATE_KEY,

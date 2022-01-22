@@ -1,28 +1,24 @@
 const Web3 = require("web3");
-const RealitioForeignArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json");
+const RealitioForeignArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxyWithAppeals.sol/RealitioForeignArbitrationProxyWithAppeals.json");
 const RealitioHomeArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioHomeArbitrationProxy.sol/RealitioHomeArbitrationProxy.json");
 const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/src/dependencies/RealitioInterface.sol/RealitioInterface.json");
 const RealitioQuestion = require("@realitio/realitio-lib/formatters/question.js");
-
-const homeRpcEndpoint = process.env.HOME_CHAIN_RPC_ENDPOINT;
-const homeWeb3 = new Web3(homeRpcEndpoint);
-
-const foreignRpcEndpoint = process.env.FOREIGN_CHAIN_RPC_ENDPOINT;
-const foreignWeb3 = new Web3(foreignRpcEndpoint);
 
 const fromBlock = 0;
 
 const isNil = (value) => value === undefined || value === null;
 
 module.exports = async function getMetaEvidence() {
-  if (isNil(scriptParameters.disputeID) || isNil(scriptParameters.arbitrableContractAddress)) {
+  const { disputeID, arbitrableContractAddress, arbitrableJsonRpcUrl, arbitratorJsonRpcUrl, jsonRpcUrl } =
+    scriptParameters;
+  if (isNil(disputeID) || isNil(arbitrableContractAddress)) {
     return rejectScript("Both `disputeID` and `arbitrableContractAddress` script parameters are required");
   }
 
-  const foreignProxy = new foreignWeb3.eth.Contract(
-    RealitioForeignArbitrationProxy.abi,
-    scriptParameters.arbitrableContractAddress
-  );
+  const foreignWeb3 = new Web3(arbitratorJsonRpcUrl || jsonRpcUrl);
+  const foreignProxy = new foreignWeb3.eth.Contract(RealitioForeignArbitrationProxy.abi, arbitrableContractAddress);
+
+  const homeWeb3 = new Web3(arbitrableJsonRpcUrl || jsonRpcUrl);
   const homeProxy = new homeWeb3.eth.Contract(
     RealitioHomeArbitrationProxy.abi,
     await foreignProxy.methods.homeProxy().call()
@@ -31,7 +27,7 @@ module.exports = async function getMetaEvidence() {
 
   const arbitrationCreatedLogs = await foreignProxy.getPastEvents("ArbitrationCreated", {
     filter: {
-      _disputeID: scriptParameters.disputeID,
+      _disputeID: disputeID,
     },
     fromBlock: fromBlock,
     toBlock: "latest",
@@ -74,6 +70,9 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "single-select",
           titles: ["No", "Yes"],
+          reserved: {
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
+          },
         },
       });
     case "uint":
@@ -82,6 +81,9 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "uint",
           precision: questionData.decimals,
+          reserved: {
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
+          },
         },
       });
     case "single-select":
@@ -90,6 +92,9 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "single-select",
           titles: questionData.outcomes,
+          reserved: {
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
+          },
         },
       });
     case "multiple-select":
@@ -98,6 +103,9 @@ module.exports = async function getMetaEvidence() {
         rulingOptions: {
           type: "multiple-select",
           titles: questionData.outcomes,
+          reserved: {
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
+          },
         },
       });
     case "datetime":
@@ -105,6 +113,9 @@ module.exports = async function getMetaEvidence() {
         ...erc1497OverridesMixin,
         rulingOptions: {
           type: "datetime",
+          reserved: {
+            "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
+          },
         },
       });
     default:

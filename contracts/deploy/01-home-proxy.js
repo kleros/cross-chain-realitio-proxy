@@ -4,12 +4,14 @@ const HOME_CHAIN_IDS = [77, 100];
 const paramsByChainId = {
   77: {
     amb: "0xFe446bEF1DbF7AFE24E81e05BC8B271C1BA9a560",
-    realitio: "0x90a617ed516ab7fAaBA56CcEDA0C5D952f294d03",
+    //realitio: "0x90a617ed516ab7fAaBA56CcEDA0C5D952f294d03",
+    realitio: "0xC3324405793B9F1C29e97b29cB084C9541aD4d9B", // Realitio v3
     foreignChainId: 42,
   },
   100: {
     amb: "0x75Df5AF045d91108662D8080fD1FEFAd6aA0bb59",
-    realitio: "0x79e32aE03fb27B07C89c0c568F80287C01ca2E57",
+    //realitio: "0x79e32aE03fb27B07C89c0c568F80287C01ca2E57",
+    realitio: "0xE78996A233895bE74a66F451f1019cA9734205cc", // Realitio v3
     foreignChainId: 1,
   },
 };

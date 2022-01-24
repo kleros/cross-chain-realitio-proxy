@@ -12,7 +12,7 @@ class RealitioDisplayInterface extends Component {
   async componentDidMount() {
     if (window.location.search[0] !== "?") return;
 
-    const message = JSON.parse(decodeURIComponent(window.location.search.substring(1)));
+    const message = Object.fromEntries(new URLSearchParams(decodeURIComponent(window.location.search.substring(1))));
     console.debug(message);
 
     const {
@@ -78,6 +78,14 @@ class RealitioDisplayInterface extends Component {
       toBlock: "latest",
     });
 
+    console.log(questionEventLog[0].returnValues.question);
+    console.log(templateEventLog[0].returnValues.question_text);
+    console.log(
+      populatedJSONForTemplate(
+        questionEventLog[0].returnValues.question,
+        templateEventLog[0].returnValues.question_text
+      )
+    );
     this.setState({
       questionID,
       chainID: cid,

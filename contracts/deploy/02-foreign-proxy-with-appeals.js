@@ -10,7 +10,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
     homeChainId: 77,
-    metaEvidence: "/ipfs/QmTVSBruY3iBfc5ye43FE7t2qokXZbUzVLHFoJrFrA29Yd/realitio.json",
+    metaEvidence: "/ipfs/Qmf4V7xUM4AkhobUQ5Gh86HKck6o3EStEmQfvit9L6hBLQ/realitio.json",
     termsOfService: "/ipfs/QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
   },
   1: {
@@ -19,7 +19,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f", // General Court - 31 jurors
     homeChainId: 100,
-    metaEvidence: "/ipfs/QmU7DG87LsS7MJ5yJBR9e8YkaFWvPBhifKef3QGZLebc7H/realitio.json",
+    metaEvidence: "/ipfs/QmeWZL2LzVYH6oEDJXcHfeSHYdZmebv3Q9zLuRgsCLSCVg/realitio.json",
     termsOfService: "/ipfs/QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
   },
 };

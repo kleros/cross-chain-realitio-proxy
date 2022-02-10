@@ -69,6 +69,7 @@ provider:
   region: ${env:AWS_REGION,'us-east-2'}
   stage: staging
   runtime: nodejs12.x
+  lambdaHashingVersion: "20201221"
   environment:
     CHAIN_METADATA_TABLE_NAME: CrossChainRealitio_ChainMetadata_${self:custom.currentStage}
     REQUESTS_TABLE_NAME: CrossChainRealitio_Requests_${self:custom.currentStage}

@@ -1,13 +1,12 @@
 {
   "parserOptions": {
-    "ecmaVersion": 2020
+    "ecmaVersion": 2018
   },
   "env": {
     "browser": true,
     "es6": true,
     "node": true,
-    "mocha": true,
-    "es2020": true
+    "mocha": true
   },
   "extends": [
     "eslint:recommended",
@@ -32,6 +31,7 @@
       {
         "commonjs": true
       }
-    ]
+    ],
+    "no-console": "off"
   }
 }

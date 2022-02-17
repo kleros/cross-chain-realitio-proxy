@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 function usage {
   echo "./$(basename $0) [-v] [-s]"
   echo ""

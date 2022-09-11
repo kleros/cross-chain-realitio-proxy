@@ -132,7 +132,7 @@ class RealitioDisplayInterface extends Component {
         </div>
         <a
           style={{ color: "#2093ff" }}
-          href={`https://reality.eth.link/app/index.html#!/network/${chainID}/question/${realitioContractAddress}-${questionID}`}
+          href={`https://reality.eth.limo/app/index.html#!/network/${chainID}/question/${realitioContractAddress}-${questionID}`}
           target="_blank"
           rel="noopener noreferrer"
         >

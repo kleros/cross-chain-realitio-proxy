@@ -1,17 +1,15 @@
 const getContractAddress = require("../deploy-helpers/getContractAddress");
 
-const HOME_CHAIN_IDS = [77, 100];
+const HOME_CHAIN_IDS = [10200, 100];
 const paramsByChainId = {
-  77: {
-    amb: "0xFe446bEF1DbF7AFE24E81e05BC8B271C1BA9a560",
-    //realitio: "0x90a617ed516ab7fAaBA56CcEDA0C5D952f294d03",
-    realitio: "0xC3324405793B9F1C29e97b29cB084C9541aD4d9B", // Realitio v3
-    foreignChainId: 42,
+  10200: {
+    amb: "0x8448E15d0e706C0298dECA99F0b4744030e59d7d",
+    realitio: "0x1E732a1C5e9181622DD5A931Ec6801889ce66185",
+    foreignChainId: 11155111,
   },
   100: {
     amb: "0x75Df5AF045d91108662D8080fD1FEFAd6aA0bb59",
-    //realitio: "0x79e32aE03fb27B07C89c0c568F80287C01ca2E57",
-    realitio: "0xE78996A233895bE74a66F451f1019cA9734205cc", // Realitio v3
+    realitio: "0xE78996A233895bE74a66F451f1019cA9734205cc",
     foreignChainId: 1,
   },
 };
@@ -22,21 +20,21 @@ async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethe
   const { hexZeroPad } = ethers.utils;
 
   const accounts = await getNamedAccounts();
-  const { deployer, counterPartyDeployer } = accounts;
+  const { deployer } = accounts;
   const chainId = await getChainId();
 
   const foreignNetworks = {
-    77: config.networks.kovan,
+    10200: config.networks.sepolia,
     100: config.networks.mainnet,
   };
   const { url } = foreignNetworks[chainId];
   const foreignChainProvider = new providers.JsonRpcProvider(url);
-  const nonce = await foreignChainProvider.getTransactionCount(counterPartyDeployer);
+  const nonce = await foreignChainProvider.getTransactionCount(deployer);
 
   const { amb, foreignChainId, realitio } = paramsByChainId[chainId];
 
   // Foreign proxy deploy will happen AFTER this, so the nonce on that account should be the current transaction count
-  const foreignProxyAddress = getContractAddress(counterPartyDeployer, nonce);
+  const foreignProxyAddress = getContractAddress(deployer, nonce);
   const foreignChainIdAsBytes32 = hexZeroPad(foreignChainId, 32);
 
   const homeProxy = await deploy("RealitioHomeArbitrationProxy", {

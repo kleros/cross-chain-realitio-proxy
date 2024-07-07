@@ -1,17 +1,14 @@
 const getContractAddress = require("../deploy-helpers/getContractAddress");
-
-const FOREIGN_CHAIN_IDS = [42, 1];
+const FOREIGN_CHAIN_IDS = [11155111, 1];
 const paramsByChainId = {
-  42: {
-    amb: "0xFe446bEF1DbF7AFE24E81e05BC8B271C1BA9a560",
-    // arbitrator: "0xA8243657a1E6ad1AAf2b59c4CCDFE85fC6fD7a8B",
-    // arbitrator: "0x3b261920Ba47f0C0c6162e592181bbE2244b63AE",
-    arbitrator: "0x60B2AbfDfaD9c0873242f59f2A8c32A3Cc682f80", // KlerosLiquid on Kovan
+  11155111: {
+    amb: "0xf2546D6648BD2af6a008A7e7C1542BB240329E11",
+    arbitrator: "0x90992fb4E15ce0C59aEFfb376460Fda4Ee19C879",
     arbitratorExtraData:
       "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-    homeChainId: 77,
-    metaEvidence: "/ipfs/Qmf4V7xUM4AkhobUQ5Gh86HKck6o3EStEmQfvit9L6hBLQ/realitio.json",
-    termsOfService: "/ipfs/QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
+    homeChainId: 10200,
+    metaEvidence: "/ipfs/QmTrejLM1ythucs5TsRNFUot5bqoPwiMXF66Y5VaJBUHTi",
+    termsOfService: "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
   },
   1: {
     amb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
@@ -19,8 +16,8 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f", // General Court - 31 jurors
     homeChainId: 100,
-    metaEvidence: "/ipfs/QmeWZL2LzVYH6oEDJXcHfeSHYdZmebv3Q9zLuRgsCLSCVg/realitio.json",
-    termsOfService: "/ipfs/QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
+    metaEvidence: "/ipfs/QmV4VhBEgAf93WquKvedkFQmNJHhcWPPT6FdYYSdN6v6Mc",
+    termsOfService: "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
   },
 };
 
@@ -30,16 +27,16 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
   const { hexZeroPad } = ethers.utils;
 
   const accounts = await getNamedAccounts();
-  const { deployer, counterPartyDeployer } = accounts;
+  const { deployer } = accounts;
   const chainId = await getChainId();
 
   const homeNetworks = {
-    42: config.networks.sokol,
+    11155111: config.networks.chiado,
     1: config.networks.xdai,
   };
   const { url } = homeNetworks[chainId];
   const homeChainProvider = new providers.JsonRpcProvider(url);
-  const nonce = await homeChainProvider.getTransactionCount(counterPartyDeployer);
+  const nonce = await homeChainProvider.getTransactionCount(deployer);
 
   const { amb, arbitrator, arbitratorExtraData, homeChainId, metaEvidence, termsOfService } = paramsByChainId[chainId];
   const winnerMultiplier = 3000;
@@ -47,7 +44,7 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
   const loserAppealPeriodMultiplier = 5000;
 
   // Foreign Proxy deploy will happen AFTER the Home Proxy deploy, so we need to subtract 1 from the nonce
-  const homeProxyAddress = getContractAddress(counterPartyDeployer, nonce - 1);
+  const homeProxyAddress = getContractAddress(deployer, nonce - 1);
   const homeChainIdAsBytes32 = hexZeroPad(homeChainId, 32);
 
   const foreignProxy = await deploy("RealitioForeignArbitrationProxyWithAppeals", {

@@ -6,6 +6,7 @@ require("@nomiclabs/hardhat-web3");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("./tasks/link-proxies");
+require("@nomicfoundation/hardhat-verify");
 
 // This is a sample Buidler task. To learn how to create your own go to
 // https://buidler.dev/guides/create-task.html
@@ -36,9 +37,9 @@ module.exports = {
       saveDeployments: false,
       tags: ["test", "local"],
     },
-    sokol: {
-      chainId: 77,
-      url: "https://sokol.poa.network/",
+    chiado: {
+      chainId: 10200,
+      url: "https://gnosis-chiado-rpc.publicnode.com",
       accounts: [process.env.PRIVATE_KEY],
       live: true,
       saveDeployments: true,
@@ -46,18 +47,18 @@ module.exports = {
     },
     xdai: {
       chainId: 100,
-      url: "https://rpc.xdaichain.com/",
+      url: "https://rpc.gnosischain.com",
       accounts: [process.env.PRIVATE_KEY, process.env.MAINNET_PRIVATE_KEY],
       live: true,
       saveDeployments: true,
       tags: ["production"],
     },
-    kovan: {
-      chainId: 42,
-      url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+    sepolia: {
+      chainId: 11155111,
+      url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
       live: true,
       saveDeployments: true,
+      accounts: [process.env.PRIVATE_KEY],
       tags: ["staging"],
     },
     mainnet: {
@@ -77,6 +78,14 @@ module.exports = {
       default: 0,
       xdai: 1,
       mainnet: 1,
+    },
+  },
+  etherscan: {
+    apiKey: {
+      chiado: process.env.GNOSIS_API_KEY,
+      xdai: process.env.GNOSIS_API_KEY,
+      mainnent: process.env.ETHERSCAN_API_KEY,
+      sepolia: process.env.ETHERSCAN_API_KEY,
     },
   },
 };

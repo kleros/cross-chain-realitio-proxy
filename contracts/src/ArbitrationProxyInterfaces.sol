@@ -111,6 +111,13 @@ interface IHomeArbitrationProxy {
      * @param _answer The answer from the arbitrator.
      */
     function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external;
+
+    /** @notice Provides a string of json-encoded metadata with the following properties:
+      - tos: A URI representing the location of a terms-of-service document for the arbitrator.
+      - template_hashes: An array of hashes of templates supported by the arbitrator. If you have a numerical ID for a template registered with Reality.eth, you can look up this hash by calling the Reality.eth template_hashes() function.
+     *  @dev Template_hashes won't be used by this home proxy. 
+     */
+    function metadata() external view returns (string calldata);
 }
 
 interface IForeignArbitrationProxy is IArbitrable, IEvidence {

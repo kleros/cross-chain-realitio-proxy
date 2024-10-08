@@ -68,6 +68,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(await foreignProxy.homeProxy()).to.equal(homeProxy.address);
     expect(await foreignProxy.homeChainId()).to.equal(homeChainId);
     expect(await foreignProxy.termsOfService()).to.equal(termsOfService);
+    expect(await homeProxy.metadata()).to.equal(termsOfService);
 
     // 0 - winner, 1 - loser, 2 - loserAppealPeriod.
     const multipliers = await foreignProxy.getMultipliers();
@@ -717,7 +718,7 @@ describe("Cross-chain arbitration with appeals", () => {
       loserAppealPeriodMultiplier
     );
 
-    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address);
+    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address, termsOfService);
 
     return {
       amb,

@@ -368,7 +368,7 @@ describe("Cross-Chain Arbitration", () => {
       termsOfService
     );
 
-    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address);
+    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address, termsOfService);
 
     return {
       amb,

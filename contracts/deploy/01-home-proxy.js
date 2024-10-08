@@ -6,11 +6,13 @@ const paramsByChainId = {
     amb: "0x8448E15d0e706C0298dECA99F0b4744030e59d7d",
     realitio: "0x1E732a1C5e9181622DD5A931Ec6801889ce66185",
     foreignChainId: 11155111,
+    termsOfService: "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
   },
   100: {
     amb: "0x75Df5AF045d91108662D8080fD1FEFAd6aA0bb59",
     realitio: "0xE78996A233895bE74a66F451f1019cA9734205cc",
     foreignChainId: 1,
+    termsOfService: "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
   },
 };
 
@@ -31,7 +33,7 @@ async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethe
   const foreignChainProvider = new providers.JsonRpcProvider(url);
   const nonce = await foreignChainProvider.getTransactionCount(deployer);
 
-  const { amb, foreignChainId, realitio } = paramsByChainId[chainId];
+  const { amb, foreignChainId, realitio, termsOfService } = paramsByChainId[chainId];
 
   // Foreign proxy deploy will happen AFTER this, so the nonce on that account should be the current transaction count
   const foreignProxyAddress = getContractAddress(deployer, nonce);
@@ -40,7 +42,7 @@ async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethe
   const homeProxy = await deploy("RealitioHomeArbitrationProxy", {
     from: deployer,
     gas: 8000000,
-    args: [amb, foreignProxyAddress, foreignChainIdAsBytes32, realitio],
+    args: [amb, foreignProxyAddress, foreignChainIdAsBytes32, realitio, termsOfService],
   });
 
   console.log("Home Proxy:", homeProxy.address);

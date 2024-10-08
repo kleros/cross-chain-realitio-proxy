@@ -34,6 +34,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     /// @dev Metadata for Realitio interface.
     string public constant metadata = '{"foreignProxy":true}';
 
+    /// @dev The path for the Terms of Service for Kleros as an arbitrator for Realitio.
+    string public termsOfService;
+
     enum Status {
         None,
         Rejected,
@@ -67,17 +70,21 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _foreignProxy The address of the proxy.
      * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
      * @param _realitio Realitio contract address.
+     * @param _termsOfService The path for the Terms of Service for Kleros as an arbitrator for Realitio.
+     *   Note those terms are non-authoritative, to be rendered in interfaces bound to the Home Chain.
      */
     constructor(
         IAMB _amb,
         address _foreignProxy,
         bytes32 _foreignChainId,
-        RealitioInterface _realitio
+        RealitioInterface _realitio,
+        string memory _termsOfService
     ) {
         amb = _amb;
         foreignProxy = _foreignProxy;
         foreignChainId = _foreignChainId;
         realitio = _realitio;
+        termsOfService = _termsOfService;
     }
 
     /**

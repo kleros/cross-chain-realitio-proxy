@@ -32,7 +32,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     bytes32 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
-    string public constant metadata = '{"foreignProxy":true}';
+    string public override metadata;
 
     enum Status {
         None,
@@ -67,17 +67,20 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
      * @param _foreignProxy The address of the proxy.
      * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
      * @param _realitio Realitio contract address.
+     * @param _metadata Metadata for Realitio.
      */
     constructor(
         IAMB _amb,
         address _foreignProxy,
         bytes32 _foreignChainId,
-        RealitioInterface _realitio
+        RealitioInterface _realitio,
+        string memory _metadata
     ) {
         amb = _amb;
         foreignProxy = _foreignProxy;
         foreignChainId = _foreignChainId;
         realitio = _realitio;
+        metadata = _metadata;
     }
 
     /**

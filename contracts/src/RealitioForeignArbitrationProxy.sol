@@ -69,6 +69,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
 
     /// @dev Whether a dispute has already been created for the given question ID or not. questionIDToDisputeExists[questionID]
     mapping(bytes32 => bool) public questionIDToDisputeExists;
+    mapping(uint256 => uint256) public arbitrationCreatedBlock; // Block of dispute creation. arbitrationCreatedBlock[disputeID]
 
     modifier onlyArbitrator() {
         require(msg.sender == address(arbitrator), "Only arbitrator allowed");
@@ -159,6 +160,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
                 disputeDetails.requester = _requester;
 
                 questionIDToDisputeExists[_questionID] = true;
+                arbitrationCreatedBlock[disputeID] = block.number;
 
                 // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
                 uint256 remainder = arbitration.deposit - arbitrationCost;

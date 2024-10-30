@@ -84,7 +84,7 @@ module.exports = {
     apiKey: {
       chiado: process.env.GNOSIS_API_KEY,
       xdai: process.env.GNOSIS_API_KEY,
-      mainnent: process.env.ETHERSCAN_API_KEY,
+      mainnet: process.env.ETHERSCAN_API_KEY,
       sepolia: process.env.ETHERSCAN_API_KEY,
     },
   },

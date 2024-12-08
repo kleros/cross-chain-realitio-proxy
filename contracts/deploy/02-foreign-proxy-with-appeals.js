@@ -16,7 +16,7 @@ const paramsByChainId = {
     arbitratorExtraData:
       "0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001f", // General Court - 31 jurors
     homeChainId: 100,
-    metaEvidence: "/ipfs/QmV4VhBEgAf93WquKvedkFQmNJHhcWPPT6FdYYSdN6v6Mc",
+    metaEvidence: "/ipfs/QmTYEpuN4iqbYPXc6ba2QCcYGDwRVNvSFfyWGpDkx7kC3B",
     termsOfService: "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
   },
 };

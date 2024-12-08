@@ -14,7 +14,7 @@ const paramsByChainId = {
   },
 };
 const metadata =
-  '{"tos":"ipfs://QmPmRkXFUmzP4rq2YfD3wNwL8bg3WDxkYuvTP9A9UZm9gJ/seer-markets-resolution-policy.pdf", "foreignProxy":true}';
+  '{"tos":"ipfs://QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf", "foreignProxy":true}';
 
 async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethers, config }) {
   const { deploy } = deployments;
@@ -42,6 +42,8 @@ async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethe
   const homeProxy = await deploy("RealitioHomeArbitrationProxy", {
     from: deployer,
     gas: 8000000,
+    maxPriorityFeePerGas: ethers.utils.parseUnits("2", "gwei"),
+    maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
     args: [amb, foreignProxyAddress, foreignChainIdAsBytes32, realitio, metadata],
   });
 

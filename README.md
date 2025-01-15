@@ -1,12 +1,12 @@
 # Cross-Chain Realitio Proxy
 
-Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB-compatible networks using Kleros as arbitrator.
+Enables cross-chain arbitration for Realitio (Reality.eth) on Gnosis or other AMB-compatible networks using Kleros as arbitrator.
 
 ## High-Level Flow Description
 
 1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the maximum value of the bond for the question (A.K.A. `max_previous`).
-1. The ETH proxy communicates the request to the xDAI proxy through the AMB.
-1. The xDAI tries to notify Realitio of the arbitration request and forwards the `max_previous` value:
+1. The ETH proxy communicates the request to the Gnosis proxy through the AMB.
+1. The Gnosis tries to notify Realitio of the arbitration request and forwards the `max_previous` value:
    1. If the bond has not changed, the arbitration request will be accepted.
       1. Notify the ETH proxy through the AMB.
    1. Otherwise, if it changed then:
@@ -20,9 +20,9 @@ Enables cross-chain arbitration for Realition (Reality.eth) on xDAI or other AMB
       1. Refund Alice of the difference.
    1. If the fees have increased, then the arbitration request will fail:
       1. Refund Alice of the value paid so far.
-      1. The ETH proxy notifies the xDAI proxy through the AMB that the arbitration failed to be created.
-      1. The xDAI proxy notifies Realitio of the failed arbitration. **END**
-1. The Kleros court gives a ruling. It is relayed to the xDAI proxy through the AMB.
+      1. The ETH proxy notifies the Gnosis proxy through the AMB that the arbitration failed to be created.
+      1. The Gnosis proxy notifies Realitio of the failed arbitration. **END**
+1. The Kleros court gives a ruling. It is relayed to the Gnosis proxy through the AMB.
    1. If the ruling is the current answer, Bob, the last answerer, is the winner. **END**
    1. If it is not, Alice is the winner. **END**
 

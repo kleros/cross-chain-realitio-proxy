@@ -86,7 +86,7 @@ contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
      * @param _amb ArbitraryMessageBridge contract address.
-     * @param _homeProxy The address of the proxy contract in the counter-party Home Chain (i.e.: xDAI)
+     * @param _homeProxy The address of the proxy contract in the counter-party Home Chain (i.e.: Gnosis)
      * @param _homeChainId The ID of the counter-party Home Chain.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.

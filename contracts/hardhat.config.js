@@ -39,15 +39,15 @@ module.exports = {
     },
     chiado: {
       chainId: 10200,
-      url: "https://gnosis-chiado-rpc.publicnode.com",
+      url: "https://rpc.chiado.gnosis.gateway.fm",
       accounts: [process.env.PRIVATE_KEY],
       live: true,
       saveDeployments: true,
       tags: ["staging"],
     },
-    xdai: {
+    gnosis: {
       chainId: 100,
-      url: "https://rpc.gnosischain.com",
+      url: "https://rpc.gnosis.gateway.fm",
       accounts: [process.env.PRIVATE_KEY, process.env.MAINNET_PRIVATE_KEY],
       live: true,
       saveDeployments: true,
@@ -76,14 +76,14 @@ module.exports = {
     },
     counterPartyDeployer: {
       default: 0,
-      xdai: 1,
+      gnosis: 1,
       mainnet: 1,
     },
   },
   etherscan: {
     apiKey: {
       chiado: process.env.GNOSIS_API_KEY,
-      xdai: process.env.GNOSIS_API_KEY,
+      gnosis: process.env.GNOSIS_API_KEY,
       mainnet: process.env.ETHERSCAN_API_KEY,
       sepolia: process.env.ETHERSCAN_API_KEY,
     },

@@ -32,7 +32,7 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
 
   const homeNetworks = {
     11155111: config.networks.chiado,
-    1: config.networks.xdai,
+    1: config.networks.gnosis,
   };
   const { url } = homeNetworks[chainId];
   const homeChainProvider = new providers.JsonRpcProvider(url);

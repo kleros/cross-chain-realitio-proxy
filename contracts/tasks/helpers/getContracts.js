@@ -2,18 +2,18 @@ async function getContracts({ env, ethers }) {
   const networksByEnv = {
     staging: {
       home: {
-        name: "sokol",
-        url: "https://sokol.poa.network",
+        name: "chiado",
+        url: "https://rpc.chiado.gnosis.gateway.fm",
       },
       foreign: {
-        name: "kovan",
-        url: `https://kovan.infura.io/v3/${process.env.INFURA_API_KEY}`,
+        name: "sepolia",
+        url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
       },
     },
     production: {
       home: {
-        name: "xdai",
-        url: "https://rpc.xdaichain.com/",
+        name: "gnosis",
+        url: "https://rpc.gnosis.gateway.fm",
       },
       foreign: {
         name: "mainnet",

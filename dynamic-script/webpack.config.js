@@ -1,12 +1,13 @@
 const path = require("path");
 const Dotenv = require("dotenv-webpack");
-const {CleanWebpackPlugin} = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 module.exports = {
+  mode: "production",
   entry: "./src/index.js",
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "realitio-dynamic-script.js",
+    filename: "realitio-dynamic-script-v" + process.env.npm_package_version + ".js",
     libraryTarget: "var",
     library: "getMetaEvidence",
   },

@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import RealitioInterace from "./containers/realitio";
+import RealitioInterface from "./containers/realitio";
 
 const App = () => (
   <>
-    <RealitioInterace />
+    <RealitioInterface />
   </>
 );
 

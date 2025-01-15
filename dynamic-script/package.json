@@ -4,12 +4,9 @@
   "main": "index.js",
   "author": "Kleros",
   "license": "MIT",
-  "private": false,
   "scripts": {
     "build:silent": "webpack --mode production --display=errors-only 1>&2",
-    "build": "webpack --mode production --progress",
-    "predeploy": "run-s -s build:silent",
-    "deploy": "file-to-ipfs -f dist/realitio-dynamic-script.js -r realitio.js"
+    "build": "webpack --mode production --progress"
   },
   "dependencies": {
     "@kleros/cross-chain-realitio-contracts": "~0.5.0",
@@ -18,10 +15,12 @@
     "webpack": "^4.19.0"
   },
   "devDependencies": {
-    "@kleros/file-to-ipfs": "^0.1.0",
     "clean-webpack-plugin": "^3.0.0",
     "dotenv-webpack": "^4.0.0",
-    "webpack-cli": "^3.0.4",
+    "webpack-cli": "^3.3.12",
     "webpack-node-externals": "^2.5.2"
+  },
+  "volta": {
+    "node": "16.13.0"
   }
 }

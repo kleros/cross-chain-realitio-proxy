@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.2;
 
-import "../dependencies/RealitioInterface.sol";
+import "../interfaces/RealitioInterface.sol";
 
 /**
  * @dev This is a barebones partial implementation of Realitio.

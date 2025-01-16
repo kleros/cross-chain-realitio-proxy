@@ -11,8 +11,8 @@
 pragma solidity ^0.7.2;
 
 import {IArbitrator} from "@kleros/erc-792/contracts/IArbitrator.sol";
-import {IAMB} from "./dependencies/IAMB.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
+import {IAMB} from "./interfaces/IAMB.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).

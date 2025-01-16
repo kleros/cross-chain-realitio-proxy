@@ -1,34 +1,33 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *  @authors: [@hbarcelos]
- *  @reviewers: [@ferittuncer, @fnanni-0, @nix1g, @epiqueras*, @clesaege, @unknownunknown1]
+ *  @authors: [@anmol-dhiman]
+ *  @reviewers: []
  *  @auditors: []
  *  @bounties: []
- *  @deployments: [0xe40DD83a262da3f56976038F1554Fe541Fa75ecd]
+ *  @deployments: []
  */
+pragma solidity 0.8.25;
 
-pragma solidity ^0.7.2;
-
-import {IAMB} from "./dependencies/IAMB.sol";
-import {RealitioInterface} from "./dependencies/RealitioInterface.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./ArbitrationProxyInterfaces.sol";
+import "./interfaces/RealitioInterface.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import {ICrossDomainMessenger} from "./interfaces/ICrossDomainMessenger.sol";
 
 /**
- * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
- * @dev This contract is meant to be deployed to side-chains (i.e.: Gnosis) in which Reality.eth is deployed.
+ * @title Arbitration proxy for Realitio on home chain (eg. Optimism, Unichain, Redstone etc).
+ * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
  */
-contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
-    /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
+contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
+    uint32 public constant MIN_GAS_LIMIT = 1500000; // Gas limit of the transaction call.
+
+    // contract for L2 -> L1 communication
+    ICrossDomainMessenger public immutable messenger;
+
+    /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
+    address public immutable foreignProxy; // Address of the proxy on L1.
 
-    /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public immutable amb;
-
-    /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
-    address public immutable foreignProxy;
-
-    /// @dev The chain ID where the foreign proxy is deployed.
+    /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
@@ -55,32 +54,31 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     mapping(bytes32 => address) public questionIDToRequester;
 
     modifier onlyForeignProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == foreignChainId, "Only foreign chain allowed");
-        require(amb.messageSender() == foreignProxy, "Only foreign proxy allowed");
+        require(msg.sender == address(messenger), "NOT_MESSENGER");
+        require(messenger.xDomainMessageSender() == foreignProxy, "Can only be called by Foreign Proxy");
         _;
     }
 
     /**
      * @notice Creates an arbitration proxy on the home chain.
-     * @param _amb ArbitraryMessageBridge contract address.
-     * @param _foreignProxy The address of the proxy.
-     * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
      * @param _realitio Realitio contract address.
+     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
+     * @param _foreignProxy Address of the proxy on L1.
      * @param _metadata Metadata for Realitio.
+     * @param _messenger L2 -> L1 communcation contract address
      */
     constructor(
-        IAMB _amb,
-        address _foreignProxy,
-        bytes32 _foreignChainId,
         RealitioInterface _realitio,
-        string memory _metadata
+        uint256 _foreignChainId,
+        address _foreignProxy,
+        string memory _metadata,
+        address _messenger
     ) {
-        amb = _amb;
-        foreignProxy = _foreignProxy;
-        foreignChainId = _foreignChainId;
         realitio = _realitio;
+        foreignChainId = bytes32(_foreignChainId);
+        foreignProxy = _foreignProxy;
         metadata = _metadata;
+        messenger = ICrossDomainMessenger(_messenger);
     }
 
     /**
@@ -122,8 +120,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Handles arbitration request after it has been notified to Realitio for a given question.
-     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
+     * @dev Relays arbitration request back to L1 after it has been notified by Realitio for a given question.
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
@@ -133,16 +130,14 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
 
         request.status = Status.AwaitingRuling;
 
-        bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationAcknowledgement.selector;
+        bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
-
+        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
         emit RequestAcknowledged(_questionID, _requester);
     }
 
     /**
-     * @notice Handles arbitration request after it has been rejected.
-     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
+     * @dev Relays arbitration request back to L1 after it has been rejected.
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
@@ -158,10 +153,9 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
         // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
         request.status = Status.None;
 
-        bytes4 selector = IForeignArbitrationProxy(0).receiveArbitrationCancelation.selector;
+        bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
-
+        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
         emit RequestCanceled(_questionID, _requester);
     }
 
@@ -184,7 +178,7 @@ contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Receives the answer to a specified question. TRUSTED.
+     * @notice Receives an answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */

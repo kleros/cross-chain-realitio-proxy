@@ -2949,7 +2949,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@kleros/cross-chain-realitio-contracts@workspace:contracts"
   dependencies:
-    "@kleros/dispute-resolver-interface-contract": "npm:^2.0.0"
+    "@kleros/dispute-resolver-interface-contract-0.7": "npm:@kleros/dispute-resolver-interface-contract@^2.0.0"
+    "@kleros/dispute-resolver-interface-contract-0.8": "npm:@kleros/dispute-resolver-interface-contract@^8.0.0"
     "@kleros/ethereum-libraries": "npm:^7.0.0"
     "@nomicfoundation/hardhat-verify": "npm:1.0.4"
     "@nomiclabs/hardhat-ethers": "npm:^2.0.0"
@@ -3035,7 +3036,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@kleros/dispute-resolver-interface-contract@npm:^2.0.0":
+"@kleros/dispute-resolver-interface-contract-0.7@npm:@kleros/dispute-resolver-interface-contract@^2.0.0":
   version: 2.0.0
   resolution: "@kleros/dispute-resolver-interface-contract@npm:2.0.0"
   dependencies:
@@ -3044,10 +3045,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@kleros/dispute-resolver-interface-contract-0.8@npm:@kleros/dispute-resolver-interface-contract@^8.0.0":
+  version: 8.0.0
+  resolution: "@kleros/dispute-resolver-interface-contract@npm:8.0.0"
+  dependencies:
+    "@kleros/erc-792": "npm:8.0.0"
+  checksum: 10/009b866a3ed40826186978aca1319bf24215f604037c2664e62cfe5b970de3581e4cea02ca503f226759e1d751350c4fa1dc984dae29eed2bde05b39e54a67b6
+  languageName: node
+  linkType: hard
+
 "@kleros/erc-792@npm:7.0.0":
   version: 7.0.0
   resolution: "@kleros/erc-792@npm:7.0.0"
   checksum: 10/b4ff9a9098df0b93012f1da59e25203fdf2d5b1aa3ce30cc93f4feceb26a4b9400a270459975e2c2ed54315721d12981a07db567b0b378e0f44c62a9e946eda3
+  languageName: node
+  linkType: hard
+
+"@kleros/erc-792@npm:8.0.0":
+  version: 8.0.0
+  resolution: "@kleros/erc-792@npm:8.0.0"
+  checksum: 10/83933929df92698eb3808f53e5e2eb911bdcb1cc9df648acddb513e461ccb64e3efc34c58c78070138c7c3be037dc6a85cfaa20bf6778131e2f59a32e3526eb6
   languageName: node
   linkType: hard
 

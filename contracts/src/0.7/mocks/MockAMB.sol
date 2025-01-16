@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.2;
 
-import "../dependencies/IAMB.sol";
+import "../interfaces/IAMB.sol";
 
 /**
  * @dev This is a barebones partial implementation of an ArbitratryMessageBridge.

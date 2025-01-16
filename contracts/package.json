@@ -11,7 +11,8 @@
     "deploy": "hardhat deploy"
   },
   "dependencies": {
-    "@kleros/dispute-resolver-interface-contract": "^2.0.0",
+    "@kleros/dispute-resolver-interface-contract-0.7": "npm:@kleros/dispute-resolver-interface-contract@^2.0.0",
+    "@kleros/dispute-resolver-interface-contract-0.8": "npm:@kleros/dispute-resolver-interface-contract@^8.0.0",
     "@kleros/ethereum-libraries": "^7.0.0"
   },
   "devDependencies": {

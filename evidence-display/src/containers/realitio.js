@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import Web3 from "web3";
 
-import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/interfaces/RealitioInterface.sol/RealitioInterface.json";
+import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.8/interfaces/RealitioInterface.sol/RealitioInterface.json";
 import { populatedJSONForTemplate } from "@reality.eth/reality-eth-lib/formatters/question";
 
 import RealityLogo from "../assets/images/reality_eth_logo.png";
@@ -23,7 +23,7 @@ const REALITY_STARTS_AT = {
   "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA": 14341474, // Reality 3.0 OptimismSepolia
   "0xc716c23D75f523eF0C511456528F2A1980256a87": 3034954, // Reality 3.0 Redstone
   "0x288799697ae9ebcedc1b30bbae6a38e03e41cddb": 8809697, // Reality 3.0 UnichainSepolia,
-  };
+};
 
 class RealitioDisplayInterface extends Component {
   state = { question: null };
@@ -58,10 +58,7 @@ class RealitioDisplayInterface extends Component {
     const foreignProxy = new foreignWeb3.eth.Contract(foreignProxyAbi, arbitrableContractAddress);
 
     const homeWeb3 = new Web3(arbitrableJsonRpcUrl || jsonRpcUrl);
-    const homeProxy = new homeWeb3.eth.Contract(
-      homeProxyAbi,
-      await foreignProxy.methods.homeProxy().call()
-    );
+    const homeProxy = new homeWeb3.eth.Contract(homeProxyAbi, await foreignProxy.methods.homeProxy().call());
 
     const realitioContractAddress = await homeProxy.methods.realitio().call();
     const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);

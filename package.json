@@ -7,7 +7,7 @@
   "author": "Kleros",
   "license": "MIT",
   "private": true,
-  "packageManager": "yarn@4.2.1",
+  "packageManager": "yarn@3.8.7",
   "scripts": {
     "lint": "run-p -s lint:*",
     "lint:js": "eslint .",

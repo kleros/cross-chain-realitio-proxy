@@ -1,6 +1,6 @@
 const Web3 = require("web3");
 const RealitioQuestion = require("@realitio/realitio-lib/formatters/question.js");
-const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/src/interfaces/RealitioInterface.sol/RealitioInterface.json");
+const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/src/0.8/interfaces/RealitioInterface.sol/RealitioInterface.json");
 const { homeProxyAbi, foreignProxyAbi } = require("./abis");
 
 const isNil = (value) => value === undefined || value === null;
@@ -21,7 +21,7 @@ const REALITY_STARTS_AT = {
   "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA": 14341474, // Reality 3.0 OptimismSepolia
   "0xc716c23D75f523eF0C511456528F2A1980256a87": 3034954, // Reality 3.0 Redstone
   "0x288799697ae9ebcedc1b30bbae6a38e03e41cddb": 8809697, // Reality 3.0 UnichainSepolia,
-  };
+};
 
 module.exports = async function getMetaEvidence() {
   const { disputeID, arbitrableContractAddress, arbitrableJsonRpcUrl, arbitratorJsonRpcUrl, jsonRpcUrl } =
@@ -34,10 +34,7 @@ module.exports = async function getMetaEvidence() {
   const foreignProxy = new foreignWeb3.eth.Contract(foreignProxyAbi, arbitrableContractAddress);
 
   const homeWeb3 = new Web3(arbitrableJsonRpcUrl || jsonRpcUrl);
-  const homeProxy = new homeWeb3.eth.Contract(
-    homeProxyAbi,
-    await foreignProxy.methods.homeProxy().call()
-  );
+  const homeProxy = new homeWeb3.eth.Contract(homeProxyAbi, await foreignProxy.methods.homeProxy().call());
 
   const realitioContractAddress = await homeProxy.methods.realitio().call();
   const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);

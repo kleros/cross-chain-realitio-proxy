@@ -21,6 +21,6 @@
     "webpack-node-externals": "^2.5.2"
   },
   "volta": {
-    "node": "16.13.0"
+    "node": "16.20.2"
   }
 }

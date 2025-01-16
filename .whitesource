@@ -1,0 +1,22 @@
+{
+  "scanSettings": {
+    "baseBranches": ["master", "dev"]
+  },
+  "checkRunSettings": {
+    "vulnerableCheckRunConclusionLevel": "failure",
+    "displayMode": "diff",
+    "useMendCheckNames": true
+  },
+  "issueSettings": {
+    "minSeverityLevel": "MEDIUM",
+    "issueType": "DEPENDENCY",
+    "customLabels": ["Type: Security🛡️ ", "dependencies"]
+  },
+  "remediateSettings": {
+    "workflowRules": {
+      "enabled": true,
+        "minVulnerabilityScore": 3,
+        "maxVulnerabilityScore": 10
+    }
+  }
+}

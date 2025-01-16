@@ -1,5 +1,0 @@
-**/*
-!/src/**
-!/artifacts/@kleros/**
-!/artifacts/src/**
-!/deployments/*/*.json

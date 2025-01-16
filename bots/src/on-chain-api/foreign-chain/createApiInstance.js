@@ -1,4 +1,4 @@
-import ForeignProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioForeignArbitrationProxy.sol/RealitioForeignArbitrationProxy.json";
+import ForeignProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.7/RealitioForeignProxyGnosis.sol/RealitioForeignProxyGnosis.json";
 import { compose, filter, into, map, prop, propEq } from "ramda";
 import { createBatchSend } from "~/shared/batchSend";
 import { getContract } from "~/shared/contract";

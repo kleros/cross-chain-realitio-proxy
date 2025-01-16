@@ -5,13 +5,12 @@
   "author": "Kleros",
   "license": "MIT",
   "scripts": {
-    "build:silent": "webpack --mode production --display=errors-only 1>&2",
     "build": "webpack --mode production --progress"
   },
   "dependencies": {
-    "@kleros/cross-chain-realitio-contracts": "~0.5.0",
+    "@kleros/cross-chain-realitio-contracts": "^1.0.0",
     "@realitio/realitio-lib": "^1.0.2",
-    "web3": "1.2.6",
+    "web3": "1.10.4",
     "webpack": "^4.19.0"
   },
   "devDependencies": {

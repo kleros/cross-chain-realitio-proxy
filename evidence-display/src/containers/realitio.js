@@ -1,11 +1,10 @@
 import React, { Component } from "react";
 import Web3 from "web3";
 
-import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.8/interfaces/RealitioInterface.sol/RealitioInterface.json";
 import { populatedJSONForTemplate } from "@reality.eth/reality-eth-lib/formatters/question";
 
 import RealityLogo from "../assets/images/reality_eth_logo.png";
-import { homeProxyAbi, foreignProxyAbi } from "./abis";
+import { homeProxyAbi, foreignProxyAbi, realitioAbi } from "./abis";
 
 const REALITY_STARTS_AT = {
   "0x325a2e0f3cca2ddbaebb4dfc38df8d19ca165b47": 6531265, // Reality 2.0 Mainnet
@@ -61,7 +60,7 @@ class RealitioDisplayInterface extends Component {
     const homeProxy = new homeWeb3.eth.Contract(homeProxyAbi, await foreignProxy.methods.homeProxy().call());
 
     const realitioContractAddress = await homeProxy.methods.realitio().call();
-    const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);
+    const realitio = new homeWeb3.eth.Contract(realitioAbi, realitioContractAddress);
 
     const arbitrationCreatedBlock = await foreignProxy.methods.arbitrationCreatedBlock(disputeID).call();
     const arbitrationCreatedLogs = await foreignProxy.getPastEvents("ArbitrationCreated", {

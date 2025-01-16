@@ -20,7 +20,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/Arbi
  * This version of the contract has an appeal support.
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignArbitrationProxyWithAppeals is IForeignArbitrationProxy, IDisputeResolver {
+contract RealitioForeignProxyWithAppealsGnosis is IForeignArbitrationProxy, IDisputeResolver {
     using CappedMath for uint256;
 
     /* Constants */

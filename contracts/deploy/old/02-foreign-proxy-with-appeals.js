@@ -47,7 +47,7 @@ async function deployForeignProxy({ deployments, getNamedAccounts, getChainId, e
   const homeProxyAddress = getContractAddress(deployer, nonce - 1);
   const homeChainIdAsBytes32 = hexZeroPad(homeChainId, 32);
 
-  const foreignProxy = await deploy("RealitioForeignArbitrationProxyWithAppeals", {
+  const foreignProxy = await deploy("RealitioForeignProxyGnosisWithAppeals", {
     from: deployer,
     args: [
       amb,

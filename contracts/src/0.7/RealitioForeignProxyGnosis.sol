@@ -18,7 +18,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/Arbi
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignArbitrationProxy is IForeignArbitrationProxy {
+contract RealitioForeignProxyGnosis is IForeignArbitrationProxy {
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
     IAMB public immutable amb;
 

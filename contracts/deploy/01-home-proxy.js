@@ -1,54 +1,93 @@
-const getContractAddress = require("../deploy-helpers/getContractAddress");
+const { run } = require("hardhat");
+const { homeChains, HOME_CHAIN_IDS } = require("./consts/index");
+const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeChains;
 
-const HOME_CHAIN_IDS = [10200, 100];
-const paramsByChainId = {
-  10200: {
-    amb: "0x8448E15d0e706C0298dECA99F0b4744030e59d7d",
-    realitio: "0x1E732a1C5e9181622DD5A931Ec6801889ce66185",
-    foreignChainId: 11155111,
-  },
-  100: {
-    amb: "0x75Df5AF045d91108662D8080fD1FEFAd6aA0bb59",
-    realitio: "0xE78996A233895bE74a66F451f1019cA9734205cc",
-    foreignChainId: 1,
-  },
-};
+// Redstone Messenger - https://redstone.xyz/docs/contract-addresses
+// Optimism Sepolia Messenger - https://docs.optimism.io/chain/addresses
+// Unichain Sepolia Messenger - https://docs.unichain.org/docs/technical-information/contract-addresses
+// Same for all the L2 OP chains
+const messenger = "0x4200000000000000000000000000000000000007";
+
+// Same for all chains
 const metadata =
   '{"tos":"ipfs://QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf", "foreignProxy":true}';
 
-async function deployHomeProxy({ deployments, getNamedAccounts, getChainId, ethers, config }) {
+const params = {
+  [unichainSepolia.chainId]: {
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/1301/ETH/RealityETH-3.0.json
+    realitio: "0x288799697AE9EbceDC1b30BBAE6a38e03e41CdDb",
+    messenger,
+    metadata,
+    family: "Unichain",
+  },
+  [optimismSepolia.chainId]: {
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/11155420/ETH/RealityETH-3.0.json
+    realitio: "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA",
+    messenger,
+    metadata,
+    family: "Optimism",
+  },
+  [unichain.chainId]: {
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/130/ETH/RealityETH-3.0.json
+    realitio: "0x0000000000000000000000000000000000000000", // FIXME!
+    messenger,
+    metadata,
+    family: "Unichain",
+  },
+  [optimism.chainId]: {
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10/OETH/RealityETH-3.0.json
+    realitio: "0x0eF940F7f053a2eF5D6578841072488aF0c7d89A",
+    messenger,
+    metadata,
+    family: "Optimism",
+  },
+  [redstone.chainId]: {
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/690/ETH/RealityETH-3.0.json
+    realitio: "0xc716c23D75f523eF0C511456528F2A1980256a87",
+    messenger,
+    metadata,
+    family: "Redstone",
+  },
+};
+
+async function deployHomeProxy({ deployments, getChainId, ethers, config, network }) {
+  console.log(`Running deployment script for home proxy contract on ${network.name}`);
+
   const { deploy } = deployments;
-  const { providers } = ethers;
-  const { hexZeroPad } = ethers.utils;
-
-  const accounts = await getNamedAccounts();
-  const { deployer } = accounts;
   const chainId = await getChainId();
-
-  const foreignNetworks = {
-    10200: config.networks.sepolia,
-    100: config.networks.mainnet,
+  const { realitio, metadata, messenger, family } = params[chainId];
+  if (!network.companionNetworks.foreign) {
+    throw new Error("Foreign network not configured in companion networks");
+  }
+  const foreignNetwork = config.networks[network.companionNetworks.foreign];
+  const provider = new ethers.JsonRpcProvider(foreignNetwork.url);
+  const [account] = await ethers.getSigners();
+  const nonce = await provider.getTransactionCount(account.address);
+  console.log(`Nonce: ${nonce}`);
+  const transaction = {
+    from: account.address,
+    nonce: nonce,
   };
-  const { url } = foreignNetworks[chainId];
-  const foreignChainProvider = new providers.JsonRpcProvider(url);
-  const nonce = await foreignChainProvider.getTransactionCount(deployer);
+  const foreignProxy = ethers.getCreateAddress(transaction);
+  console.log(`Foreign proxy: ${foreignProxy}`);
 
-  const { amb, foreignChainId, realitio } = paramsByChainId[chainId];
+  console.log(
+    `Args: realitio=${realitio}, foreignChainId=${foreignNetwork.chainId}, foreignProxy=${foreignProxy}, metadata=${metadata}, messenger=${messenger}`
+  );
 
-  // Foreign proxy deploy will happen AFTER this, so the nonce on that account should be the current transaction count
-  const foreignProxyAddress = getContractAddress(deployer, nonce);
-  const foreignChainIdAsBytes32 = hexZeroPad(foreignChainId, 32);
-
-  const homeProxy = await deploy("RealitioHomeArbitrationProxy", {
-    from: deployer,
-    gas: 8000000,
-    maxPriorityFeePerGas: ethers.utils.parseUnits("2", "gwei"),
-    maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
-    args: [amb, foreignProxyAddress, foreignChainIdAsBytes32, realitio, metadata],
+  const homeProxy = await deploy(`RealitioHomeProxy${family}`, {
+    contract: "RealitioHomeProxyOptimism",
+    from: account.address,
+    args: [realitio, foreignNetwork.chainId, foreignProxy, metadata, messenger],
   });
 
-  console.log("Home Proxy:", homeProxy.address);
-  console.log("Foreign Proxy:", foreignProxyAddress);
+  console.log(`RealitioHomeProxyOptimism was deployed to ${homeProxy.address}, waiting 5 seconds before verifying...`);
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  await run("verify:verify", {
+    address: homeProxy.address,
+    constructorArguments: [realitio, foreignNetwork.chainId, foreignProxy, metadata, messenger],
+  });
 }
 
 deployHomeProxy.tags = ["HomeChain"];

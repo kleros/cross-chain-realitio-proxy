@@ -349,8 +349,8 @@ describe("Cross-Chain Arbitration", () => {
     const Realitio = await ethers.getContractFactory("MockRealitio", signer);
     const realitio = await Realitio.deploy();
 
-    const ForeignProxy = await ethers.getContractFactory("RealitioForeignArbitrationProxy", signer);
-    const HomeProxy = await ethers.getContractFactory("RealitioHomeArbitrationProxy", signer);
+    const ForeignProxy = await ethers.getContractFactory("RealitioForeignProxyGnosis", signer);
+    const HomeProxy = await ethers.getContractFactory("RealitioHomeProxyGnosis", signer);
 
     const address = await signer.getAddress();
     const nonce = await signer.getTransactionCount();

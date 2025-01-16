@@ -18,7 +18,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/Arbi
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
  * @dev This contract is meant to be deployed to side-chains (i.e.: Gnosis) in which Reality.eth is deployed.
  */
-contract RealitioHomeArbitrationProxy is IHomeArbitrationProxy {
+contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
     /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
     RealitioInterface public immutable realitio;
 

@@ -1,5 +1,5 @@
-import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/dependencies/RealitioInterface.sol/RealitioInterface.json";
-import HomeProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/RealitioHomeArbitrationProxy.sol/RealitioHomeArbitrationProxy.json";
+import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.7/interfaces/RealitioInterface.sol/RealitioInterface.json";
+import HomeProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.7/RealitioHomeProxyGnosis.sol/RealitioHomeProxyGnosis.json";
 import { compose, descend, filter, into, map, prop, propEq, sort } from "ramda";
 import { createBatchSend } from "~/shared/batchSend";
 import { getContract } from "~/shared/contract";

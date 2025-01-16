@@ -11,13 +11,13 @@
   },
   "dependencies": {
     "@kleros/contract-deployments": "^0.3.2",
-    "@kleros/cross-chain-realitio-contracts": "~0.5.0",
+    "@kleros/cross-chain-realitio-contracts": "^1.0.0",
     "aws-sdk": "^2.730.0",
     "core-js": "^3.0.0",
     "dayjs": "^1.8.33",
     "deepmerge": "^4.2.2",
     "ramda": "^0.27.1",
-    "web3": "^1.7.0",
+    "web3": "^1.10.4",
     "web3-batched-send": "^1.0.3"
   },
   "devDependencies": {

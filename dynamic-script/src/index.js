@@ -1,7 +1,6 @@
 const Web3 = require("web3");
 const RealitioQuestion = require("@realitio/realitio-lib/formatters/question.js");
-const RealitioInterface = require("@kleros/cross-chain-realitio-contracts/artifacts/src/0.8/interfaces/RealitioInterface.sol/RealitioInterface.json");
-const { homeProxyAbi, foreignProxyAbi } = require("./abis");
+const { homeProxyAbi, foreignProxyAbi, realitioAbi } = require("./abis");
 
 const isNil = (value) => value === undefined || value === null;
 
@@ -37,7 +36,7 @@ module.exports = async function getMetaEvidence() {
   const homeProxy = new homeWeb3.eth.Contract(homeProxyAbi, await foreignProxy.methods.homeProxy().call());
 
   const realitioContractAddress = await homeProxy.methods.realitio().call();
-  const realitio = new homeWeb3.eth.Contract(RealitioInterface.abi, realitioContractAddress);
+  const realitio = new homeWeb3.eth.Contract(realitioAbi, realitioContractAddress);
 
   const arbitrationCreatedBlock = await foreignProxy.methods.arbitrationCreatedBlock(disputeID).call();
   const arbitrationCreatedLogs = await foreignProxy.getPastEvents("ArbitrationCreated", {

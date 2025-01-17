@@ -1,3 +1,5 @@
+const { ethers } = require("ethers");
+
 function getChainsByTag(tag) {
   const { config } = require("hardhat");
   return Object.entries(config.networks).reduce((acc, [networkName, networkConfig]) => {
@@ -35,9 +37,9 @@ const termsOfServiceUri = `ipfs://${termsOfService}`; // for Reality: https://en
 const termsOfServiceMultiformat = `/ipfs/${termsOfService}`; // for Kleros: https://multiformats.io/multiaddr/
 const metadata = `{"tos":"${termsOfServiceUri}", "foreignProxy":true}`;
 
-const gwei = (units) => ethers.utils.parseUnits(units, "gwei");
-const eth = (units) => ethers.utils.parseUnits(units, "eth");
-const toBytes32 = (number) => ethers.zeroPadValue(number, 32);
+const gwei = (units) => ethers.parseUnits(units, "gwei");
+const eth = (units) => ethers.parseEther(units);
+const toBytes32 = (number) => ethers.zeroPadValue(ethers.toBeHex(number), 32);
 const encodeExtraData = (courtId, minJurors) =>
   ethers.AbiCoder.defaultAbiCoder().encode(["uint96", "uint96"], [courtId, minJurors]);
 

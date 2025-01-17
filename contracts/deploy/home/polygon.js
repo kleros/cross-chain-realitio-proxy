@@ -1,4 +1,4 @@
-const { homeChains, gwei, metadata } = require("../consts");
+const { homeChains, metadata } = require("../consts");
 const { amoy, polygon } = homeChains;
 
 const homeParameters = {
@@ -21,8 +21,7 @@ async function deployHomeProxy({ deploy, get, from, parameters, foreignChainId, 
   const deployed = await deploy(`RealitioHomeProxyPolygon`, {
     from,
     args: [fxChild, realitio, foreignChainId, metadata],
-    maxPriorityFeePerGas: gwei(2),
-    maxFeePerGas: gwei(20),
+    gas: 8000000,
     log: true,
   });
 

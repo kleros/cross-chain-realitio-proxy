@@ -19,11 +19,14 @@ const homeParameters = {
 async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio, homeAmb } = parameters;
   const foreignChainIdAsBytes32 = toBytes32(foreignChainId);
-  return await deploy(`RealitioHomeProxyGnosis`, {
+
+  // Fully qualified contract name because there's also an 0.7 artifact
+  return await deploy("RealitioHomeProxyGnosis", {
+    contract: "src/0.8/RealitioHomeProxyGnosis.sol:RealitioHomeProxyGnosis",
     from,
     args: [homeAmb, foreignProxy, foreignChainIdAsBytes32, realitio, metadata],
-    maxPriorityFeePerGas: gwei(2),
-    maxFeePerGas: gwei(20),
+    maxPriorityFeePerGas: gwei("2"),
+    maxFeePerGas: gwei("20"),
     log: true,
   });
 }

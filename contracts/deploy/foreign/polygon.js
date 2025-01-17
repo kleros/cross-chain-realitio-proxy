@@ -35,7 +35,7 @@ async function deployForeignProxy({ deploy, get, from, parameters, homeProxy, ar
   return deployed;
 }
 
-const getHomeProxyName = () => "RealitioForeignProxyPolygon";
+const getHomeProxyName = () => "RealitioHomeProxyPolygon";
 
 const supportedHomeChains = Object.keys(foreignParameters).map(String);
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *  @authors: [@anmol-dhiman]
+ *  @authors: [@hbarcelos*, @unknownunknown1]
  *  @reviewers: []
  *  @auditors: []
  *  @bounties: []
@@ -11,14 +11,14 @@
 pragma solidity 0.8.25;
 
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
+import {IAMB} from "./interfaces/IAMB.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
-import {ICrossDomainMessenger} from "./interfaces/ICrossDomainMessenger.sol";
 
 /**
- * @title Arbitration proxy for Realitio on foreign chain (eg. mainnet).
- * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
+ * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
+ * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResolver {
+contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolver {
     /* Constants */
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
@@ -39,7 +39,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         Status status; // Status of the arbitration.
         uint248 deposit; // The deposit paid by the requester at the time of the arbitration.
         uint256 disputeID; // The ID of the dispute in arbitrator contract.
-        uint256 answer; // The answer given by the arbitrator.
+        uint256 answer; // The answer given by the arbitrator shifted by -1 to match Realitio format.
         Round[] rounds; // Tracks each appeal round of a dispute.
     }
 
@@ -57,13 +57,12 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
-    // contract for L1 -> L2 communication
-    ICrossDomainMessenger public immutable messenger;
-    uint32 public immutable minGasLimit = 200000; // Gas limit of the transaction call on L2. Note that setting value too high results in high gas estimation fee (tested on Sepolia).
-    address public immutable homeProxy; // Proxy on L2.
-
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
+
+    IAMB public immutable amb; // ArbitraryMessageBridge contract address. TRUSTED.
+    address public immutable homeProxy; // Address of the counter-party proxy on the Home Chain. TRUSTED.
+    bytes32 public immutable homeChainId; // The chain ID where the home proxy is deployed.
 
     // Multipliers are in basis points.
     uint256 public immutable winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
@@ -73,20 +72,23 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
     mapping(uint256 => mapping(address => ArbitrationRequest)) public arbitrationRequests; // Maps arbitration ID to its data. arbitrationRequests[uint(questionID)][requester].
     mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
-
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
-    mapping(uint256 => uint256) public arbitrationCreatedBlock; // Block of dispute creation.
+    mapping(uint256 => uint256) public arbitrationCreatedBlock; // Block of dispute creation. arbitrationCreatedBlock[disputeID]
+
+    /* Modifiers */
 
     modifier onlyHomeProxy() {
-        require(msg.sender == address(messenger), "NOT_MESSENGER");
-        require(messenger.xDomainMessageSender() == homeProxy, "Can only be called by Home proxy");
+        require(msg.sender == address(amb), "Only AMB allowed");
+        require(amb.messageSourceChainId() == homeChainId, "Only home chain allowed");
+        require(amb.messageSender() == homeProxy, "Only home proxy allowed");
         _;
     }
 
     /**
-     * @notice Creates an arbitration proxy on the foreign chain (L1).
-     * @param _messenger contract for L1 -> L2 tx
-     * @param _homeProxy Proxy on L2.
+     * @notice Creates an arbitration proxy on the foreign chain.
+     * @param _amb ArbitraryMessageBridge contract address.
+     * @param _homeProxy The address of the proxy.
+     * @param _homeChainId The chain ID where the home proxy is deployed.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -95,8 +97,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(
-        address _messenger,
+        IAMB _amb,
         address _homeProxy,
+        bytes32 _homeChainId,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -104,8 +107,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256 _loserMultiplier,
         uint256 _loserAppealPeriodMultiplier
     ) {
-        messenger = ICrossDomainMessenger(_messenger);
+        amb = _amb;
         homeProxy = _homeProxy;
+        homeChainId = _homeChainId;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -115,9 +119,11 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                             REALITIO LOGIC
-    //////////////////////////////////////////////////////////////*/
+    /* External and public */
+
+    // ************************ //
+    // *    Realitio logic    * //
+    // ************************ //
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
@@ -130,16 +136,16 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
         arbitration.status = Status.Requested;
         arbitration.deposit = uint248(msg.value);
 
-        messenger.sendMessage(homeProxy, data, minGasLimit);
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
+        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
 
@@ -148,18 +154,20 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) external override onlyHomeProxy {
+    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
+        external
+        override
+        onlyHomeProxy
+    {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
+
         if (arbitration.deposit >= arbitrationCost) {
             try
-                arbitrator.createDispute{value: arbitrationCost}(
-                    NUMBER_OF_CHOICES_FOR_ARBITRATOR,
-                    arbitratorExtraData
-                )
+                arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData)
             returns (uint256 disputeID) {
                 DisputeDetails storage disputeDetails = disputeIDToDisputeDetails[disputeID];
                 disputeDetails.arbitrationID = arbitrationID;
@@ -211,7 +219,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
     }
 
     /**
-     * @notice Cancels the arbitration in case the dispute could not be created. Requires a small deposit to cover Optimism fees.
+     * @notice Cancels the arbitration in case the dispute could not be created.
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
@@ -219,17 +227,15 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
-
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-
         payable(_requester).send(deposit);
 
-        messenger.sendMessage(homeProxy, data, minGasLimit);
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
+        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
+
         emit ArbitrationCanceled(_questionID, _requester);
     }
 
@@ -263,7 +269,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
             } else {
                 require(
                     block.timestamp - appealPeriodStart <
-                        ((appealPeriodEnd - appealPeriodStart) * (loserAppealPeriodMultiplier)) / MULTIPLIER_DIVISOR,
+                        ((appealPeriodEnd - appealPeriodStart) * loserAppealPeriodMultiplier) / MULTIPLIER_DIVISOR,
                     "Appeal period is over for loser"
                 );
                 multiplier = loserMultiplier;
@@ -277,9 +283,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256 totalCost = appealCost + ((appealCost * multiplier) / MULTIPLIER_DIVISOR);
 
         // Take up to the amount necessary to fund the current round at the current costs.
-        uint256 contribution = totalCost - (round.paidFees[_answer]) > msg.value
+        uint256 contribution = totalCost - round.paidFees[_answer] > msg.value
             ? msg.value
-            : totalCost - (round.paidFees[_answer]);
+            : totalCost - round.paidFees[_answer];
         emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
 
         round.contributions[msg.sender][_answer] += contribution;
@@ -398,19 +404,17 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         arbitration.answer = finalRuling;
         arbitration.status = Status.Ruled;
 
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
         // Realitio ruling is shifted by 1 compared to Kleros.
         uint256 realitioRuling = finalRuling != 0 ? finalRuling - 1 : REFUSE_TO_ARBITRATE_REALITIO;
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(realitioRuling));
-        messenger.sendMessage(homeProxy, data, minGasLimit);
+        amb.requireToPassMessage(homeProxy, data, amb.maxGasPerTx());
 
-        emit Ruling(IArbitrator(msg.sender), _disputeID, finalRuling);
+        emit Ruling(arbitrator, _disputeID, finalRuling);
     }
 
-    // ********************************* //
-    // *    External View Functions    * //
-    // ********************************* //
+    /* External Views */
 
     /**
      * @notice Returns stake multipliers.
@@ -423,7 +427,12 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         external
         view
         override
-        returns (uint256 winner, uint256 loser, uint256 loserAppealPeriod, uint256 divisor)
+        returns (
+            uint256 winner,
+            uint256 loser,
+            uint256 loserAppealPeriod,
+            uint256 divisor
+        )
     {
         return (winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier, MULTIPLIER_DIVISOR);
     }
@@ -432,7 +441,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @notice Returns number of possible ruling options. Valid rulings are [0, return value].
      * @return count The number of ruling options.
      */
-    function numberOfRulingOptions(uint256 /* _arbitrationID */) external pure override returns (uint256) {
+    function numberOfRulingOptions(
+        uint256 /* _arbitrationID */
+    ) external pure override returns (uint256) {
         return NUMBER_OF_CHOICES_FOR_ARBITRATOR;
     }
 
@@ -440,7 +451,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
+    function getDisputeFee(
+        bytes32 /* _questionID */
+    ) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 
@@ -463,10 +476,15 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @return feeRewards The amount of fees that will be used as rewards.
      * @return fundedAnswers IDs of fully funded answers.
      */
-    function getRoundInfo(
-        uint256 _arbitrationID,
-        uint256 _round
-    ) external view returns (uint256[] memory paidFees, uint256 feeRewards, uint256[] memory fundedAnswers) {
+    function getRoundInfo(uint256 _arbitrationID, uint256 _round)
+        external
+        view
+        returns (
+            uint256[] memory paidFees,
+            uint256 feeRewards,
+            uint256[] memory fundedAnswers
+        )
+    {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];

@@ -26,6 +26,12 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 - [RealitioForeignProxyOptimism](https://sepolia.etherscan.io/address/0x6a41AF8FC7f68bdd13B2c7D50824Ed49155DC3bA)
 
 
+#### ArbitrumSepolia
+
+- [RealitioHomeProxyArbitrum](https://sepolia.arbiscan.io/address/0x890deB4111F92fE9447e83aBEF1b754372d6770e)
+- [RealitioForeignProxyArbitrum](https://sepolia.etherscan.io/address/0x26222Ec1F548953a4fEaE4C5A216337E26A821F9)
+
+
 ### Mainnets
 
 #### Gnosis
@@ -33,6 +39,11 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 - [RealitioHomeArbitrationProxy](https://gnosisscan.io/address/0x88Fb25D399310c07d35cB9091b8346d8b1893aa5)
 - [RealitioForeignProxyGnosis](https://etherscan.io/address/0x79d0464Ec27F67663DADf761432fC8DD0AeA3D49)
 - [RealitioForeignProxyWithAppealsGnosis](https://etherscan.io/address/0x32bcDC9776692679CfBBf8350BAd67Da13FaaA3F)
+
+#### Polygon
+
+- [RealitioHomeProxyPolygon](https://polygonscan.com/address/0x5AFa42b30955f137e10f89dfb5EF1542a186F90e)
+- [RealitioForeignProxyPolygon](https://etherscan.io/address/0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52)
 
 
 ## Contributing

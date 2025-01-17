@@ -22,19 +22,23 @@ function generate() { #deploymentDir #explorerUrl
 IGNORED_ARTIFACTS=("NOP")
 
 # Use regular arrays to preserve the ordering
-TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia")
+TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy")
 declare -A HOME_TESTNETS_EXPLORERS=(
     ["chiado"]="https://gnosis-chiado.blockscout.com/address/"
     ["unichainSepolia"]="https://sepolia.uniscan.xyz/address/"
     ["optimismSepolia"]="https://sepolia-optimism.etherscan.io/address/"
+    ["arbitrumSepolia"]="https://sepolia.arbiscan.io/address/"
+    ["amoy"]="https://amoy.polygonscan.com/address/"
 )
 
-MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone")
+MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "arbitrum" "polygon")
 declare -A HOME_MAINNET_EXPLORERS=(
     ["gnosis"]="https://gnosisscan.io/address/"
     ["unichain"]="https://uniscan.xyz/address/"
     ["optimism"]="https://etherscan.io/address/"
     ["redstone"]="https://explorer.redstone.xyz/address/"
+    ["arbitrum"]="https://arbiscan.io/address/"
+    ["polygon"]="https://polygonscan.com/address/"
 )
 
 declare -A FOREIGN_NETWORK_EXPLORERS=(
@@ -46,10 +50,14 @@ declare -A FILTERS=(
     ["chiado"]="Gnosis"
     ["unichainSepolia"]="Unichain"
     ["optimismSepolia"]="Optimism"
+    ["arbitrumSepolia"]="Arbitrum"
+    ["amoy"]="Polygon"
     ["gnosis"]="Gnosis"
     ["unichain"]="Unichain"
     ["optimism"]="Optimism"
     ["redstone"]="Redstone"
+    ["arbitrum"]="Arbitrum"
+    ["polygon"]="Polygon"
 )
 
 echo "### Testnets"

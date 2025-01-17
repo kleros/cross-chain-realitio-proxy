@@ -11,7 +11,7 @@
     "@kleros/cross-chain-realitio-contracts": "^1.0.0",
     "@realitio/realitio-lib": "^1.0.2",
     "web3": "1.10.4",
-    "webpack": "^4.19.0"
+    "webpack": "^4.47.0"
   },
   "devDependencies": {
     "clean-webpack-plugin": "^3.0.0",

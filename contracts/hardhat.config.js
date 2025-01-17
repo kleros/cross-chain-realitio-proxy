@@ -43,6 +43,8 @@ module.exports = {
         homeGnosis: "chiado",
         homeUnichain: "unichainSepolia",
         homeOptimism: "optimismSepolia",
+        homeArbitrum: "arbitrumSepolia",
+        homePolygon: "mumbai",
       },
       verify: {
         etherscan: {
@@ -97,6 +99,36 @@ module.exports = {
         },
       },
     },
+    arbitrumSepolia: {
+      chainId: 421614,
+      url: `https://arbitrum-sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+      tags: ["home"],
+      companionNetworks: {
+        foreign: "sepolia",
+      },
+      verify: {
+        etherscan: {
+          apiURL: "https://api-sepolia.arbiscan.io/api",
+          apiKey: process.env.ARBITSCAN_API_KEY,
+        },
+      },
+    },
+    mumbai: {
+      chainId: 80001,
+      url: `https://rpc-mumbai.maticvigil.com`,
+      accounts: [process.env.PRIVATE_KEY],
+      tags: ["home"],
+      companionNetworks: {
+        foreign: "sepolia",
+      },
+      verify: {
+        etherscan: {
+          apiURL: "https://api-testnet.polygonscan.com/api",
+          apiKey: process.env.POLYGONSCAN_API_KEY,
+        },
+      },
+    },
     // ----------------------------------------------------------------------------------------
     // Mainnets
     // ----------------------------------------------------------------------------------------
@@ -110,6 +142,8 @@ module.exports = {
         homeUnichain: "unichain",
         homeOptimism: "optimism",
         homeRedstone: "redstone",
+        homeArbitrum: "arbitrum",
+        homePolygon: "polygon",
       },
       verify: {
         etherscan: {
@@ -129,7 +163,7 @@ module.exports = {
       verify: {
         etherscan: {
           apiURL: "https://api.gnosisscan.com/api",
-          apiKey: process.env.GNOSIS_API_KEY,
+          apiKey: process.env.GNOSISSCAN_API_KEY,
         },
       },
     },
@@ -175,6 +209,36 @@ module.exports = {
         etherscan: {
           apiURL: "https://api.redstone.xyz/api",
           apiKey: process.env.REDSTONE_API_KEY,
+        },
+      },
+    },
+    arbitrum: {
+      chainId: 42161,
+      url: `https://arbitrum.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+      tags: ["home"],
+      companionNetworks: {
+        foreign: "mainnet",
+      },
+      verify: {
+        etherscan: {
+          apiURL: "https://api.arbiscan.io/api",
+          apiKey: process.env.ARBITSCAN_API_KEY,
+        },
+      },
+    },
+    polygon: {
+      chainId: 137,
+      url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+      tags: ["home"],
+      companionNetworks: {
+        foreign: "mainnet",
+      },
+      verify: {
+        etherscan: {
+          apiURL: "https://api.polygonscan.com/api",
+          apiKey: process.env.POLYGONSCAN_API_KEY,
         },
       },
     },

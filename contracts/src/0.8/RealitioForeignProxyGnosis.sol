@@ -93,7 +93,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
-     * @param _loserMultiplier Multiplier for calculation the appeal cost of the losing answer.
+     * @param _loserMultiplier Multiplier for calculating the appeal cost of the losing answer.
      * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(

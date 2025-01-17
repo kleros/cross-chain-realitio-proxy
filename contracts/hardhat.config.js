@@ -44,7 +44,7 @@ module.exports = {
         homeUnichain: "unichainSepolia",
         homeOptimism: "optimismSepolia",
         homeArbitrum: "arbitrumSepolia",
-        homePolygon: "mumbai",
+        homePolygon: "amoy",
       },
       verify: {
         etherscan: {
@@ -114,9 +114,9 @@ module.exports = {
         },
       },
     },
-    mumbai: {
-      chainId: 80001,
-      url: `https://rpc-mumbai.maticvigil.com`,
+    amoy: {
+      chainId: 80002,
+      url: `https://rpc-amoy.polygon.technology`,
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {
@@ -124,7 +124,7 @@ module.exports = {
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-testnet.polygonscan.com/api",
+          apiURL: "https://api-amoy.polygonscan.com/api",
           apiKey: process.env.POLYGONSCAN_API_KEY,
         },
       },
@@ -184,7 +184,7 @@ module.exports = {
     },
     optimism: {
       chainId: 10,
-      url: `https://optimism.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      url: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {
@@ -214,7 +214,7 @@ module.exports = {
     },
     arbitrum: {
       chainId: 42161,
-      url: `https://arbitrum.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {

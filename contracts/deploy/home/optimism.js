@@ -1,4 +1,4 @@
-const { homeChains } = require("../consts");
+const { homeChains, metadata } = require("../consts");
 const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeChains;
 
 // Redstone Messenger - https://redstone.xyz/docs/contract-addresses
@@ -7,49 +7,41 @@ const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeC
 // Same for all the L2 OP chains
 const opMessenger = "0x4200000000000000000000000000000000000007";
 
-const metadata =
-  '{"tos":"ipfs://QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf", "foreignProxy":true}';
-
 const homeParameters = {
   [unichainSepolia.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/1301/ETH/RealityETH-3.0.json
     realitio: "0x288799697AE9EbceDC1b30BBAE6a38e03e41CdDb",
     homeBridge: opMessenger,
-    metadata,
     variant: "Unichain",
   },
   [optimismSepolia.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/11155420/ETH/RealityETH-3.0.json
     realitio: "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA",
     homeBridge: opMessenger,
-    metadata,
     variant: "Optimism",
   },
   [unichain.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/130/ETH/RealityETH-3.0.json
     realitio: "0x0000000000000000000000000000000000000000", // FIXME!
     homeBridge: opMessenger,
-    metadata,
     variant: "Unichain",
   },
   [optimism.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10/OETH/RealityETH-3.0.json
     realitio: "0x0eF940F7f053a2eF5D6578841072488aF0c7d89A",
     homeBridge: opMessenger,
-    metadata,
     variant: "Optimism",
   },
   [redstone.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/690/ETH/RealityETH-3.0.json
     realitio: "0xc716c23D75f523eF0C511456528F2A1980256a87",
     homeBridge: opMessenger,
-    metadata,
     variant: "Redstone",
   },
 };
 
-async function deployHomeProxy(deploy, get, from, chainParams, foreignChainId, foreignProxy) {
-  const { realitio, metadata, homeBridge, variant } = chainParams;
+async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
+  const { realitio, homeBridge, variant } = parameters;
   return await deploy(`RealitioHomeProxy${variant}`, {
     contract: "RealitioHomeProxyOptimism",
     from,

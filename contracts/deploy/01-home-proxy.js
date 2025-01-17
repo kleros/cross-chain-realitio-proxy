@@ -1,7 +1,7 @@
 const { HOME_CHAIN_IDS } = require("./consts/index");
-const optimismProxy = require("./home/optimism.js");
-const gnosisProxy = require("./home/gnosis.js");
 const arbitrumProxy = require("./home/arbitrum.js");
+const gnosisProxy = require("./home/gnosis.js");
+const optimismProxy = require("./home/optimism.js");
 const polygonProxy = require("./home/polygon.js");
 
 async function deployHomeProxy({ deployments, getChainId, ethers, config, network }) {
@@ -9,34 +9,36 @@ async function deployHomeProxy({ deployments, getChainId, ethers, config, networ
 
   const { deploy, get } = deployments;
   const chainId = await getChainId();
-  const proxyConfigs = [optimismProxy, gnosisProxy, arbitrumProxy, polygonProxy];
+  const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy];
   const proxyConfig = proxyConfigs.find((config) => config.supportedChainIds.includes(Number(chainId)));
   if (!proxyConfig) {
-    throw new Error(`No proxy configuration supports chain ID ${chainId}`);
+    throw new Error(`No home proxy configuration supports chain ID ${chainId}`);
   }
   if (!network.companionNetworks.foreign) {
     throw new Error("Foreign network not configured in companion networks");
   }
+  const parameters = proxyConfig.homeParameters[chainId];
   const foreignNetwork = config.networks[network.companionNetworks.foreign];
+  const foreignChainId = foreignNetwork.chainId;
   const provider = new ethers.JsonRpcProvider(foreignNetwork.url);
-  const [account] = await ethers.getSigners();
-  const nonce = await provider.getTransactionCount(account.address);
+  const from = await ethers.getSigners().then((signers) => signers[0].address);
+  const nonce = await provider.getTransactionCount(from);
   console.log(`Nonce: ${nonce}`);
   const transaction = {
-    from: account.address,
+    from,
     nonce: nonce,
   };
   const foreignProxy = ethers.getCreateAddress(transaction);
-  console.log(`Foreign proxy: ${foreignProxy}`);
+  console.log(`Expected foreign proxy address: ${foreignProxy}`);
 
-  const homeProxy = await proxyConfig.deployHomeProxy(
+  const homeProxy = await proxyConfig.deployHomeProxy({
     deploy,
     get,
-    account.address,
-    proxyConfig.homeParameters[chainId],
-    foreignNetwork.chainId,
-    foreignProxy
-  );
+    from,
+    parameters,
+    foreignChainId,
+    foreignProxy,
+  });
 
   console.log(`RealitioHomeProxy was deployed to ${homeProxy.address}`);
 }

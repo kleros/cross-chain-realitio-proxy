@@ -32,7 +32,6 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         Requested,
         Created,
         Ruled,
-        Relayed,
         Failed
     }
 
@@ -91,10 +90,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
-     * @param _multipliers Appeal multipliers:
-     *  - Multiplier for calculating the appeal cost of the winning answer.
-     *  - Multiplier for calculating the appeal cost of the losing answer.
-     *  - Multiplier for calculating the appeal period for the losing answer.
+     * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
+     * @param _loserMultiplier Multiplier for calculating the appeal cost of the losing answer.
+     * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(
         address _messenger,
@@ -102,15 +100,17 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
-        uint256[3] memory _multipliers
+        uint256 _winnerMultiplier,
+        uint256 _loserMultiplier,
+        uint256 _loserAppealPeriodMultiplier
     ) {
         messenger = ICrossDomainMessenger(_messenger);
         homeProxy = _homeProxy;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
-        winnerMultiplier = _multipliers[0];
-        loserMultiplier = _multipliers[1];
-        loserAppealPeriodMultiplier = _multipliers[2];
+        winnerMultiplier = _winnerMultiplier;
+        loserMultiplier = _loserMultiplier;
+        loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
 
         emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
@@ -148,7 +148,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) public override onlyHomeProxy {
+    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) external override onlyHomeProxy {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -198,7 +198,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) public override onlyHomeProxy {
+    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyHomeProxy {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -397,29 +397,15 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         arbitration.answer = finalRuling;
         arbitration.status = Status.Ruled;
-        emit Ruling(IArbitrator(msg.sender), _disputeID, finalRuling);
-    }
-
-    /**
-     * @notice Relays the ruling to home proxy. Requires a small deposit to cover Optimism fees.
-     * @param _questionID The ID of the question.
-     * @param _requester The address of the arbitration requester.
-     */
-    function relayRule(bytes32 _questionID, address _requester) external {
-        uint256 arbitrationID = uint256(_questionID);
-        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
-        require(arbitration.status == Status.Ruled, "Dispute not resolved");
 
         // Realitio ruling is shifted by 1 compared to Kleros.
-        uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
+        uint256 realitioRuling = finalRuling != 0 ? finalRuling - 1 : REFUSE_TO_ARBITRATE_REALITIO;
 
         bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
-
-        arbitration.status = Status.Relayed;
-
+        bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(realitioRuling));
         messenger.sendMessage(homeProxy, data, minGasLimit);
-        emit RulingRelayed(_questionID, bytes32(realitioRuling));
+
+        emit Ruling(IArbitrator(msg.sender), _disputeID, finalRuling);
     }
 
     // ********************************* //

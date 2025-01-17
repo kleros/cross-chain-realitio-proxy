@@ -12,7 +12,7 @@ pragma solidity 0.8.25;
 
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
-import {ICrossDomainMessenger} from "./interfaces/ICrossDomainMessenger.sol";
+import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger.sol";
 
 /**
  * @title Arbitration proxy for Realitio on foreign chain (eg. mainnet).
@@ -215,7 +215,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external override {
+    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable override {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");

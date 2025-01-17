@@ -184,7 +184,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external ;
+    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable;
 
     /**
      * @notice Gets the fee to create a dispute.

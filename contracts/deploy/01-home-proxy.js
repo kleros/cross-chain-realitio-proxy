@@ -6,7 +6,7 @@ const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeC
 // Optimism Sepolia Messenger - https://docs.optimism.io/chain/addresses
 // Unichain Sepolia Messenger - https://docs.unichain.org/docs/technical-information/contract-addresses
 // Same for all the L2 OP chains
-const messenger = "0x4200000000000000000000000000000000000007";
+const opMessenger = "0x4200000000000000000000000000000000000007";
 
 // Same for all chains
 const metadata =
@@ -16,46 +16,68 @@ const params = {
   [unichainSepolia.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/1301/ETH/RealityETH-3.0.json
     realitio: "0x288799697AE9EbceDC1b30BBAE6a38e03e41CdDb",
-    messenger,
+    homeBridge: opMessenger,
     metadata,
-    family: "Unichain",
+    variant: "Unichain",
   },
   [optimismSepolia.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/11155420/ETH/RealityETH-3.0.json
     realitio: "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA",
-    messenger,
+    homeBridge: opMessenger,
     metadata,
-    family: "Optimism",
+    variant: "Optimism",
   },
   [unichain.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/130/ETH/RealityETH-3.0.json
     realitio: "0x0000000000000000000000000000000000000000", // FIXME!
-    messenger,
+    homeBridge: opMessenger,
     metadata,
-    family: "Unichain",
+    variant: "Unichain",
   },
   [optimism.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10/OETH/RealityETH-3.0.json
     realitio: "0x0eF940F7f053a2eF5D6578841072488aF0c7d89A",
-    messenger,
+    homeBridge: opMessenger,
     metadata,
-    family: "Optimism",
+    variant: "Optimism",
   },
   [redstone.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/690/ETH/RealityETH-3.0.json
     realitio: "0xc716c23D75f523eF0C511456528F2A1980256a87",
-    messenger,
+    homeBridge: opMessenger,
     metadata,
-    family: "Redstone",
+    variant: "Redstone",
   },
 };
+
+/**
+ * Constructors args
+ * Inputs: realitio, foreignChainId, foreignProxy, metadata, homeBridge, deployOptions, preDeploy(compute alias), postDeploy(link fxChild)
+ *
+ * RealitioHomeProxyOptimism: realitio, foreignChainId, foreignProxy, metadata, messenger (IT SHOULD BE HARDCODED for HOME)
+ * RealitioHomeProxyArbitrumitrumitrum: realitio, foreignChainId, foreignProxy, metadata
+ * RealitioHomeZkSync: realitio, foreignChainId, foreignProxy, alias (= L2 address for foreignProxy), metadata
+ * RealitioHomeProxyGnosis: amb, foreignProxy, foreignChainId (bytes32), realitio, metadata
+ *   -> TODO: change to realitio, foreignChainId (convert in constructor), foreignProxy, metadata, amb
+ * RealitioHomeProxyPolygon: fxChild, realitio, foreignChainId, metadata (+ fxRootTunnel separately)...
+ *   -> TODO: try to modify FxBaseChildTunnel.sol constructor
+ */
+
+async function deployOptimism(deploy, from, chainParams, foreignChainId, foreignProxy) {
+  const { realitio, metadata, homeBridge, variant } = chainParams;
+  return await deploy(`RealitioHomeProxy${variant}`, {
+    contract: "RealitioHomeProxyOptimism",
+    from,
+    args: [realitio, foreignChainId, foreignProxy, metadata, homeBridge],
+    log: true,
+  });
+}
 
 async function deployHomeProxy({ deployments, getChainId, ethers, config, network }) {
   console.log(`Running deployment script for home proxy contract on ${network.name}`);
 
   const { deploy } = deployments;
   const chainId = await getChainId();
-  const { realitio, metadata, messenger, family } = params[chainId];
   if (!network.companionNetworks.foreign) {
     throw new Error("Foreign network not configured in companion networks");
   }
@@ -71,23 +93,15 @@ async function deployHomeProxy({ deployments, getChainId, ethers, config, networ
   const foreignProxy = ethers.getCreateAddress(transaction);
   console.log(`Foreign proxy: ${foreignProxy}`);
 
-  console.log(
-    `Args: realitio=${realitio}, foreignChainId=${foreignNetwork.chainId}, foreignProxy=${foreignProxy}, metadata=${metadata}, messenger=${messenger}`
+  const homeProxy = await deployOptimism(
+    deploy,
+    account.address,
+    params[chainId],
+    foreignNetwork.chainId,
+    foreignProxy
   );
 
-  const homeProxy = await deploy(`RealitioHomeProxy${family}`, {
-    contract: "RealitioHomeProxyOptimism",
-    from: account.address,
-    args: [realitio, foreignNetwork.chainId, foreignProxy, metadata, messenger],
-  });
-
-  console.log(`RealitioHomeProxyOptimism was deployed to ${homeProxy.address}, waiting 5 seconds before verifying...`);
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  await run("verify:verify", {
-    address: homeProxy.address,
-    constructorArguments: [realitio, foreignNetwork.chainId, foreignProxy, metadata, messenger],
-  });
+  console.log(`RealitioHomeProxyOptimism was deployed to ${homeProxy.address}`);
 }
 
 deployHomeProxy.tags = ["HomeChain"];

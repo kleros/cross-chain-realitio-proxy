@@ -8,6 +8,7 @@
     "build": "hardhat compile",
     "clean": "hardhat clean",
     "test": "hardhat test",
+    "etherscan-verify": "hardhat etherscan-verify",
     "metaevidence:chiado": "hardhat generate-metaevidence --deployment chiado",
     "metaevidence:unichainSepolia": "hardhat generate-metaevidence --deployment unichainSepolia",
     "metaevidence:optimismSepolia": "hardhat generate-metaevidence --deployment optimismSepolia",
@@ -58,6 +59,7 @@
     "solidity-coverage": "^0.8.14"
   },
   "dependencies": {
+    "@arbitrum/nitro-contracts": "^1.0.0",
     "@kleros/dispute-resolver-interface-contract-0.7": "npm:@kleros/dispute-resolver-interface-contract@^2.0.0",
     "@kleros/dispute-resolver-interface-contract-0.8": "npm:@kleros/dispute-resolver-interface-contract@^8.0.0",
     "@kleros/ethereum-libraries": "^7.0.0",

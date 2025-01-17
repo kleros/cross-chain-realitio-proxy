@@ -1,31 +1,26 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *  @authors: [@anmol-dhiman]
- *  @reviewers: []
+ *  @authors: [@hbarcelos, @shalzz]
+ *  @reviewers: [@ferittuncer*, @fnanni-0*, @nix1g*, @epiqueras*, @clesaege*, @unknownunknown1, @jaybuidl]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
  */
-pragma solidity 0.8.25;
 
-import "./interfaces/RealitioInterface.sol";
+pragma solidity ^0.8.0;
+
+import {FxBaseChildTunnel} from "./interfaces/polygon/FxBaseChildTunnel.sol";
+import {RealitioInterface} from "./interfaces/RealitioInterface.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
-import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger.sol";
 
 /**
- * @title Arbitration proxy for Realitio on home chain (eg. Optimism, Unichain, Redstone etc).
- * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
+ * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
+ * @dev This contract is meant to be deployed to side-chains in which Reality.eth is deployed.
  */
-contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
-    uint32 public constant MIN_GAS_LIMIT = 1500000; // Gas limit of the transaction call.
-
-    // contract for L2 -> L1 communication
-    ICrossDomainMessenger public immutable messenger;
-
+contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
-    address public immutable foreignProxy; // Address of the proxy on L1.
 
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
@@ -53,32 +48,35 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
-    modifier onlyForeignProxy() {
-        require(msg.sender == address(messenger), "NOT_MESSENGER");
-        require(messenger.xDomainMessageSender() == foreignProxy, "Can only be called by Foreign Proxy");
+    /**
+     * @dev This is applied to functions called via the internal function
+     * `_processMessageFromRoot` which is invoked via the Polygon bridge (see FxBaseChildTunnel)
+     *
+     * The functions requiring this modifier cannot simply be declared internal as
+     * we still need the ABI generated of these functions to be able to call them
+     * across contracts and have the compiler type check the function signatures.
+     */
+    modifier onlyBridge() {
+        require(msg.sender == address(this), "Can only be called via bridge");
         _;
     }
 
     /**
      * @notice Creates an arbitration proxy on the home chain.
+     * @param _fxChild Address of the FxChild contract of the Polygon bridge
      * @param _realitio Realitio contract address.
      * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
-     * @param _foreignProxy Address of the proxy on L1.
-     * @param _metadata Metadata for Realitio.
-     * @param _messenger L2 -> L1 communcation contract address
+     * @param _metadata Metadata for Realitio
      */
     constructor(
+        address _fxChild,
         RealitioInterface _realitio,
         uint256 _foreignChainId,
-        address _foreignProxy,
-        string memory _metadata,
-        address _messenger
-    ) {
+        string memory _metadata
+    ) FxBaseChildTunnel(_fxChild) {
         realitio = _realitio;
         foreignChainId = bytes32(_foreignChainId);
-        foreignProxy = _foreignProxy;
         metadata = _metadata;
-        messenger = ICrossDomainMessenger(_messenger);
     }
 
     /**
@@ -91,7 +89,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         bytes32 _questionID,
         address _requester,
         uint256 _maxPrevious
-    ) external override onlyForeignProxy {
+    ) external override onlyBridge {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.None, "Request already exists");
 
@@ -120,7 +118,9 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     }
 
     /**
-     * @dev Relays arbitration request back to L1 after it has been notified by Realitio for a given question.
+     * @notice Handles arbitration request after it has been notified to Realitio for a given question.
+     * @dev This method exists because `receiveArbitrationRequest` is called by the Polygon Bridge
+     * and cannot send messages back to it.
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
@@ -132,12 +132,15 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
+        _sendMessageToRoot(data);
+
         emit RequestAcknowledged(_questionID, _requester);
     }
 
     /**
-     * @dev Relays arbitration request back to L1 after it has been rejected.
+     * @notice Handles arbitration request after it has been rejected.
+     * @dev This method exists because `receiveArbitrationRequest` is called by the Polygon Bridge
+     * and cannot send messages back to it.
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
@@ -155,7 +158,8 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
+        _sendMessageToRoot(data);
+
         emit RequestCanceled(_questionID, _requester);
     }
 
@@ -165,7 +169,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxy {
+    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyBridge {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -178,11 +182,11 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Receives an answer to a specified question. TRUSTED.
+     * @notice Receives the answer to a specified question. TRUSTED.
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
-    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
+    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyBridge {
         address requester = questionIDToRequester[_questionID];
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
@@ -225,5 +229,22 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
+    }
+
+    /**
+     * @notice Realitio interface requires home proxy to return foreign proxy.
+     */
+    function foreignProxy() external view returns (address) {
+        return fxRootTunnel;
+    }
+
+    function _processMessageFromRoot(
+        uint256 stateId,
+        address sender,
+        bytes memory _data
+    ) internal override validateSender(sender) {
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, ) = address(this).call(_data);
+        require(success, "Failed to call contract");
     }
 }

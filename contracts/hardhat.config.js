@@ -1,6 +1,5 @@
 require("dotenv/config");
 require("@nomicfoundation/hardhat-toolbox");
-require("@nomicfoundation/hardhat-verify");
 require("hardhat-deploy");
 require("./tasks/generate-metaevidence");
 

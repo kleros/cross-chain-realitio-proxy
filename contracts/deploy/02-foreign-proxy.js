@@ -26,46 +26,46 @@ const params = {
     arbitrator: klerosLiquid[sepolia.chainId],
     arbitratorExtraData: encodeExtraData(oracleCourt[sepolia.chainId], 1), // Oracle Court - 1 juror
     // https://docs.unichain.org/docs/technical-information/contract-addresses
-    messenger: "0x448A37330A60494E666F6DD60aD48d930AEbA381",
+    foreignBridge: "0x448A37330A60494E666F6DD60aD48d930AEbA381",
     metaEvidence: "/ipfs/QmfFVUKfKjZyXPwcefpJqBbFaaA4GcZrzMnt3xH211ySKy",
     multipliers: [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier],
-    family: `Unichain`,
+    variant: `Unichain`,
   },
   optimismSepolia: {
     arbitrator: klerosLiquid[sepolia.chainId],
     arbitratorExtraData: encodeExtraData(oracleCourt[sepolia.chainId], 1), // Oracle Court - 1 juror
     // https://docs.optimism.io/chain/addresses
-    messenger: "0x58Cc85b8D04EA49cC6DBd3CbFFd00B4B8D6cb3ef",
+    foreignBridge: "0x58Cc85b8D04EA49cC6DBd3CbFFd00B4B8D6cb3ef",
     metaEvidence: "/ipfs/QmYj9PRtDV4HpNKXJbJ8AaYv5FBknNuSo4kjH2raHX47eM/",
     multipliers: [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier],
-    family: `Optimism`,
+    variant: `Optimism`,
   },
   unichain: {
     arbitrator: klerosLiquid[mainnet.chainId],
     arbitratorExtraData: encodeExtraData(oracleCourt[mainnet.chainId], 7), // Oracle Court - 7 jurors
     // https://docs.unichain.org/docs/technical-information/contract-addresses
-    messenger: "FIXME", // Not launched yet
+    foreignBridge: "FIXME", // Not launched yet
     metaEvidence: "/ipfs/FIXME",
     multipliers: [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier],
-    family: `Unichain`,
+    variant: `Unichain`,
   },
   optimism: {
     arbitrator: klerosLiquid[mainnet.chainId],
     arbitratorExtraData: encodeExtraData(oracleCourt[mainnet.chainId], 7), // Oracle Court - 7 jurors
     // https://docs.optimism.io/chain/addresses
-    messenger: "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1",
+    foreignBridge: "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1",
     metaEvidence: "/ipfs/QmaA3mXhvRxXFcmyF2zbF5CirJmK4xH2jVy7XBWBDprvxS",
     multipliers: [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier],
-    family: `Optimism`,
+    variant: `Optimism`,
   },
   redstone: {
     arbitrator: klerosLiquid[mainnet.chainId],
     arbitratorExtraData: encodeExtraData(oracleCourt[mainnet.chainId], 7), // Oracle Court - 7 jurors
     // https://redstone.xyz/docs/contract-addresses
-    messenger: "0x592C1299e0F8331D81A28C0FC7352Da24eDB444a",
+    foreignBridge: "0x592C1299e0F8331D81A28C0FC7352Da24eDB444a",
     metaEvidence: "/ipfs/bafybeibho6gzezi7ludu6zxfzetmicho7ekuh3gu3oouihmbfsabhcg7te/",
     multipliers: [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier],
-    family: `Redstone`,
+    variant: `Redstone`,
   },
 };
 
@@ -78,6 +78,20 @@ async function getHomeDeployments({ companionNetworks, homeNetworkName, config }
   return homeNetwork.deployments;
 }
 
+/**
+ * Constructors args
+ * Inputs: homeProxy, arbitrator, arbitratorExtraData, metaEvidence, multipliers, foreignBridge
+ *
+ * RealitioForeignProxyOptimism: foreignBridge, homeProxy, arbitrator, arbitratorExtraData, metaEvidence, multipliers
+ *  -> Warning: Danil wants the multipliers array destructured
+ * RealitioForeignProxyArbitrumitrum: homeProxy, governor, arbitrator, arbitratorExtraData, foreignBridge, surplus, l2GasLimit, gasPriceBid, metaEvidence, multipliers
+ *  -> TODO: reorder to?
+ *  -> TODO: destructure multipliers array?
+ * RealitioForeignProxyPolygon: checkpointManager, foreignBridge, arbitrator, arbitratorExtraData, metaEvidence, ...[multipliers] (+ setFxChildTunnel(homeProxy) done separately
+ * RealitioForeignProxyZkSync: governor, arbitrator, arbitratorExtraData,foreignBridge, l2GasLimit, l2GasPerPubdata, surplusAmount, metaEvidence, ...[multipliers] (+ homeProxy set separately)
+ * RealitioForeignProxyGnosis: foreignBridge, homeProxy, homeChainID (bytes32), arbitrator, arbitratorExtraData, metaEvidence, tos, ...[multipliers
+ */
+
 async function deployForeignProxy({ deployments, ethers, companionNetworks, config, network }) {
   const homeNetworkName = process.env.HOME_NETWORK;
   if (!homeNetworkName || !(homeNetworkName in params))
@@ -88,19 +102,19 @@ async function deployForeignProxy({ deployments, ethers, companionNetworks, conf
   );
 
   const { deploy } = deployments;
-  const { arbitrator, arbitratorExtraData, messenger, metaEvidence, multipliers, family } = params[homeNetworkName];
+  const { arbitrator, arbitratorExtraData, foreignBridge, metaEvidence, multipliers, variant } = params[homeNetworkName];
   const [account] = await ethers.getSigners();
   const homeDeployments = await getHomeDeployments({ companionNetworks, homeNetworkName, config });
-  const homeProxy = await homeDeployments.get(`RealitioHomeProxy${family}`).then((homeProxy) => homeProxy.address);
+  const homeProxy = await homeDeployments.get(`RealitioHomeProxy${variant}`).then((homeProxy) => homeProxy.address);
 
   console.log(
-    `Args: messenger=${messenger}, homeProxy=${homeProxy}, arbitrator=${arbitrator}, arbitratorExtraData=${arbitratorExtraData}, metaEvidence=${metaEvidence}, multipliers=[${multipliers}]`
+    `ForeignProxy Args: foreignBridge=${foreignBridge}, homeProxy=${homeProxy}, arbitrator=${arbitrator}, arbitratorExtraData=${arbitratorExtraData}, metaEvidence=${metaEvidence}, multipliers=[${multipliers}]`
   );
 
-  const foreignProxy = await deploy(`RealitioForeignProxy${family}`, {
+  const foreignProxy = await deploy(`RealitioForeignProxy${variant}`, {
     contract: "RealitioForeignProxyOptimism",
     from: account.address,
-    args: [messenger, homeProxy, arbitrator, arbitratorExtraData, metaEvidence, multipliers],
+    args: [foreignBridge, homeProxy, arbitrator, arbitratorExtraData, metaEvidence, multipliers],
   });
 
   console.log(
@@ -110,7 +124,7 @@ async function deployForeignProxy({ deployments, ethers, companionNetworks, conf
 
   await run("verify:verify", {
     address: foreignProxy.address,
-    constructorArguments: [messenger, homeProxy, arbitrator, arbitratorExtraData, metaEvidence, multipliers],
+    constructorArguments: [foreignBridge, homeProxy, arbitrator, arbitratorExtraData, metaEvidence, multipliers],
   });
 }
 

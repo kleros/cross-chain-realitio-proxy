@@ -1,32 +1,34 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *  @authors: [@anmol-dhiman]
+ *  @authors: [@unknownunknown1]
  *  @reviewers: []
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
  */
+
 pragma solidity 0.8.25;
 
 import "./interfaces/RealitioInterface.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
-import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger.sol";
+import "@arbitrum/nitro-contracts/src/precompiles/ArbSys.sol";
+import "@arbitrum/nitro-contracts/src/libraries/AddressAliasHelper.sol";
 
 /**
- * @title Arbitration proxy for Realitio on home chain (eg. Optimism, Unichain, Redstone etc).
- * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
+ * @title Arbitration proxy for Realitio on Arbitrum.
+ * @dev This contract is meant to be deployed to L2 where Reality.eth is deployed.
+ * https://docs.arbitrum.io/arbos/l2-to-l1-messaging
+ * Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/arbitrum/GreeterL2.sol
  */
-contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
-    uint32 public constant MIN_GAS_LIMIT = 1500000; // Gas limit of the transaction call.
-
-    // contract for L2 -> L1 communication
-    ICrossDomainMessenger public immutable messenger;
+contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
+    // Precompiled contract for L2 -> L1 communication
+    // https://docs.arbitrum.io/build-decentralized-apps/precompiles/reference#arbsys
+    ArbSys constant ARB_SYS = ArbSys(address(100));
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
     address public immutable foreignProxy; // Address of the proxy on L1.
-
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
 
@@ -53,9 +55,11 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
-    modifier onlyForeignProxy() {
-        require(msg.sender == address(messenger), "NOT_MESSENGER");
-        require(messenger.xDomainMessageSender() == foreignProxy, "Can only be called by Foreign Proxy");
+    event L2ToL1TxCreated(uint256 indexed withdrawalId);
+
+    /// @dev Foreign proxy uses its alias to make calls on L2.
+    modifier onlyForeignProxyAlias() virtual {
+        require(msg.sender == AddressAliasHelper.applyL1ToL2Alias(foreignProxy), "Can only be called by foreign proxy");
         _;
     }
 
@@ -65,20 +69,17 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
      * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      * @param _foreignProxy Address of the proxy on L1.
      * @param _metadata Metadata for Realitio.
-     * @param _messenger L2 -> L1 communcation contract address
      */
     constructor(
         RealitioInterface _realitio,
         uint256 _foreignChainId,
         address _foreignProxy,
-        string memory _metadata,
-        address _messenger
+        string memory _metadata
     ) {
         realitio = _realitio;
         foreignChainId = bytes32(_foreignChainId);
         foreignProxy = _foreignProxy;
         metadata = _metadata;
-        messenger = ICrossDomainMessenger(_messenger);
     }
 
     /**
@@ -91,7 +92,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         bytes32 _questionID,
         address _requester,
         uint256 _maxPrevious
-    ) external override onlyForeignProxy {
+    ) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.None, "Request already exists");
 
@@ -132,7 +133,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
+        sendToL1(data);
         emit RequestAcknowledged(_questionID, _requester);
     }
 
@@ -155,7 +156,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
+        sendToL1(data);
         emit RequestCanceled(_questionID, _requester);
     }
 
@@ -165,7 +166,10 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxy {
+    function receiveArbitrationFailure(
+        bytes32 _questionID,
+        address _requester
+    ) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -182,7 +186,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
-    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
+    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxyAlias {
         address requester = questionIDToRequester[_questionID];
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
@@ -225,5 +229,14 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
+    }
+
+    /**
+     * @notice Sends a message to L1.
+     * @param _data The data sent.
+     */
+    function sendToL1(bytes memory _data) internal virtual {
+        uint256 withdrawalId = ARB_SYS.sendTxToL1(foreignProxy, _data);
+        emit L2ToL1TxCreated(withdrawalId);
     }
 }

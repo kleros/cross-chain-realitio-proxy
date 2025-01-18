@@ -1,6 +1,7 @@
 require("dotenv/config");
 require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-deploy");
+require("hardhat-deploy-ethers");
 require("./tasks/generate-metaevidence");
 
 module.exports = {
@@ -56,6 +57,7 @@ module.exports = {
     chiado: {
       chainId: 10200,
       url: "https://rpc.chiado.gnosis.gateway.fm",
+      // url: `http://127.0.0.1:8546`, // fork with `anvil --fork-url https://rpc.chiado.gnosis.gateway.fm --port 8546`
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {
@@ -102,6 +104,7 @@ module.exports = {
     arbitrumSepolia: {
       chainId: 421614,
       url: `https://arbitrum-sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      // url: `http://127.0.0.1:8548`, // fork with `anvil --fork-url https://arbitrum-sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8548`
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {
@@ -117,6 +120,7 @@ module.exports = {
     amoy: {
       chainId: 80002,
       url: `https://rpc-amoy.polygon.technology`,
+      // url: `http://127.0.0.1:8549`, // fork with `anvil --fork-url https://rpc-amoy.polygon.technology --port 8549`
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {

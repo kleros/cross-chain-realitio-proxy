@@ -80,6 +80,7 @@
     "ethers": "^6.13.5",
     "hardhat": "^2.22.18",
     "hardhat-deploy": "^0.14.0",
+    "hardhat-deploy-ethers": "^0.4.2",
     "hardhat-gas-reporter": "^2.2.2",
     "solidity-coverage": "^0.8.14",
     "zksync-ethers": "^6.15.3",

@@ -2859,6 +2859,7 @@ __metadata:
     ethers: ^6.13.5
     hardhat: ^2.22.18
     hardhat-deploy: ^0.14.0
+    hardhat-deploy-ethers: ^0.4.2
     hardhat-gas-reporter: ^2.2.2
     solidity-coverage: ^0.8.14
     zksync-ethers: ^6.15.3
@@ -13367,6 +13368,17 @@ __metadata:
     ajv: ^6.12.3
     har-schema: ^2.0.0
   checksum: b998a7269ca560d7f219eedc53e2c664cd87d487e428ae854a6af4573fc94f182fe9d2e3b92ab968249baec7ebaf9ead69cf975c931dc2ab282ec182ee988280
+  languageName: node
+  linkType: hard
+
+"hardhat-deploy-ethers@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "hardhat-deploy-ethers@npm:0.4.2"
+  peerDependencies:
+    "@nomicfoundation/hardhat-ethers": ^3.0.2
+    hardhat: ^2.16.0
+    hardhat-deploy: ^0.12.0
+  checksum: 38c06f6b1d482cff92f31f1daf4cc4b6be943e1f62148e29cdddfc481d040470b9d6f233e0d61517fd02cc259f9f77ebd4512ea79624a893c72c90d70eff3f65
   languageName: node
   linkType: hard
 

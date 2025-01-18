@@ -7,7 +7,7 @@ const polygonProxy = require("./home/polygon.js");
 async function deployHomeProxy({ deployments, getChainId, ethers, config, network }) {
   console.log(`Running deployment script for home proxy contract on ${network.name}`);
 
-  const { deploy, get } = deployments;
+  const { deploy } = deployments;
   const chainId = await getChainId();
   const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy];
   const proxyConfig = proxyConfigs.find((config) => config.supportedChainIds.includes(Number(chainId)));
@@ -33,7 +33,6 @@ async function deployHomeProxy({ deployments, getChainId, ethers, config, networ
 
   const homeProxy = await proxyConfig.deployHomeProxy({
     deploy,
-    get,
     from,
     parameters,
     foreignChainId,

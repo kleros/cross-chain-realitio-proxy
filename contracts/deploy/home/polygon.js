@@ -1,10 +1,11 @@
+const { ethers } = require("hardhat");
 const { homeChains, metadata } = require("../consts");
 const { amoy, polygon } = homeChains;
 
 const homeParameters = {
   [amoy.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/80002/
-    realitio: "NOT DEPLOYED YET",
+    realitio: "0x0000000000000000000000000000000000000000", // NOT DEPLOYED YET
     // https://docs.polygon.technology/pos/how-to/bridging/l1-l2-communication/state-transfer/#prerequisites
     fxChild: "0xE5930336866d0388f0f745A2d9207C7781047C0f",
   },
@@ -16,7 +17,7 @@ const homeParameters = {
   },
 };
 
-async function deployHomeProxy({ deploy, get, from, parameters, foreignChainId, foreignProxy }) {
+async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio, fxChild } = parameters;
   const deployed = await deploy(`RealitioHomeProxyPolygon`, {
     from,
@@ -25,8 +26,8 @@ async function deployHomeProxy({ deploy, get, from, parameters, foreignChainId, 
     log: true,
   });
 
-  // Link to foreign proxy
-  const homeProxy = await get(`RealitioHomeProxyPolygon`);
+  console.log(`Linking to foreign proxy ${foreignProxy}`);
+  const homeProxy = await ethers.getContract(`RealitioHomeProxyPolygon`);
   await homeProxy.setFxRootTunnel(foreignProxy);
   return deployed;
 }

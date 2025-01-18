@@ -30,7 +30,7 @@ async function deployForeignProxy({ deployments, getChainId, ethers, companionNe
     `Running deployment script for foreign proxy contract on ${network.name} for home proxy ${homeNetworkName}`
   );
 
-  const { deploy, get } = deployments;
+  const { deploy } = deployments;
   const chainId = await getChainId();
   const from = await ethers.getSigners().then((signers) => signers[0].address);
   const parameters = proxyConfig.foreignParameters[homeNetworkName];
@@ -41,7 +41,6 @@ async function deployForeignProxy({ deployments, getChainId, ethers, companionNe
 
   const foreignProxy = await proxyConfig.deployForeignProxy({
     deploy,
-    get,
     from,
     parameters,
     homeChainId,

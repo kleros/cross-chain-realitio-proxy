@@ -1,3 +1,4 @@
+const { ethers } = require("hardhat");
 const { encodeExtraData } = require("../consts/index");
 
 // Bridge addresses:
@@ -9,7 +10,7 @@ const foreignParameters = {
     numberOfJurors: 1,
     checkpointManager: "0x2890bA17EfE978480615e330ecB65333b880928e",
     fxRoot: "0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA",
-    metaEvidence: "/ipfs/QmYAomciorEQ3pisZP7DuzFN9TGhT5YaQYMJfnnw3ZJQYV/realitio.json",
+    metaEvidence: "/ipfs/TODO",
   },
   polygon: {
     numberOfJurors: 7,
@@ -19,7 +20,7 @@ const foreignParameters = {
   },
 };
 
-async function deployForeignProxy({ deploy, get, from, parameters, homeProxy, arbitrator, courts, multipliers }) {
+async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitrator, courts, multipliers }) {
   const { numberOfJurors, checkpointManager, fxRoot, metaEvidence } = parameters;
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   const deployed = await deploy("RealitioForeignProxyPolygon", {
@@ -29,8 +30,8 @@ async function deployForeignProxy({ deploy, get, from, parameters, homeProxy, ar
     gas: 8000000,
   });
 
-  // Link to home proxy
-  const foreignProxy = await get("RealitioForeignProxyPolygon");
+  console.log(`Linking to home proxy ${homeProxy}`);
+  const foreignProxy = await ethers.getContract("RealitioForeignProxyPolygon");
   await foreignProxy.setFxChildTunnel(homeProxy);
   return deployed;
 }

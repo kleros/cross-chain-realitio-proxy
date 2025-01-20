@@ -18,10 +18,8 @@ import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger
  * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
  */
 contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
+    ICrossDomainMessenger public constant messenger = ICrossDomainMessenger(0x4200000000000000000000000000000000000007); // Precompile for L2 -> L1 communication, identical for all OP L2s
     uint32 public constant MIN_GAS_LIMIT = 1500000; // Gas limit of the transaction call.
-
-    // contract for L2 -> L1 communication
-    ICrossDomainMessenger public immutable messenger;
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
@@ -62,23 +60,15 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
-     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
-     * @param _foreignProxy Address of the proxy on L1.
      * @param _metadata Metadata for Realitio.
-     * @param _messenger L2 -> L1 communcation contract address
+     * @param _foreignProxy Address of the proxy on L1.
+     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      */
-    constructor(
-        RealitioInterface _realitio,
-        uint256 _foreignChainId,
-        address _foreignProxy,
-        string memory _metadata,
-        address _messenger
-    ) {
+    constructor(RealitioInterface _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
         realitio = _realitio;
-        foreignChainId = bytes32(_foreignChainId);
-        foreignProxy = _foreignProxy;
         metadata = _metadata;
-        messenger = ICrossDomainMessenger(_messenger);
+        foreignProxy = _foreignProxy;
+        foreignChainId = bytes32(_foreignChainId);
     }
 
     /**

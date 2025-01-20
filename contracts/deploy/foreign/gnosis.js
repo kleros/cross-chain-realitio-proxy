@@ -1,4 +1,4 @@
-const { encodeExtraData, toBytes32 } = require("../consts/index");
+const { encodeExtraData } = require("../consts/index");
 
 // Bridge addresses:
 // https://docs.gnosischain.com/developers/Usefulcontracts#mainnet-bridge-contract-addresses
@@ -29,14 +29,13 @@ async function deployForeignProxy({
   multipliers,
 }) {
   const { numberOfJurors, foreignAmb, metaEvidence } = parameters;
-  const homeChainIdAsBytes32 = toBytes32(homeChainId);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
 
   // Fully qualified contract name because there's also an 0.7 artifact
   return await deploy("RealitioForeignProxyGnosis", {
     contract: "src/0.8/RealitioForeignProxyGnosis.sol:RealitioForeignProxyGnosis",
     from,
-    args: [foreignAmb, homeProxy, homeChainIdAsBytes32, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers],
+    args: [arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, homeChainId, foreignAmb],
     log: true,
     gas: 8000000,
   });

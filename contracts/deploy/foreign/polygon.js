@@ -25,7 +25,7 @@ async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitra
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   const deployed = await deploy("RealitioForeignProxyPolygon", {
     from,
-    args: [checkpointManager, fxRoot, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers],
+    args: [arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, checkpointManager, fxRoot],
     log: true,
     gas: 8000000,
   });

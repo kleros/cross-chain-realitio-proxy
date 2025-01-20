@@ -63,20 +63,20 @@ contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
 
     /**
      * @notice Creates an arbitration proxy on the home chain.
-     * @param _fxChild Address of the FxChild contract of the Polygon bridge
      * @param _realitio Realitio contract address.
-     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      * @param _metadata Metadata for Realitio
+     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
+     * @param _fxChild Address of the FxChild contract of the Polygon bridge
      */
     constructor(
-        address _fxChild,
         RealitioInterface _realitio,
+        string memory _metadata,
         uint256 _foreignChainId,
-        string memory _metadata
+        address _fxChild
     ) FxBaseChildTunnel(_fxChild) {
         realitio = _realitio;
-        foreignChainId = bytes32(_foreignChainId);
         metadata = _metadata;
+        foreignChainId = bytes32(_foreignChainId);
     }
 
     /**

@@ -9,24 +9,24 @@ import {RealitioForeignProxyPolygon} from "../../RealitioForeignProxyPolygon.sol
  */
 contract MockForeignArbitrationProxyWithAppeals is RealitioForeignProxyPolygon {
     constructor(
-        address _checkpointManager,
-        address _fxRoot,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         uint256 _winnerMultiplier,
         uint256 _loserMultiplier,
-        uint256 _loserAppealPeriodMultiplier
+        uint256 _loserAppealPeriodMultiplier,
+        address _checkpointManager,
+        address _fxRoot
     )
         RealitioForeignProxyPolygon(
-            _checkpointManager,
-            _fxRoot,
             _arbitrator,
             _arbitratorExtraData,
             _metaEvidence,
             _winnerMultiplier,
             _loserMultiplier,
-            _loserAppealPeriodMultiplier
+            _loserAppealPeriodMultiplier,
+            _checkpointManager,
+            _fxRoot
         )
     {}
 

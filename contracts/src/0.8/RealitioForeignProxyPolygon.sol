@@ -89,24 +89,24 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
-     * @param _checkpointManager For Polygon FX-portal bridge.
-     * @param _fxRoot Address of the FxRoot contract of the Polygon bridge.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
      * @param _loserMultiplier Multiplier for calculation the appeal cost of the losing answer.
      * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
+     * @param _checkpointManager For Polygon FX-portal bridge.
+     * @param _fxRoot Address of the FxRoot contract of the Polygon bridge.
      */
     constructor(
-        address _checkpointManager,
-        address _fxRoot,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
         uint256 _winnerMultiplier,
         uint256 _loserMultiplier,
-        uint256 _loserAppealPeriodMultiplier
+        uint256 _loserAppealPeriodMultiplier,
+        address _checkpointManager,
+        address _fxRoot
     ) FxBaseRootTunnel(_checkpointManager, _fxRoot) {
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
@@ -420,12 +420,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         external
         view
         override
-        returns (
-            uint256 winner,
-            uint256 loser,
-            uint256 loserAppealPeriod,
-            uint256 divisor
-        )
+        returns (uint256 winner, uint256 loser, uint256 loserAppealPeriod, uint256 divisor)
     {
         return (winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier, MULTIPLIER_DIVISOR);
     }
@@ -434,9 +429,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
      * @notice Returns number of possible ruling options. Valid rulings are [0, return value].
      * @return count The number of ruling options.
      */
-    function numberOfRulingOptions(
-        uint256 /* _arbitrationID */
-    ) external pure override returns (uint256) {
+    function numberOfRulingOptions(uint256 /* _arbitrationID */) external pure override returns (uint256) {
         return NUMBER_OF_CHOICES_FOR_ARBITRATOR;
     }
 
@@ -444,9 +437,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(
-        bytes32 /* _questionID */
-    ) external view override returns (uint256) {
+    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 
@@ -469,15 +460,10 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
      * @return feeRewards The amount of fees that will be used as rewards.
      * @return fundedAnswers IDs of fully funded answers.
      */
-    function getRoundInfo(uint256 _arbitrationID, uint256 _round)
-        external
-        view
-        returns (
-            uint256[] memory paidFees,
-            uint256 feeRewards,
-            uint256[] memory fundedAnswers
-        )
-    {
+    function getRoundInfo(
+        uint256 _arbitrationID,
+        uint256 _round
+    ) external view returns (uint256[] memory paidFees, uint256 feeRewards, uint256[] memory fundedAnswers) {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];

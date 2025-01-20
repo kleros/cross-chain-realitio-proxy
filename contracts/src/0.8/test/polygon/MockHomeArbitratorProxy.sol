@@ -11,11 +11,11 @@ import {MockForeignArbitrationProxyWithAppeals} from "./MockForeignArbitratorPro
  */
 contract MockHomeArbitrationProxy is RealitioHomeProxyPolygon {
     constructor(
-        address _fxChild,
         RealitioInterface _realitio,
+        string memory _metadata,
         uint256 _foreignChainId,
-        string memory _metadata
-    ) RealitioHomeProxyPolygon(_fxChild, _realitio, _foreignChainId, _metadata) {}
+        address _fxChild
+    ) RealitioHomeProxyPolygon(_realitio, _metadata, _foreignChainId, _fxChild) {}
 
     // Overridden to directly call the foreignProxy under test
     // instead of emitting an event

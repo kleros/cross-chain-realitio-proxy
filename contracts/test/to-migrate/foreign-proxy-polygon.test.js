@@ -697,21 +697,21 @@ describe("Cross-chain arbitration with appeals", () => {
     const HomeProxy = await ethers.getContractFactory("MockHomeArbitrationProxy", signer);
 
     const foreignProxy = await ForeignProxy.deploy(
-      ADDRESS_ZERO,
-      fxRoot.address,
       arbitrator.address,
       arbitratorExtraData,
       metaEvidence,
       winnerMultiplier,
       loserMultiplier,
-      loserAppealPeriodMultiplier
+      loserAppealPeriodMultiplier,
+      ADDRESS_ZERO,
+      fxRoot.address
     );
 
     const homeProxy = await HomeProxy.deploy(
-      fxRoot.address, // Here our mock FxRoot directly calls the FxChildTunnel
       realitio.address,
+      metadata,
       foreignChainId,
-      metadata
+      fxRoot.address // Here our mock FxRoot directly calls the FxChildTunnel
     );
 
     await foreignProxy.setFxChildTunnel(homeProxy.address);

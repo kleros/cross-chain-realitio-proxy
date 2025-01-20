@@ -45,7 +45,7 @@ async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitra
   return await deploy(`RealitioForeignProxy${variant}`, {
     contract: "RealitioForeignProxyOptimism",
     from,
-    args: [foreignBridge, homeProxy, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers],
+    args: [arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, foreignBridge],
     log: true,
   });
 }

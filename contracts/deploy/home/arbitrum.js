@@ -19,7 +19,7 @@ async function deployHomeProxy({ deploy, from, parameters, foreignChainId, forei
   const { realitio } = parameters;
   return await deploy(`RealitioHomeProxyArbitrum`, {
     from,
-    args: [realitio, foreignChainId, foreignProxy, metadata],
+    args: [realitio, metadata, foreignProxy, foreignChainId],
     log: true,
   });
 }

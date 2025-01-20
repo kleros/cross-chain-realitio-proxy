@@ -21,7 +21,7 @@ async function deployHomeProxy({ deploy, from, parameters, foreignChainId, forei
   const { realitio, fxChild } = parameters;
   const deployed = await deploy(`RealitioHomeProxyPolygon`, {
     from,
-    args: [fxChild, realitio, foreignChainId, metadata],
+    args: [realitio, metadata, foreignChainId, fxChild],
     gas: 8000000,
     log: true,
   });

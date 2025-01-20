@@ -3,13 +3,14 @@ const arbitrumProxy = require("./home/arbitrum.js");
 const gnosisProxy = require("./home/gnosis.js");
 const optimismProxy = require("./home/optimism.js");
 const polygonProxy = require("./home/polygon.js");
+const zksyncProxy = require("./home/zksync.js");
 
 async function deployHomeProxy({ deployments, getChainId, ethers, config, network }) {
   console.log(`Running deployment script for home proxy contract on ${network.name}`);
 
   const { deploy } = deployments;
   const chainId = await getChainId();
-  const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy];
+  const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy, zksyncProxy];
   const proxyConfig = proxyConfigs.find((config) => config.supportedChainIds.includes(Number(chainId)));
   if (!proxyConfig) {
     throw new Error(`No home proxy configuration supports chain ID ${chainId}`);

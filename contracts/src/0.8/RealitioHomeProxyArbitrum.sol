@@ -66,20 +66,15 @@ contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
     /**
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
-     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
-     * @param _foreignProxy Address of the proxy on L1.
      * @param _metadata Metadata for Realitio.
+     * @param _foreignProxy Address of the proxy on L1.
+     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      */
-    constructor(
-        RealitioInterface _realitio,
-        uint256 _foreignChainId,
-        address _foreignProxy,
-        string memory _metadata
-    ) {
+    constructor(RealitioInterface _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
         realitio = _realitio;
+        metadata = _metadata;
         foreignChainId = bytes32(_foreignChainId);
         foreignProxy = _foreignProxy;
-        metadata = _metadata;
     }
 
     /**

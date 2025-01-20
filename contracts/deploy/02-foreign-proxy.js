@@ -3,6 +3,7 @@ const arbitrumProxy = require("./foreign/arbitrum.js");
 const gnosisProxy = require("./foreign/gnosis.js");
 const optimismProxy = require("./foreign/optimism.js");
 const polygonProxy = require("./foreign/polygon.js");
+const zksyncProxy = require("./foreign/zksync.js");
 
 // Note that values apply to both testnet and mainnet since fees are observed to be about the same on both chains as of mid 2024.
 const winnerMultiplier = 3000;
@@ -20,7 +21,7 @@ async function getHomeDeployments({ companionNetworks, homeNetworkName, homeChai
 async function deployForeignProxy({ deployments, getChainId, ethers, companionNetworks, config, network }) {
   const homeNetworkName = process.env.HOME_NETWORK;
   if (!homeNetworkName) throw new Error("HOME_NETWORK environment variable must be set");
-  const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy];
+  const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy, zksyncProxy];
   const proxyConfig = proxyConfigs.find((config) => config.supportedHomeChains.includes(homeNetworkName));
   if (!proxyConfig) {
     throw new Error(`No foreign proxy configuration supports home network ${homeNetworkName}`);

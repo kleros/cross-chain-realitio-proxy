@@ -18,12 +18,12 @@ contract MockRealitioHomeProxy is RealitioHomeProxyArbitrum {
 
     constructor(
         RealitioInterface _realitio,
-        uint256 _foreignChainId,
-        address _foreignProxy,
         string memory _metadata,
+        address _foreignProxy,
+        uint256 _foreignChainId,
         address _mockInbox,
         MockBridge _mockBridge
-    ) RealitioHomeProxyArbitrum(_realitio, _foreignChainId, _foreignProxy, _metadata) {
+    ) RealitioHomeProxyArbitrum(_realitio, _metadata, _foreignProxy, _foreignChainId) {
         mockInbox = _mockInbox;
         mockBridge = _mockBridge;
     }

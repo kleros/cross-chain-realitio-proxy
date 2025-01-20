@@ -1,4 +1,4 @@
-const { homeChains, gwei, toBytes32, metadata } = require("../consts");
+const { homeChains, gwei, metadata } = require("../consts");
 const { chiado, gnosis } = homeChains;
 
 const homeParameters = {
@@ -18,13 +18,12 @@ const homeParameters = {
 
 async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio, homeAmb } = parameters;
-  const foreignChainIdAsBytes32 = toBytes32(foreignChainId);
 
   // Fully qualified contract name because there's also an 0.7 artifact
   return await deploy("RealitioHomeProxyGnosis", {
     contract: "src/0.8/RealitioHomeProxyGnosis.sol:RealitioHomeProxyGnosis",
     from,
-    args: [homeAmb, foreignProxy, foreignChainIdAsBytes32, realitio, metadata],
+    args: [realitio, metadata, foreignProxy, foreignChainId, homeAmb],
     maxPriorityFeePerGas: gwei("2"),
     maxFeePerGas: gwei("20"),
     log: true,

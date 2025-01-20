@@ -1,8 +1,28 @@
 const { ethers } = require("ethers");
 
 function getChainsByTag(tag) {
-  const { config } = require("hardhat");
-  return Object.entries(config.networks).reduce((acc, [networkName, networkConfig]) => {
+  const hardhatConfig = require("../../hardhat.config.js");
+  const zkSyncConfig = require("../../hardhat.config.zksync.js");
+
+  // Deep merge rather than spread which is a shallow merge
+  function deepMerge(target, source) {
+    if (!source) return target;
+    if (!target) return source;
+
+    const result = { ...target };
+    for (const key in source) {
+      if (typeof source[key] === "object" && !Array.isArray(source[key])) {
+        result[key] = deepMerge(target[key], source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+    return result;
+  }
+
+  const mergedNetworks = deepMerge(hardhatConfig?.networks || {}, zkSyncConfig?.networks || {});
+
+  return Object.entries(mergedNetworks).reduce((acc, [networkName, networkConfig]) => {
     if (networkConfig.tags?.includes(tag)) acc[networkName] = networkConfig;
     return acc;
   }, {});

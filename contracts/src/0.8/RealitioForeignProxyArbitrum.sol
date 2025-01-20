@@ -107,40 +107,41 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
-     * @param _homeProxy Proxy on L2.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
+     * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
+     * @param _loserMultiplier Multiplier for calculating the appeal cost of the losing answer.
+     * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
+     * @param _homeProxy Proxy on L2.
      * @param _inbox L2 inbox.
      * @param _surplusAmount The surplus amount to cover Arbitrum fees.
      * @param _l2GasLimit L2 gas limit
      * @param _gasPriceBid Max gas price L2.
      * @param _metaEvidence The URI of the meta evidence file.
-     * @param _multipliers Appeal multipliers:
-     *  - Multiplier for calculating the appeal cost of the winning answer.
-     *  - Multiplier for calculating the appeal cost of the losing answer.
-     *  - Multiplier for calculating the appeal period for the losing answer.
      */
     constructor(
-        address _homeProxy,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
+        string memory _metaEvidence,
+        uint256 _winnerMultiplier,
+        uint256 _loserMultiplier,
+        uint256 _loserAppealPeriodMultiplier,
+        address _homeProxy,
         address _inbox,
         uint256 _surplusAmount,
         uint256 _l2GasLimit,
-        uint256 _gasPriceBid,
-        string memory _metaEvidence,
-        uint256[3] memory _multipliers
+        uint256 _gasPriceBid
     ) {
-        homeProxy = _homeProxy;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
+        winnerMultiplier = _winnerMultiplier;
+        loserMultiplier = _loserMultiplier;
+        loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
+        homeProxy = _homeProxy;
         inbox = IInbox(_inbox);
         surplusAmount = _surplusAmount;
         l2GasLimit = _l2GasLimit;
         gasPriceBid = _gasPriceBid;
-        winnerMultiplier = _multipliers[0];
-        loserMultiplier = _multipliers[1];
-        loserAppealPeriodMultiplier = _multipliers[2];
 
         emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }

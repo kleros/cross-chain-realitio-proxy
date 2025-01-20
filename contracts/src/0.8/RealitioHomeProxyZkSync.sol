@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 /**
- *  @authors: [@hbarcelos, @unknownunknown1]
+ *  @authors: [@unknownunknown1]
  *  @reviewers: []
  *  @auditors: []
  *  @bounties: []
@@ -10,25 +10,25 @@
 
 pragma solidity 0.8.25;
 
-import {IAMB} from "./interfaces/IAMB.sol";
+// Importing interfaces and addresses of the system contracts
+import "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IL1Messenger.sol";
 import {RealitioInterface} from "./interfaces/RealitioInterface.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
 
 /**
- * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
- * @dev This contract is meant to be deployed to side-chains (i.e.: Gnosis) in which Reality.eth is deployed.
+ * @title Arbitration proxy for Realitio on L2.
+ * @dev This contract is meant to be deployed to L2 where Reality.eth is deployed.
+ * https://era.zksync.io/docs/dev/how-to/send-message-l2-l1.html
  */
-contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
-    /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
+contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
+    // 2^15 offset to avoid collision. Taken from zk system contract https://github.com/matter-labs/v2-testnet-contracts/blob/b8449bf9c819098cc8bfee0549ff5094456be51d/l2/system-contracts/Constants.sol#L18
+    IL1Messenger constant L1_MESSENGER_CONTRACT = IL1Messenger(address(0x8000 + 0x08));
+
+    /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     RealitioInterface public immutable realitio;
-
-    /// @dev ArbitraryMessageBridge contract address. TRUSTED.
-    IAMB public immutable amb;
-
-    /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
-    address public immutable foreignProxy;
-
-    /// @dev The chain ID where the foreign proxy is deployed.
+    address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
+    address public immutable foreignProxy; // Address of the proxy on L1. Required for Realitio UI.
+    /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
 
     /// @dev Metadata for Realitio interface.
@@ -54,10 +54,9 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
-    modifier onlyForeignProxy() {
-        require(msg.sender == address(amb), "Only AMB allowed");
-        require(amb.messageSourceChainId() == foreignChainId, "Only foreign chain allowed");
-        require(amb.messageSender() == foreignProxy, "Only foreign proxy allowed");
+    /// @dev Foreign proxy uses its alias to make calls on L2.
+    modifier onlyForeignProxyAlias() {
+        require(msg.sender == foreignProxyAlias, "Can only be called by foreign proxy");
         _;
     }
 
@@ -65,22 +64,22 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
      * @param _metadata Metadata for Realitio.
-     * @param _foreignProxy The address of the proxy.
-     * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
-     * @param _amb ArbitraryMessageBridge contract address.
+     * @param _foreignProxy Address of the proxy on L1.
+     * @param _foreignProxyAlias Alias of the proxy on L1.
+     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      */
     constructor(
         RealitioInterface _realitio,
         string memory _metadata,
         address _foreignProxy,
-        uint256 _foreignChainId,
-        IAMB _amb
+        address _foreignProxyAlias,
+        uint256 _foreignChainId
     ) {
         realitio = _realitio;
         metadata = _metadata;
         foreignProxy = _foreignProxy;
+        foreignProxyAlias = _foreignProxyAlias;
         foreignChainId = bytes32(_foreignChainId);
-        amb = _amb;
     }
 
     /**
@@ -93,7 +92,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
         bytes32 _questionID,
         address _requester,
         uint256 _maxPrevious
-    ) external override onlyForeignProxy {
+    ) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.None, "Request already exists");
 
@@ -122,8 +121,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
     }
 
     /**
-     * @notice Handles arbitration request after it has been notified to Realitio for a given question.
-     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
+     * @dev Relays arbitration request back to L1 after it has been notified by Realitio for a given question.
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
@@ -135,14 +133,13 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
+        sendToL1(data);
 
         emit RequestAcknowledged(_questionID, _requester);
     }
 
     /**
-     * @notice Handles arbitration request after it has been rejected.
-     * @dev This method exists because `receiveArbitrationRequest` is called by the AMB and cannot send messages back to it.
+     * @dev Relays arbitration request back to L1 after it has been rejected.
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
@@ -160,7 +157,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        amb.requireToPassMessage(foreignProxy, data, amb.maxGasPerTx());
+        sendToL1(data);
 
         emit RequestCanceled(_questionID, _requester);
     }
@@ -171,7 +168,10 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.
      */
-    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external override onlyForeignProxy {
+    function receiveArbitrationFailure(
+        bytes32 _questionID,
+        address _requester
+    ) external override onlyForeignProxyAlias {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
@@ -188,7 +188,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
      * @param _questionID The ID of the question.
      * @param _answer The answer from the arbitrator.
      */
-    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxy {
+    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxyAlias {
         address requester = questionIDToRequester[_questionID];
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
@@ -219,8 +219,6 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.Ruled, "Arbitrator has not ruled yet");
 
-        request.status = Status.Finished;
-
         realitio.assignWinnerAndSubmitAnswerByArbitrator(
             _questionID,
             request.arbitratorAnswer,
@@ -230,6 +228,12 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
             _lastAnswerer
         );
 
+        request.status = Status.Finished;
+
         emit ArbitrationFinished(_questionID);
+    }
+
+    function sendToL1(bytes memory _data) internal virtual {
+        L1_MESSENGER_CONTRACT.sendToL1(_data);
     }
 }

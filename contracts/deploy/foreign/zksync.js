@@ -1,3 +1,4 @@
+const { ethers } = require("hardhat");
 const { encodeExtraData, eth } = require("../consts/index");
 
 // Bridge addresses:
@@ -5,42 +6,47 @@ const { encodeExtraData, eth } = require("../consts/index");
 
 // The parameters are keyed by home network name rather than by chainId because several home proxies point to the same foreign proxy.
 const foreignParameters = {
-  arbitrumSepolia: {
+  zkSyncSepolia: {
     numberOfJurors: 1,
-    inbox: "0xaAe29B0366299461418F5324a79Afc425BE5ae21",
-    metaEvidence: "/ipfs/QmX4uAgcXJdLifAmZjt6VYP2Lwj91zZ3H6DLF68Yt1d7pr",
+    zkAddress: "0x9A6DE0f62Aa270A8bCB1e2610078650D539B1Ef9",
+    metaEvidence: "/ipfs/QmZjtv9jTbykD39z8U7ZAmZ3mvRw7J6etKohgJBS5Nmxm5/metaevidence.json",
   },
-  arbitrum: {
+  zkSyncMainnet: {
     numberOfJurors: 15,
-    inbox: "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f",
+    zkAddress: "0x32400084C286CF3E17e7B677ea9583e60a000324",
     metaEvidence: "TODO",
   },
 };
 
 async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitrator, courts, multipliers }) {
-  const { numberOfJurors, inbox, metaEvidence } = parameters;
+  const { numberOfJurors, zkAddress, metaEvidence } = parameters;
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
-  const surplus = eth("0.03"); // The surplus will be automatically reimbursed when the dispute is created.
+  const surplus = eth("0.05"); // The surplus will be automatically reimbursed when the dispute is created.
   const l2GasLimit = 1500000; // Gas limit for a tx on L2.
-  const gasPriceBid = 1000000000; // x10000 bid of random arb sepolia tx. Gas price * gasLimit will result in additional 0.0015 eth fee for automatic-redeem on L2. The surplus will be reimbursed.
-  return await deploy("RealitioForeignProxyArbitrum", {
+  const l2GasPerPubdataByteLimit = 800;
+  const deployed = await deploy("RealitioForeignProxyZkSync", {
     from,
     args: [
+      from, // governor
       arbitrator,
       arbitratorExtraData,
       metaEvidence,
       ...multipliers,
-      homeProxy,
-      inbox,
+      zkAddress,
       surplus,
       l2GasLimit,
-      gasPriceBid,
+      l2GasPerPubdataByteLimit,
     ],
     log: true,
   });
+
+  console.log(`Linking to home proxy ${homeProxy}`);
+  const foreignProxy = await ethers.getContract("RealitioForeignProxyZkSync");
+  await foreignProxy.setHomeProxy(homeProxy);
+  return deployed;
 }
 
-const getHomeProxyName = () => "RealitioHomeProxyArbitrum";
+const getHomeProxyName = () => "RealitioHomeProxyZkSync";
 
 const supportedHomeChains = Object.keys(foreignParameters).map(String);
 

@@ -70,14 +70,12 @@ describe("Cross-chain arbitration with appeals", () => {
   it("Should correctly set the initial values", async () => {
     await foreignProxy.setHomeProxy(homeProxy.address);
 
-    expect(await foreignProxy.governor()).to.equal(governor.address);
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.address);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
     expect(await foreignProxy.zkSyncAddress()).to.equal(mockZkSync.address);
     expect(await foreignProxy.l2GasLimit()).to.equal(L2_GAS_LIMIT);
     expect(await foreignProxy.l2GasPerPubdataByteLimit()).to.equal(L2_GAS_PER_PUB_DATA_BYTE_LIMIT);
     expect(await foreignProxy.surplusAmount()).to.equal(200);
-    expect(await foreignProxy.metaEvidenceUpdates()).to.equal(0);
     expect(await foreignProxy.homeProxy()).to.equal(homeProxy.address);
     expect(await foreignProxy.deployer()).to.equal(ADDRESS_ZERO);
 
@@ -101,51 +99,6 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await foreignProxy.setHomeProxy(homeProxy.address);
     await expect(foreignProxy.setHomeProxy(mockZkSync.address)).to.be.revertedWith("Only deployer can"); // Deployer is nullified so no one can re-set the proxy
-  });
-
-  it("Check governance requires", async () => {
-    await expect(foreignProxy.connect(other).changeArbitrator(homeProxy.address, "0xff")).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeArbitrator(homeProxy.address, "0xff");
-    expect(await foreignProxy.arbitrator()).to.equal(homeProxy.address);
-    expect(await foreignProxy.arbitratorExtraData()).to.equal("0xff");
-
-    await expect(foreignProxy.connect(other).changeMetaevidence("ME2.0")).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeMetaevidence("ME2.0");
-    expect(await foreignProxy.metaEvidenceUpdates()).to.equal(1);
-
-    await expect(foreignProxy.connect(other).changeZkSyncAddress(other.address)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeZkSyncAddress(other.address);
-    expect(await foreignProxy.zkSyncAddress()).to.equal(other.address);
-
-    await expect(foreignProxy.connect(other).changeL2GasLimit(1111)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeL2GasLimit(1111);
-    expect(await foreignProxy.l2GasLimit()).to.equal(1111);
-
-    await expect(foreignProxy.connect(other).changeL2GasPerPubdata(2222)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeL2GasPerPubdata(2222);
-    expect(await foreignProxy.l2GasPerPubdataByteLimit()).to.equal(2222);
-
-    await expect(foreignProxy.connect(other).changeSurplusAmount(3333)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeSurplusAmount(3333);
-    expect(await foreignProxy.surplusAmount()).to.equal(3333);
-
-    await expect(foreignProxy.connect(other).changeWinnerMultiplier(51)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeWinnerMultiplier(51);
-    expect(await foreignProxy.winnerMultiplier()).to.equal(51);
-
-    await expect(foreignProxy.connect(other).changeGovernor(other.address)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(governor).changeGovernor(other.address);
-    expect(await foreignProxy.governor()).to.equal(other.address);
-
-    // Governor is change from now on
-
-    await expect(foreignProxy.connect(governor).changeLoserMultiplier(25)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(other).changeLoserMultiplier(25);
-    expect(await foreignProxy.loserMultiplier()).to.equal(25);
-
-    await expect(foreignProxy.connect(governor).changeLoserAppealPeriodMultiplier(777)).to.be.revertedWith("The caller must be the governor.");
-    await foreignProxy.connect(other).changeLoserAppealPeriodMultiplier(777);
-    expect(await foreignProxy.loserAppealPeriodMultiplier()).to.equal(777);
   });
 
   it("Should not allow to request arbitration if home proxy is not set", async () => {
@@ -278,7 +231,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(arbitration[1]).to.equal(0, "Deposit value should be empty");
     expect(arbitration[2]).to.equal(2, "Incorrect dispute ID");
 
-    const disputeData = await foreignProxy.arbitratorDisputeIDToDisputeDetails(arbitrator.address, 2);
+    const disputeData = await foreignProxy.disputeIDToDisputeDetails(2);
     expect(disputeData[0]).to.equal(0, "Incorrect arbitration ID in disputeData");
     expect(disputeData[1]).to.equal(await requester.getAddress(), "Incorrect requester address in disputeData");
 
@@ -1122,7 +1075,6 @@ describe("Cross-chain arbitration with appeals", () => {
     const HomeProxy = await ethers.getContractFactory("MockZkHomeProxy", signer);
 
     const foreignProxy = await ForeignProxy.deploy(
-      signer.address,
       arbitrator.address,
       arbitratorExtraData,
       mockZkSync.address,

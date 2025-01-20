@@ -27,7 +27,6 @@ async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitra
   const deployed = await deploy("RealitioForeignProxyZkSync", {
     from,
     args: [
-      from, // governor
       arbitrator,
       arbitratorExtraData,
       metaEvidence,

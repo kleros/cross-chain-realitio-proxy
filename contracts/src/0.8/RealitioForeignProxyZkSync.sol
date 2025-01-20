@@ -17,7 +17,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/Arbi
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
- * https://era.zksync.io/docs/dev/how-to/send-transaction-l1-l2.html
+ * https://docs.zksync.io/build/developer-reference/l1-l2-interoperability
  */
 contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolver {
     /* Constants */
@@ -26,6 +26,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
     uint256 public constant L2_CALL_VALUE = 0; // Amount of ETH to pass with the call to L2. Used as msg.value for the transaction.
+    uint256 public constant META_EVIDENCE_ID = 0; // The ID of the MetaEvidence for disputes.
 
     /* Storage */
 
@@ -44,9 +45,6 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 disputeID; // The ID of the dispute in arbitrator contract.
         uint256 answer; // The answer given by the arbitrator.
         Round[] rounds; // Tracks each appeal round of a dispute.
-        IArbitrator arbitrator; // The arbitrator trusted to solve disputes for this request.
-        bytes arbitratorExtraData; // The extra data for the trusted arbitrator of this request.
-        uint256 metaEvidenceID; // The meta evidence to be used in a dispute for this case.
     }
 
     struct DisputeDetails {
@@ -64,28 +62,27 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
     }
 
     address public deployer = msg.sender; // Deployer address. It will be set to 0 after setting HomeProxy.
-    address public governor; // Governor of the contract (e.g KlerosGovernor).
-    IArbitrator public arbitrator; // The address of the arbitrator. TRUSTED.
-    bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
-    uint256 public metaEvidenceUpdates; // The number of times the meta evidence has been updated. Used to track the latest meta evidence ID.
-
-    IZkSync public zkSyncAddress; // The current address of the zkSync L1 bridge.
     address public homeProxy; // Proxy on L2.
 
-    uint256 public l2GasLimit; // Gas limit of the transaction call. Note some L2 operations consume up to 700000 gas. Default value is 1500000
-    uint256 public l2GasPerPubdataByteLimit; // L2 gas price for each published L1 calldata byte. Current default value is 800 https://era.zksync.io/docs/api/js/utils.html#gas
-    uint256 public surplusAmount; // The amount to add to arbitration fees to cover for zkSync fees. The leftover will be reimbursed. This is required for Realtio UI. Default value is 0.05 Eth.
+    IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
+    bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
+
+    IZkSync public immutable zkSyncAddress; // The current address of the zkSync L1 bridge.
+
+    uint256 public immutable l2GasLimit; // Gas limit of the transaction call. Note some L2 operations consume up to 700000 gas. Default value is 1500000
+    uint256 public immutable l2GasPerPubdataByteLimit; // L2 gas price for each published L1 calldata byte. Current default value is 800 https://docs.zksync.io/build/developer-reference/fee-model/how-l2-gas-price-works#note-on-l1l2-transactions
+    uint256 public immutable surplusAmount; // The amount to add to arbitration fees to cover for zkSync fees. The leftover will be reimbursed. This is required for Realtio UI. Default value is 0.03 Eth.
 
     // Multipliers are in basis points.
-    uint256 public winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
-    uint256 public loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
-    uint256 public loserAppealPeriodMultiplier; // Multiplier for calculating the duration of the appeal period for the loser, in basis points.
+    uint256 public immutable winnerMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that was chosen by the arbitrator in the previous round.
+    uint256 public immutable loserMultiplier; // Multiplier for calculating the appeal fee that must be paid for the answer that the arbitrator didn't rule for in the previous round.
+    uint256 public immutable loserAppealPeriodMultiplier; // Multiplier for calculating the duration of the appeal period for the loser, in basis points.
 
     mapping(uint256 => mapping(address => ArbitrationRequest)) public arbitrationRequests; // Maps arbitration ID to its data. arbitrationRequests[uint(questionID)][requester].
-    mapping(address => mapping(uint256 => DisputeDetails)) public arbitratorDisputeIDToDisputeDetails; // Maps external dispute ids from a particular arbitrator to local arbitration ID and requester who was able to complete the arbitration request.
+    mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
-
+    mapping(uint256 => uint256) public arbitrationCreatedBlock; // Block of dispute creation.
     mapping(uint256 => mapping(uint256 => bool)) public isL2ToL1MessageProcessed; // Is used to indicate that zkSync L2 to L1 message was already processed. isL2ToL1MessageProcessed[l2BlockNumber][messageNumber]
 
     /**
@@ -99,14 +96,8 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         _;
     }
 
-    modifier onlyGovernor() {
-        require(msg.sender == governor, "The caller must be the governor.");
-        _;
-    }
-
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
-     * @param _governor Governor of the contract.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -119,7 +110,6 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _surplusAmount The surplus amount to cover zk fees.
      */
     constructor(
-        address _governor,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -131,7 +121,6 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 _l2GasPerPubdataByteLimit,
         uint256 _surplusAmount
     ) {
-        governor = _governor;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -142,14 +131,10 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         l2GasPerPubdataByteLimit = _l2GasPerPubdataByteLimit;
         surplusAmount = _surplusAmount;
 
-        emit MetaEvidence(metaEvidenceUpdates, _metaEvidence);
+        emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
 
     /* External and public */
-
-    // ************************ //
-    // *      Governance      * //
-    // ************************ //
 
     /**
      * @notice Set home proxy. Can only be done by deployer.
@@ -159,91 +144,6 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         require(msg.sender == deployer, "Only deployer can");
         homeProxy = _homeProxy;
         deployer = address(0);
-    }
-
-    /**
-     * @notice Changes the governor of the contract.
-     * @param _governor New governor address.
-     */
-    function changeGovernor(address _governor) external onlyGovernor {
-        governor = _governor;
-    }
-
-    /**
-     * @notice Changes the arbitrator and extradata. The arbitrator is trusted to support appeal period and not reenter.
-     * Note avoid changing arbitrator if there is an active arbitration request in Requested phase, otherwise evidence submitted during this phase
-     * will be submitted to the new arbitrator, while arbitration request will be processed by the old one.
-     * @param _arbitrator New arbitrator address.
-     * @param _arbitratorExtraData Extradata for the arbitrator
-     */
-    function changeArbitrator(IArbitrator _arbitrator, bytes calldata _arbitratorExtraData) external onlyGovernor {
-        arbitrator = _arbitrator;
-        arbitratorExtraData = _arbitratorExtraData;
-    }
-
-    /**
-     * @notice Update the meta evidence used for disputes.
-     * @param _metaEvidence Metaevidence URI.
-     */
-    function changeMetaevidence(string memory _metaEvidence) external onlyGovernor {
-        metaEvidenceUpdates++;
-        emit MetaEvidence(metaEvidenceUpdates, _metaEvidence);
-    }
-
-    /**
-     * @notice Changes the address of zkSync bridge.
-     * @param _zkSyncAddress New zkSync bridge address.
-     */
-    function changeZkSyncAddress(IZkSync _zkSyncAddress) external onlyGovernor {
-        zkSyncAddress = _zkSyncAddress;
-    }
-
-    /**
-     * @notice Changes gas limit for L2 tx.
-     * @param _l2GasLimit New L2 gas limit.
-     */
-    function changeL2GasLimit(uint256 _l2GasLimit) external onlyGovernor {
-        l2GasLimit = _l2GasLimit;
-    }
-
-    /**
-     * @notice Changes L2 gas price for each published L1 calldata byte.
-     * @param _l2GasPerPubdataByteLimit New L2 gas per pubdata.
-     */
-    function changeL2GasPerPubdata(uint256 _l2GasPerPubdataByteLimit) external onlyGovernor {
-        l2GasPerPubdataByteLimit = _l2GasPerPubdataByteLimit;
-    }
-
-    /**
-     * @notice Changes the surplus amount to cover the zk fees.
-     * @param _surplusAmount New surplus amount value.
-     */
-    function changeSurplusAmount(uint256 _surplusAmount) external onlyGovernor {
-        surplusAmount = _surplusAmount;
-    }
-
-    /**
-     * @notice Changes winner multiplier value.
-     * @param _winnerMultiplier New winner multiplier.
-     */
-    function changeWinnerMultiplier(uint256 _winnerMultiplier) external onlyGovernor {
-        winnerMultiplier = _winnerMultiplier;
-    }
-
-    /**
-     * @notice Changes loser multiplier value.
-     * @param _loserMultiplier New loser multiplier.
-     */
-    function changeLoserMultiplier(uint256 _loserMultiplier) external onlyGovernor {
-        loserMultiplier = _loserMultiplier;
-    }
-
-    /**
-     * @notice Changes loser multiplier for appeal period.
-     * @param _loserAppealPeriodMultiplier New loser multiplier for appeal perido.
-     */
-    function changeLoserAppealPeriodMultiplier(uint256 _loserAppealPeriodMultiplier) external onlyGovernor {
-        loserAppealPeriodMultiplier = _loserAppealPeriodMultiplier;
     }
 
     // ************************ //
@@ -261,10 +161,6 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
-
-        arbitration.arbitrator = arbitrator;
-        arbitration.arbitratorExtraData = arbitratorExtraData;
-        arbitration.metaEvidenceID = metaEvidenceUpdates;
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         uint256 zkGasFee = getZkGasFee();
@@ -291,7 +187,6 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Proves that the message was sent on L2.
-     * @dev See https://era.zksync.io/docs/dev/how-to/send-message-l2-l1.html#send-a-message for more information.
      * @param _l2BlockNumber zkSync block number in which the message was sent
      * @param _index Message index, that can be received via API
      * @param _l2TxNumberInBlock The tx number in block.
@@ -331,23 +226,20 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
-        uint256 arbitrationCost = arbitration.arbitrator.arbitrationCost(arbitration.arbitratorExtraData);
+        // Arbitration cost can possibly change between when the request has been made and received, so evaluate once more.
+        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
 
         if (arbitration.deposit >= arbitrationCost) {
             try
-                arbitration.arbitrator.createDispute{value: arbitrationCost}(
-                    NUMBER_OF_CHOICES_FOR_ARBITRATOR,
-                    arbitration.arbitratorExtraData
-                )
+                arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData)
             returns (uint256 disputeID) {
-                DisputeDetails storage disputeDetails = arbitratorDisputeIDToDisputeDetails[
-                    address(arbitration.arbitrator)
-                ][disputeID];
+                DisputeDetails storage disputeDetails = disputeIDToDisputeDetails[disputeID];
                 disputeDetails.arbitrationID = arbitrationID;
                 disputeDetails.requester = _requester;
 
                 arbitrationIDToDisputeExists[arbitrationID] = true;
                 arbitrationIDToRequester[arbitrationID] = _requester;
+                arbitrationCreatedBlock[disputeID] = block.number;
 
                 // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
                 uint256 remainder = arbitration.deposit - arbitrationCost;
@@ -362,7 +254,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
-                emit Dispute(arbitration.arbitrator, disputeID, arbitration.metaEvidenceID, arbitrationID);
+                emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, arbitrationID);
             } catch {
                 arbitration.status = Status.Failed;
                 emit ArbitrationFailed(_questionID, _requester);
@@ -442,12 +334,12 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         require(arbitration.status == Status.Created, "No dispute to appeal.");
 
         uint256 disputeID = arbitration.disputeID;
-        (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitration.arbitrator.appealPeriod(disputeID);
+        (uint256 appealPeriodStart, uint256 appealPeriodEnd) = arbitrator.appealPeriod(disputeID);
         require(block.timestamp >= appealPeriodStart && block.timestamp < appealPeriodEnd, "Appeal period is over.");
 
         uint256 multiplier;
         {
-            uint256 winner = arbitration.arbitrator.currentRuling(disputeID);
+            uint256 winner = arbitrator.currentRuling(disputeID);
             if (winner == _answer) {
                 multiplier = winnerMultiplier;
             } else {
@@ -463,7 +355,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 lastRoundID = arbitration.rounds.length - 1;
         Round storage round = arbitration.rounds[lastRoundID];
         require(!round.hasPaid[_answer], "Appeal fee is already paid.");
-        uint256 appealCost = arbitration.arbitrator.appealCost(disputeID, arbitration.arbitratorExtraData);
+        uint256 appealCost = arbitrator.appealCost(disputeID, arbitratorExtraData);
         uint256 totalCost = appealCost + ((appealCost * multiplier) / MULTIPLIER_DIVISOR);
 
         // Take up to the amount necessary to fund the current round at the current costs.
@@ -486,7 +378,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
             arbitration.rounds.push();
 
             round.feeRewards = round.feeRewards - appealCost;
-            arbitration.arbitrator.appeal{value: appealCost}(disputeID, arbitration.arbitratorExtraData);
+            arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
         if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
@@ -562,15 +454,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _evidenceURI Link to evidence.
      */
     function submitEvidence(uint256 _arbitrationID, string calldata _evidenceURI) external override {
-        address requester = arbitrationIDToRequester[_arbitrationID];
-        ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
-        if (address(arbitration.arbitrator) == address(0)) {
-            //None or Requested status.
-            // Note that arbitrator set during requestArbitration might differ from default arbitrator, if default arbitrator was changed during Requested status.
-            emit Evidence(arbitrator, _arbitrationID, msg.sender, _evidenceURI);
-        } else {
-            emit Evidence(arbitration.arbitrator, _arbitrationID, msg.sender, _evidenceURI);
-        }
+        emit Evidence(arbitrator, _arbitrationID, msg.sender, _evidenceURI);
     }
 
     /**
@@ -580,12 +464,12 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _ruling The ruling given by the arbitrator.
      */
     function rule(uint256 _disputeID, uint256 _ruling) external override {
-        DisputeDetails storage disputeDetails = arbitratorDisputeIDToDisputeDetails[msg.sender][_disputeID];
+        DisputeDetails storage disputeDetails = disputeIDToDisputeDetails[_disputeID];
         uint256 arbitrationID = disputeDetails.arbitrationID;
         address requester = disputeDetails.requester;
 
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][requester];
-        require(msg.sender == address(arbitration.arbitrator), "Only arbitrator allowed");
+        require(msg.sender == address(arbitrator), "Only arbitrator allowed");
         require(arbitration.status == Status.Created, "Invalid arbitration status");
         uint256 finalRuling = _ruling;
 
@@ -595,7 +479,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
         arbitration.answer = finalRuling;
         arbitration.status = Status.Ruled;
-        emit Ruling(IArbitrator(msg.sender), _disputeID, finalRuling);
+        emit Ruling(arbitrator, _disputeID, finalRuling);
     }
 
     /**
@@ -807,16 +691,11 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @return localDisputeID Dispute id as in arbitrable contract.
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
-        // Note that in case of arbitrator's change external dispute from the new arbitrator
-        // will overwrite the external dispute with the same ID from the old arbitrator,
-        // which will make the data related to the old arbitrator's dispute unaccessible in DisputeResolver's UI.
-        // It should be fine since the dispute will be closed anyway.
-        // Ideally we would want to have arbitrator's address as one of the parameters, but we can't break the interface.
-        return arbitratorDisputeIDToDisputeDetails[address(arbitrator)][_externalDisputeID].arbitrationID;
+        return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
     }
 
     /**
-     * @notice Gets the required fee for sending tx to L2. https://era.zksync.io/docs/dev/how-to/estimate-gas.html#l1-to-l2
+     * @notice Gets the required fee for sending tx to L2.
      * @return zkGasFee Required fee.
      */
     function getZkGasFee() private view returns (uint256 zkGasFee) {

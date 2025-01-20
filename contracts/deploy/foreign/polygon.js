@@ -13,7 +13,7 @@ const foreignParameters = {
     metaEvidence: "/ipfs/TODO",
   },
   polygon: {
-    numberOfJurors: 7,
+    numberOfJurors: 15,
     checkpointManager: "0x86e4dc95c7fbdbf52e33d563bbdb00823894c287",
     fxRoot: "0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2",
     metaEvidence: "/ipfs/QmXWr4ZWCpBYtAHNHzTbKW9SkV1MwQicpWfthhDHkNYxKk/realitio.json",

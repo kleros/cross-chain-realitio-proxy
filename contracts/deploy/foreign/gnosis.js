@@ -12,7 +12,7 @@ const foreignParameters = {
     metaEvidence: "/ipfs/QmTrejLM1ythucs5TsRNFUot5bqoPwiMXF66Y5VaJBUHTi",
   },
   gnosis: {
-    numberOfJurors: 7,
+    numberOfJurors: 15,
     foreignAmb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
     metaEvidence: "/ipfs/QmTYEpuN4iqbYPXc6ba2QCcYGDwRVNvSFfyWGpDkx7kC3B",
   },

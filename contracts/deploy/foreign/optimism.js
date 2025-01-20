@@ -17,21 +17,21 @@ const foreignParameters = {
     variant: `Optimism`,
   },
   unichain: {
-    numberOfJurors: 1,
+    numberOfJurors: 15,
     // https://docs.unichain.org/docs/technical-information/contract-addresses
     foreignBridge: "FIXME", // Not launched yet
     metaEvidence: "/ipfs/FIXME",
     variant: `Unichain`,
   },
   optimism: {
-    numberOfJurors: 7,
+    numberOfJurors: 15,
     // https://docs.optimism.io/chain/addresses
     foreignBridge: "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1",
     metaEvidence: "/ipfs/QmaA3mXhvRxXFcmyF2zbF5CirJmK4xH2jVy7XBWBDprvxS",
     variant: `Optimism`,
   },
   redstone: {
-    numberOfJurors: 7,
+    numberOfJurors: 15,
     // https://redstone.xyz/docs/contract-addresses
     foreignBridge: "0x592C1299e0F8331D81A28C0FC7352Da24eDB444a",
     metaEvidence: "/ipfs/bafybeibho6gzezi7ludu6zxfzetmicho7ekuh3gu3oouihmbfsabhcg7te/",

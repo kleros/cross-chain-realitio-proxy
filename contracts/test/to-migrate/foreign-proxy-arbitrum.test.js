@@ -68,14 +68,12 @@ describe("Cross-chain arbitration with appeals", () => {
   });
 
   it("Should correctly set the initial values", async () => {
-    expect(await foreignProxy.governor()).to.equal(governor.address);
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.address);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
     expect(await foreignProxy.inbox()).to.equal(mockInbox.address);
     expect(await foreignProxy.l2GasLimit()).to.equal(500);
     expect(await foreignProxy.gasPriceBid()).to.equal(5);
     expect(await foreignProxy.surplusAmount()).to.equal(20000);
-    expect(await foreignProxy.metaEvidenceUpdates()).to.equal(0);
     expect(await foreignProxy.homeProxy()).to.equal(homeProxy.address);
 
     expect(await homeProxy.metadata()).to.equal(metadata);
@@ -96,71 +94,6 @@ describe("Cross-chain arbitration with appeals", () => {
 
     expect(await mockInbox.bridge()).to.equal(mockBridge.address);
     expect(await mockInbox.submissionFee()).to.equal(10000);
-  });
-
-  it("Check governance requires", async () => {
-    await expect(foreignProxy.connect(other).changeArbitrator(homeProxy.address, "0xff")).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeArbitrator(homeProxy.address, "0xff");
-    expect(await foreignProxy.arbitrator()).to.equal(homeProxy.address);
-    expect(await foreignProxy.arbitratorExtraData()).to.equal("0xff");
-
-    await expect(foreignProxy.connect(other).changeMetaevidence("ME2.0")).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeMetaevidence("ME2.0");
-    expect(await foreignProxy.metaEvidenceUpdates()).to.equal(1);
-
-    await expect(foreignProxy.connect(other).changeInbox(other.address)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeInbox(other.address);
-    expect(await foreignProxy.inbox()).to.equal(other.address);
-
-    await expect(foreignProxy.connect(other).changeL2GasLimit(1111)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeL2GasLimit(1111);
-    expect(await foreignProxy.l2GasLimit()).to.equal(1111);
-
-    await expect(foreignProxy.connect(other).changeGasPriceBid(2222)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeGasPriceBid(2222);
-    expect(await foreignProxy.gasPriceBid()).to.equal(2222);
-
-    await expect(foreignProxy.connect(other).changeSurplus(3333)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeSurplus(3333);
-    expect(await foreignProxy.surplusAmount()).to.equal(3333);
-
-    await expect(foreignProxy.connect(other).changeWinnerMultiplier(51)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeWinnerMultiplier(51);
-    expect(await foreignProxy.winnerMultiplier()).to.equal(51);
-
-    await expect(foreignProxy.connect(other).changeGovernor(other.address)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(governor).changeGovernor(other.address);
-    expect(await foreignProxy.governor()).to.equal(other.address);
-
-    // Governor is changed from now on
-
-    await expect(foreignProxy.connect(governor).changeLoserMultiplier(25)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(other).changeLoserMultiplier(25);
-    expect(await foreignProxy.loserMultiplier()).to.equal(25);
-
-    await expect(foreignProxy.connect(governor).changeLoserAppealPeriodMultiplier(777)).to.be.revertedWith(
-      "The caller must be the governor."
-    );
-    await foreignProxy.connect(other).changeLoserAppealPeriodMultiplier(777);
-    expect(await foreignProxy.loserAppealPeriodMultiplier()).to.equal(777);
   });
 
   it("Should set correct values when requesting arbitration and fire the event", async () => {
@@ -280,7 +213,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(arbitration[1]).to.equal(0, "Deposit value should be empty");
     expect(arbitration[2]).to.equal(2, "Incorrect dispute ID");
 
-    const disputeData = await foreignProxy.arbitratorDisputeIDToDisputeDetails(arbitrator.address, 2);
+    const disputeData = await foreignProxy.disputeIDToDisputeDetails(2);
     expect(disputeData[0]).to.equal(0, "Incorrect arbitration ID in disputeData");
     expect(disputeData[1]).to.equal(await requester.getAddress(), "Incorrect requester address in disputeData");
 
@@ -983,20 +916,9 @@ describe("Cross-chain arbitration with appeals", () => {
     await mockInbox.connect(other).redeemTicket(0);
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
 
-    // Setup 2nd arbitrator and check how questions with different status handle it.
-    const Arbitrator = await ethers.getContractFactory("AutoAppealableArbitrator", governor);
-    const arbitrator2 = await Arbitrator.deploy(String(arbitrationCost));
-    await foreignProxy.changeArbitrator(arbitrator2.address, arbitratorExtraData);
-
-    // Should use old arbitrator
     await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text"))
       .to.emit(foreignProxy, "Evidence")
       .withArgs(arbitrator.address, arbitrationID, await other.getAddress(), "text");
-
-    // Use arbitration ID with None status. Should use new arbitrator
-    await expect(foreignProxy.connect(other).submitEvidence(1, "text2"))
-      .to.emit(foreignProxy, "Evidence")
-      .withArgs(arbitrator2.address, 1, await other.getAddress(), "text2");
   });
 
   async function deployContracts(signer) {
@@ -1030,7 +952,6 @@ describe("Cross-chain arbitration with appeals", () => {
 
     const foreignProxy = await ForeignProxy.deploy(
       homeProxyAddress,
-      signer.address,
       arbitrator.address,
       arbitratorExtraData,
       mockInbox.address,

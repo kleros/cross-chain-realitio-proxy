@@ -11,7 +11,7 @@ const foreignParameters = {
     metaEvidence: "/ipfs/QmX4uAgcXJdLifAmZjt6VYP2Lwj91zZ3H6DLF68Yt1d7pr",
   },
   arbitrum: {
-    numberOfJurors: 7,
+    numberOfJurors: 15,
     inbox: "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f",
     metaEvidence: "TODO",
   },
@@ -27,7 +27,6 @@ async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitra
     from,
     args: [
       homeProxy,
-      from, // Governor
       arbitrator,
       arbitratorExtraData,
       inbox,

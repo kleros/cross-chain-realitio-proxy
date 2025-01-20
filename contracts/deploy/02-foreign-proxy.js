@@ -1,4 +1,4 @@
-const { FOREIGN_CHAIN_IDS, arbitrators, courts } = require("./consts/index");
+const { FOREIGN_CHAIN_IDS, arbitrators, courts } = require("./shared");
 const arbitrumProxy = require("./foreign/arbitrum.js");
 const gnosisProxy = require("./foreign/gnosis.js");
 const optimismProxy = require("./foreign/optimism.js");

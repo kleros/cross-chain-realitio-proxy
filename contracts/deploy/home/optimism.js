@@ -1,4 +1,4 @@
-const { homeChains, metadata } = require("../consts");
+const { homeChains, metadata } = require("../shared");
 const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeChains;
 
 // CrossDomainMessenger precompile is identical for all OP L2s

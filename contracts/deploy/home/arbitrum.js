@@ -1,4 +1,4 @@
-const { homeChains, metadata } = require("../consts");
+const { homeChains, metadata } = require("../shared");
 const { arbitrumSepolia, arbitrum } = homeChains;
 
 // The home chain bridge address is hardcoded to the precompile address for ArbSys

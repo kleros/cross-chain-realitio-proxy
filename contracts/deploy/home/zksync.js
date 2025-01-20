@@ -1,5 +1,5 @@
 const { utils } = require("zksync-ethers");
-const { homeChains, metadata } = require("../consts");
+const { homeChains, metadata } = require("../shared");
 const { zkSyncSepolia, zkSyncMainnet } = homeChains;
 
 const homeParameters = {

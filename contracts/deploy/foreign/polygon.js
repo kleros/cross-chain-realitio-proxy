@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { encodeExtraData } = require("../consts/index");
+const { encodeExtraData } = require("../shared");
 
 // Bridge addresses:
 // https://docs.polygon.technology/pos/how-to/bridging/l1-l2-communication/state-transfer/#prerequisites

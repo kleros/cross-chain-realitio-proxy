@@ -1,4 +1,4 @@
-const { homeChains, gwei, metadata } = require("../consts");
+const { homeChains, gwei, metadata } = require("../shared");
 const { chiado, gnosis } = homeChains;
 
 const homeParameters = {

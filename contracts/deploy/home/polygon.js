@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { homeChains, metadata } = require("../consts");
+const { homeChains, metadata } = require("../shared");
 const { amoy, polygon } = homeChains;
 
 const homeParameters = {

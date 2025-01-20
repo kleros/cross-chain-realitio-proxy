@@ -1,4 +1,4 @@
-const { HOME_CHAIN_IDS } = require("./consts/index");
+const { HOME_CHAIN_IDS } = require("./shared");
 const arbitrumProxy = require("./home/arbitrum.js");
 const gnosisProxy = require("./home/gnosis.js");
 const optimismProxy = require("./home/optimism.js");

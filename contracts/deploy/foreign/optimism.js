@@ -1,4 +1,4 @@
-const { encodeExtraData } = require("../consts/index");
+const { encodeExtraData } = require("../shared");
 
 // The parameters are keyed by home network name rather than by chainId because several home proxies point to the same foreign proxy.
 const foreignParameters = {

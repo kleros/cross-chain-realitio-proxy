@@ -1,4 +1,4 @@
-const { encodeExtraData } = require("../consts/index");
+const { encodeExtraData } = require("../shared");
 
 // Bridge addresses:
 // https://docs.gnosischain.com/developers/Usefulcontracts#mainnet-bridge-contract-addresses

@@ -1,4 +1,4 @@
-const { encodeExtraData, eth } = require("../consts/index");
+const { encodeExtraData, eth } = require("../shared");
 
 // Bridge addresses:
 // https://docs.arbitrum.io/build-decentralized-apps/reference/contract-addresses#cross-chain-messaging-contracts

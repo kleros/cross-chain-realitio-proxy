@@ -140,7 +140,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.Rejected, "Invalid request status");
 
-        // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
+        // At this point, only the request.status is set, simply resetting the status to Status.None is enough.
         request.status = Status.None;
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
@@ -159,7 +159,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         Request storage request = requests[_questionID][_requester];
         require(request.status == Status.AwaitingRuling, "Invalid request status");
 
-        // At this point, only the request.status is set, simply reseting the status to Status.None is enough.
+        // At this point, only the request.status is set, simply resetting the status to Status.None is enough.
         request.status = Status.None;
 
         realitio.cancelArbitration(_questionID);

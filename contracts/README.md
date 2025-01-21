@@ -11,6 +11,8 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 #### Chiado
 
 - [RealitioHomeArbitrationProxy](https://gnosis-chiado.blockscout.com/address/0xE620947519E8102aa625BBB4669fE317c9FffeD7)
+- [RealitioHomeProxyGnosis](https://gnosis-chiado.blockscout.com/address/0xCA8c8688914e0F7096c920146cd0Ad85cD7Ae8b9)
+- [RealitioForeignProxyGnosis](https://sepolia.etherscan.io/address/0xFADFd2068d2ca0151229edDdfF5056B71E1674cc)
 - [RealitioForeignProxyWithAppealsGnosis](https://sepolia.etherscan.io/address/0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42)
 
 
@@ -30,6 +32,12 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 
 - [RealitioHomeProxyArbitrum](https://sepolia.arbiscan.io/address/0x890deB4111F92fE9447e83aBEF1b754372d6770e)
 - [RealitioForeignProxyArbitrum](https://sepolia.etherscan.io/address/0x26222Ec1F548953a4fEaE4C5A216337E26A821F9)
+
+
+#### Amoy
+
+- [RealitioHomeProxyPolygon](https://amoy.polygonscan.com/address/0x66de75651060d9EC7218abCc7a2e4400525a1B6E)
+- [RealitioForeignProxyPolygon](https://sepolia.etherscan.io/address/0x2bce96354af02606b4a92cEb1C7B6A91f8e9F2b8)
 
 
 ### Mainnets

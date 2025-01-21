@@ -22,16 +22,17 @@ function generate() { #deploymentDir #explorerUrl
 IGNORED_ARTIFACTS=("NOP")
 
 # Use regular arrays to preserve the ordering
-TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy")
+TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy" "zksyncSepolia")
 declare -A HOME_TESTNETS_EXPLORERS=(
     ["chiado"]="https://gnosis-chiado.blockscout.com/address/"
     ["unichainSepolia"]="https://sepolia.uniscan.xyz/address/"
     ["optimismSepolia"]="https://sepolia-optimism.etherscan.io/address/"
     ["arbitrumSepolia"]="https://sepolia.arbiscan.io/address/"
     ["amoy"]="https://amoy.polygonscan.com/address/"
+    ["zksyncSepolia"]="https://sepolia.explorer.zksync.io/address/"
 )
 
-MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "arbitrum" "polygon")
+MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "arbitrum" "polygon" "zksyncMainnet")
 declare -A HOME_MAINNET_EXPLORERS=(
     ["gnosis"]="https://gnosisscan.io/address/"
     ["unichain"]="https://uniscan.xyz/address/"
@@ -39,6 +40,7 @@ declare -A HOME_MAINNET_EXPLORERS=(
     ["redstone"]="https://explorer.redstone.xyz/address/"
     ["arbitrum"]="https://arbiscan.io/address/"
     ["polygon"]="https://polygonscan.com/address/"
+    ["zksyncMainnet"]="https://explorer.zksync.io/address/"
 )
 
 declare -A FOREIGN_NETWORK_EXPLORERS=(
@@ -52,12 +54,14 @@ declare -A FILTERS=(
     ["optimismSepolia"]="Optimism"
     ["arbitrumSepolia"]="Arbitrum"
     ["amoy"]="Polygon"
+    ["zksyncSepolia"]="ZkSync"
     ["gnosis"]="Gnosis"
     ["unichain"]="Unichain"
     ["optimism"]="Optimism"
     ["redstone"]="Redstone"
     ["arbitrum"]="Arbitrum"
     ["polygon"]="Polygon"
+    ["zksyncMainnet"]="ZkSync"
 )
 
 echo "### Testnets"

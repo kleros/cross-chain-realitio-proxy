@@ -17,7 +17,7 @@ contract MockRealitioHomeProxy is RealitioHomeProxyArbitrum {
     }
 
     constructor(
-        RealitioInterface _realitio,
+        IRealitio _realitio,
         string memory _metadata,
         address _foreignProxy,
         uint256 _foreignChainId,

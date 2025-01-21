@@ -4,7 +4,7 @@ export const homeProxyAbi = [
     name: "realitio",
     outputs: [
       {
-        internalType: "contract RealitioInterface",
+        internalType: "contract IRealitio",
         name: "",
         type: "address",
       },

@@ -9,8 +9,8 @@
  */
 pragma solidity 0.8.25;
 
-import "./interfaces/RealitioInterface.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import "./interfaces/IRealitio.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger.sol";
 
 /**
@@ -22,7 +22,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     uint32 public constant MIN_GAS_LIMIT = 1500000; // Gas limit of the transaction call.
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
-    RealitioInterface public immutable realitio;
+    IRealitio public immutable realitio;
     address public immutable foreignProxy; // Address of the proxy on L1.
 
     /// @dev ID of the foreign chain, required for Realitio.
@@ -64,7 +64,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
      * @param _foreignProxy Address of the proxy on L1.
      * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      */
-    constructor(RealitioInterface _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
+    constructor(IRealitio _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
         realitio = _realitio;
         metadata = _metadata;
         foreignProxy = _foreignProxy;

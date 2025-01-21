@@ -11,7 +11,7 @@ contract MockZkHomeProxy is RealitioHomeProxyZkSync {
     event L1MessageSent(bytes _data);
 
     constructor(
-        RealitioInterface _realitio,
+        IRealitio _realitio,
         string memory _metadata,
         address _foreignProxy,
         address _foreignProxyAlias,

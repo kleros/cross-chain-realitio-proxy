@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import {RealitioInterface} from "../../interfaces/RealitioInterface.sol";
+import {IRealitio} from "../../interfaces/IRealitio.sol";
 import {RealitioHomeProxyPolygon} from "../../RealitioHomeProxyPolygon.sol";
 
 import {MockForeignArbitrationProxyWithAppeals} from "./MockForeignArbitratorProxyWithAppeals.sol";
@@ -11,7 +11,7 @@ import {MockForeignArbitrationProxyWithAppeals} from "./MockForeignArbitratorPro
  */
 contract MockHomeArbitrationProxy is RealitioHomeProxyPolygon {
     constructor(
-        RealitioInterface _realitio,
+        IRealitio _realitio,
         string memory _metadata,
         uint256 _foreignChainId,
         address _fxChild

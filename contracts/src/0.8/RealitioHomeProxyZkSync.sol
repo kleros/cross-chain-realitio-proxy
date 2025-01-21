@@ -12,8 +12,8 @@ pragma solidity 0.8.25;
 
 // Importing interfaces and addresses of the system contracts
 import "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IL1Messenger.sol";
-import {RealitioInterface} from "./interfaces/RealitioInterface.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import {IRealitio} from "./interfaces/IRealitio.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 
 /**
  * @title Arbitration proxy for Realitio on L2.
@@ -25,7 +25,7 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
     IL1Messenger constant L1_MESSENGER_CONTRACT = IL1Messenger(address(0x8000 + 0x08));
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
-    RealitioInterface public immutable realitio;
+    IRealitio public immutable realitio;
     address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
     address public immutable foreignProxy; // Address of the proxy on L1. Required for Realitio UI.
     /// @dev ID of the foreign chain, required for Realitio.
@@ -69,7 +69,7 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
      * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      */
     constructor(
-        RealitioInterface _realitio,
+        IRealitio _realitio,
         string memory _metadata,
         address _foreignProxy,
         address _foreignProxyAlias,

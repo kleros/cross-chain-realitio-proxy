@@ -1,4 +1,4 @@
-import RealitioInterface from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.7/interfaces/RealitioInterface.sol/RealitioInterface.json";
+import IRealitio from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.7/interfaces/IRealitio.sol/IRealitio.json";
 import HomeProxy from "@kleros/cross-chain-realitio-contracts/artifacts/src/0.7/RealitioHomeProxyGnosis.sol/RealitioHomeProxyGnosis.json";
 import { compose, descend, filter, into, map, prop, propEq, sort } from "ramda";
 import { createBatchSend } from "~/shared/batchSend";
@@ -15,7 +15,7 @@ export default async function createApiInstance() {
   const [batchSend, homeProxy, realitio] = await Promise.all([
     createBatchSend(web3, HOME_TX_BATCHER_CONTRACT_ADDRESS),
     getContract(web3, HomeProxy.abi, process.env.HOME_PROXY_CONTRACT_ADDRESS),
-    getContract(web3, RealitioInterface.abi, process.env.HOME_REALITIO_CONTRACT_ADDRESS),
+    getContract(web3, IRealitio.abi, process.env.HOME_REALITIO_CONTRACT_ADDRESS),
   ]);
 
   async function getBlockNumber() {

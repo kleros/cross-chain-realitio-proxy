@@ -10,8 +10,8 @@
 
 pragma solidity 0.8.25;
 
-import "./interfaces/RealitioInterface.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import "./interfaces/IRealitio.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 import "@arbitrum/nitro-contracts/src/precompiles/ArbSys.sol";
 import "@arbitrum/nitro-contracts/src/libraries/AddressAliasHelper.sol";
 
@@ -27,7 +27,7 @@ contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
     ArbSys constant ARB_SYS = ArbSys(address(100));
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
-    RealitioInterface public immutable realitio;
+    IRealitio public immutable realitio;
     address public immutable foreignProxy; // Address of the proxy on L1.
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
@@ -70,7 +70,7 @@ contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
      * @param _foreignProxy Address of the proxy on L1.
      * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
      */
-    constructor(RealitioInterface _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
+    constructor(IRealitio _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
         realitio = _realitio;
         metadata = _metadata;
         foreignChainId = bytes32(_foreignChainId);

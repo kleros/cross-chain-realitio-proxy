@@ -13,7 +13,7 @@ pragma solidity ^0.8.0;
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import {CappedMath} from "./interfaces/polygon/lib/CappedMath.sol";
 import {FxBaseRootTunnel} from "./interfaces/polygon/FxBaseRootTunnel.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).

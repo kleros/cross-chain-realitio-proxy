@@ -1,17 +1,16 @@
 /* solhint-disable var-name-mixedcase */
 // SPDX-License-Identifier: MIT
 
-/** 
- *  Interface of https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/flat/RealityETH-3.0.sol.
- *  @reviewers: [@hbarcelos, @fnanni-0, @nix1g, @unknownunknown1, @ferittuncer, @jaybuidl]
+/** Interface of https://github.com/realitio/realitio-contracts/blob/master/truffle/contracts/Realitio_v2_1.sol original contract is to be reviewed.
+ *  @reviewers: [@hbarcelos, @fnanni-0, @nix1g, @unknownunknown1, @ferittuncer]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
  */
 
-pragma solidity 0.8.25;
+pragma solidity ^0.7.2;
 
-interface RealitioInterface {
+interface IRealitio {
     event LogNewAnswer(
         bytes32 answer,
         bytes32 indexed question_id,
@@ -44,7 +43,11 @@ interface RealitioInterface {
      * @param requester The account that requested arbitration.
      * @param max_previous If specified, reverts if a bond higher than this was submitted after you sent your transaction.
      */
-    function notifyOfArbitrationRequest(bytes32 question_id, address requester, uint256 max_previous) external;
+    function notifyOfArbitrationRequest(
+        bytes32 question_id,
+        address requester,
+        uint256 max_previous
+    ) external;
 
     /**
      * @notice Cancel a previously-requested arbitration and extend the timeout

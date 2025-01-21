@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.2;
 
-import "../interfaces/RealitioInterface.sol";
+import "../interfaces/IRealitio.sol";
 
 /**
  * @dev This is a barebones partial implementation of Realitio.
  * This code only exists for purposes of testing and SHOULD NOT be used in production environments.
  */
-contract MockRealitio is RealitioInterface {
+contract MockRealitio is IRealitio {
     enum Status {
         None,
         Open,

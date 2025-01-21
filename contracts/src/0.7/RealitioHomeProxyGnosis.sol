@@ -11,8 +11,8 @@
 pragma solidity ^0.7.2;
 
 import {IAMB} from "./interfaces/IAMB.sol";
-import {RealitioInterface} from "./interfaces/RealitioInterface.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import {IRealitio} from "./interfaces/IRealitio.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 
 /**
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
@@ -20,7 +20,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/Arbi
  */
 contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
     /// @dev The address of the Realitio contract (v2.1+ required). TRUSTED.
-    RealitioInterface public immutable realitio;
+    IRealitio public immutable realitio;
 
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
     IAMB public immutable amb;
@@ -73,7 +73,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
         IAMB _amb,
         address _foreignProxy,
         bytes32 _foreignChainId,
-        RealitioInterface _realitio,
+        IRealitio _realitio,
         string memory _metadata
     ) {
         amb = _amb;

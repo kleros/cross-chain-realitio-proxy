@@ -11,8 +11,8 @@
 pragma solidity ^0.8.0;
 
 import {FxBaseChildTunnel} from "./interfaces/polygon/FxBaseChildTunnel.sol";
-import {RealitioInterface} from "./interfaces/RealitioInterface.sol";
-import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/ArbitrationProxyInterfaces.sol";
+import {IRealitio} from "./interfaces/IRealitio.sol";
+import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 
 /**
  * @title Arbitration proxy for Realitio on the side-chain side (A.K.A. the Home Chain).
@@ -20,7 +20,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/Arbi
  */
 contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
-    RealitioInterface public immutable realitio;
+    IRealitio public immutable realitio;
 
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
@@ -69,7 +69,7 @@ contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
      * @param _fxChild Address of the FxChild contract of the Polygon bridge
      */
     constructor(
-        RealitioInterface _realitio,
+        IRealitio _realitio,
         string memory _metadata,
         uint256 _foreignChainId,
         address _fxChild

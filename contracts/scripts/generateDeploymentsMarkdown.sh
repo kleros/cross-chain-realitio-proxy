@@ -7,9 +7,9 @@ function generate() { #deploymentDir #explorerUrl
     explorerUrl=$2
     # shellcheck disable=SC2068
     for f in $(ls -1 $deploymentDir/*.json 2>/dev/null | grep -v ${IGNORED_ARTIFACTS[@]/#/-e } | sort); do
-        contractName=$(basename $f .json)
-        address=$(cat $f | jq -r .address)
-        implementation=$(cat $f | jq -r .implementation)
+        contractName=$(basename "$f" .json)
+        address=$(jq -r .address "$f")
+        implementation=$(jq -r .implementation "$f")
 
         if [ "$implementation" != "null" ]; then
             echo "- [$contractName: proxy]($explorerUrl$address), [implementation]($explorerUrl$implementation)"

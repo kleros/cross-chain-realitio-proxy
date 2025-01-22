@@ -3,6 +3,7 @@ require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("./tasks/generate-metaevidence");
+require("./tasks/relay-arbitrum");
 
 module.exports = {
   solidity: {

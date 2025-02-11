@@ -4,6 +4,7 @@ require("hardhat-deploy");
 require("hardhat-deploy-ethers");
 require("./tasks/generate-metaevidence");
 require("./tasks/relay-arbitrum");
+require("./tasks/find-dispute-id");
 
 module.exports = {
   solidity: {

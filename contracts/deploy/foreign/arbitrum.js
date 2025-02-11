@@ -8,12 +8,12 @@ const foreignParameters = {
   arbitrumSepolia: {
     numberOfJurors: 1,
     inbox: "0xaAe29B0366299461418F5324a79Afc425BE5ae21",
-    metaEvidence: "/ipfs/QmX4uAgcXJdLifAmZjt6VYP2Lwj91zZ3H6DLF68Yt1d7pr",
+    metaEvidence: "/ipfs/QmeQjQ6nKx4zN4q5QDXVyRyRywY8jRekEjSx7pLiZXGJSX",
   },
   arbitrum: {
     numberOfJurors: 15,
     inbox: "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f",
-    metaEvidence: "TODO",
+    metaEvidence: "/ipfs/QmVNnQ9XXemFzVopUwK1Y6MBnzwvoLKE8eFuarfwpLxayB",
   },
 };
 

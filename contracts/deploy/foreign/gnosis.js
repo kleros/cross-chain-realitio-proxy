@@ -9,12 +9,12 @@ const foreignParameters = {
   chiado: {
     numberOfJurors: 1,
     foreignAmb: "0xf2546D6648BD2af6a008A7e7C1542BB240329E11",
-    metaEvidence: "/ipfs/TOD",
+    metaEvidence: "/ipfs/QmX2398mQY92ALTFZKs5r6g7RUJ8JzJaK9JP5RRg4CsxKL",
   },
   gnosis: {
     numberOfJurors: 15,
     foreignAmb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
-    metaEvidence: "/ipfs/QmTYEpuN4iqbYPXc6ba2QCcYGDwRVNvSFfyWGpDkx7kC3B",
+    metaEvidence: "/ipfs/Qmd6kpcSxPjecHwf8UQRPkPRWi1LSYJXqDYryjaNhrd27D",
   },
 };
 

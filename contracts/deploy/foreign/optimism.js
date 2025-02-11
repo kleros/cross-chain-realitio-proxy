@@ -6,35 +6,35 @@ const foreignParameters = {
     numberOfJurors: 1,
     // https://docs.unichain.org/docs/technical-information/contract-addresses
     foreignBridge: "0x448A37330A60494E666F6DD60aD48d930AEbA381",
-    metaEvidence: "/ipfs/QmfFVUKfKjZyXPwcefpJqBbFaaA4GcZrzMnt3xH211ySKy",
+    metaEvidence: "/ipfs/QmPzCS4Tw4m4gCqBPrNMvgcnwDyU2c8RPZabj9Rrfhjt7Q",
     variant: `Unichain`,
   },
   optimismSepolia: {
     numberOfJurors: 1,
     // https://docs.optimism.io/chain/addresses
     foreignBridge: "0x58Cc85b8D04EA49cC6DBd3CbFFd00B4B8D6cb3ef",
-    metaEvidence: "/ipfs/QmYj9PRtDV4HpNKXJbJ8AaYv5FBknNuSo4kjH2raHX47eM/",
+    metaEvidence: "/ipfs/QmSoWtpA9rLoDU37vpP4fVu49Gf9fZdk2M4RxZFodC6MSN/",
     variant: `Optimism`,
   },
   unichain: {
     numberOfJurors: 15,
     // https://docs.unichain.org/docs/technical-information/contract-addresses
     foreignBridge: "FIXME", // Not launched yet
-    metaEvidence: "/ipfs/FIXME",
+    metaEvidence: "/ipfs/QmaqbCY9QvnoRmZQtmhhmsdFVWaNYkFfTVNj7a3oetmpt4",
     variant: `Unichain`,
   },
   optimism: {
     numberOfJurors: 15,
     // https://docs.optimism.io/chain/addresses
     foreignBridge: "0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1",
-    metaEvidence: "/ipfs/QmaA3mXhvRxXFcmyF2zbF5CirJmK4xH2jVy7XBWBDprvxS",
+    metaEvidence: "/ipfs/QmNjUimDc5RYQytyeA92b7baFdRm6kiw5qdxpFVBZnYDkV",
     variant: `Optimism`,
   },
   redstone: {
     numberOfJurors: 15,
     // https://redstone.xyz/docs/contract-addresses
     foreignBridge: "0x592C1299e0F8331D81A28C0FC7352Da24eDB444a",
-    metaEvidence: "/ipfs/TODO",
+    metaEvidence: "/ipfs/QmWBFu65DJGUPBqfZdwR21isaC5FotFKaXMnFrpRDCehVm",
     variant: `Redstone`,
   },
 };

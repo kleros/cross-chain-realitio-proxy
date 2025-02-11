@@ -16,8 +16,8 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 
 #### UnichainSepolia
 
-- [RealitioHomeProxyUnichain](https://sepolia.uniscan.xyz/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18)
-- [RealitioForeignProxyUnichain](https://sepolia.etherscan.io/address/0xC10D916467aDdC02464aC98036E58644F0E50311)
+- [RealitioHomeProxyUnichain](https://sepolia.uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6)
+- [RealitioForeignProxyUnichain](https://sepolia.etherscan.io/address/0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE)
 
 
 #### OptimismSepolia

@@ -10,13 +10,13 @@ const foreignParameters = {
     numberOfJurors: 1,
     checkpointManager: "0xbd07D7E1E93c8d4b2a261327F3C28a8EA7167209",
     fxRoot: "0x0E13EBEdDb8cf9f5987512d5E081FdC2F5b0991e",
-    metaEvidence: "/ipfs/TODO",
+    metaEvidence: "/ipfs/QmUmKB6hFjVz2rvKTkCobJrnoN7AQGMERcmcFVJUxYTrfF",
   },
   polygon: {
     numberOfJurors: 15,
     checkpointManager: "0x86e4dc95c7fbdbf52e33d563bbdb00823894c287",
     fxRoot: "0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2",
-    metaEvidence: "/ipfs/TODO",
+    metaEvidence: "/ipfs/QmVdYoUCjwDaotwCzh7uJ9KZibr9ymuBfB9UaDenaFJ4P9",
   },
 };
 

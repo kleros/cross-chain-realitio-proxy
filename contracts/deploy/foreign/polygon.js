@@ -8,15 +8,15 @@ const { encodeExtraData } = require("../shared");
 const foreignParameters = {
   amoy: {
     numberOfJurors: 1,
-    checkpointManager: "0x2890bA17EfE978480615e330ecB65333b880928e",
-    fxRoot: "0x3d1d3E34f7fB6D26245E6640E1c50710eFFf15bA",
+    checkpointManager: "0xbd07D7E1E93c8d4b2a261327F3C28a8EA7167209",
+    fxRoot: "0x0E13EBEdDb8cf9f5987512d5E081FdC2F5b0991e",
     metaEvidence: "/ipfs/TODO",
   },
   polygon: {
     numberOfJurors: 15,
     checkpointManager: "0x86e4dc95c7fbdbf52e33d563bbdb00823894c287",
     fxRoot: "0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2",
-    metaEvidence: "/ipfs/QmXWr4ZWCpBYtAHNHzTbKW9SkV1MwQicpWfthhDHkNYxKk/realitio.json",
+    metaEvidence: "/ipfs/TODO",
   },
 };
 

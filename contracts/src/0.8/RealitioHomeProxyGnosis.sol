@@ -10,7 +10,7 @@
 
 pragma solidity 0.8.25;
 
-import {IAMB} from "./interfaces/IAMB.sol";
+import {IAMB} from "./interfaces/gnosis/IAMB.sol";
 import {IRealitio} from "./interfaces/IRealitio.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 

@@ -8,7 +8,7 @@
  *  @deployments: []
  */
 
-pragma solidity ^0.8.0;
+pragma solidity 0.8.25;
 
 import {FxBaseChildTunnel} from "./interfaces/polygon/FxBaseChildTunnel.sol";
 import {IRealitio} from "./interfaces/IRealitio.sol";
@@ -65,7 +65,7 @@ contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
      * @param _metadata Metadata for Realitio
-     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
+     * @param _foreignChainId The ID of foreign chain (Sepolia/Mainnet).
      * @param _fxChild Address of the FxChild contract of the Polygon bridge
      */
     constructor(

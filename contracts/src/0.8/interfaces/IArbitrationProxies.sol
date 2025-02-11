@@ -118,7 +118,7 @@ interface IHomeArbitrationProxy {
     function metadata() external view returns (string calldata);
 }
 
-interface IForeignArbitrationProxy is IArbitrable, IEvidence {
+interface IForeignArbitrationProxy {
     /**
      * @notice Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question with the request for arbitration.
@@ -152,7 +152,7 @@ interface IForeignArbitrationProxy is IArbitrable, IEvidence {
     event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);
 
     /**
-     * @notice Should be emitted when the ruling is relayed to home proxy.
+     * @notice Should be emitted when the ruling is relayed to home proxy manually. Some implementations may not emit this event.
      * @param _questionID The ID of the question with the ruling to relay.
      * @param _ruling Ruling converted into Realitio format.
      */

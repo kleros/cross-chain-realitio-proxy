@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-// https://github.com/fx-portal/contracts/blob/v1.0.5/contracts/tunnel/FxBaseRootTunnel.sol
-pragma solidity ^0.8.0;
+// https://github.com/0xPolygon/fx-portal/blob/65e642f8f97a2e44d703590346a25c4ae00652d0/contracts/tunnel/FxBaseRootTunnel.sol
+pragma solidity 0.8.25;
 
 import {RLPReader} from "./lib/RLPReader.sol";
 import {MerklePatriciaProof} from "./lib/MerklePatriciaProof.sol";
@@ -55,7 +55,7 @@ abstract contract FxBaseRootTunnel {
     }
 
     // set fxChildTunnel if not set already
-    function setFxChildTunnel(address _fxChildTunnel) public {
+    function setFxChildTunnel(address _fxChildTunnel) public virtual {
         require(fxChildTunnel == address(0x0), "FxBaseRootTunnel: CHILD_TUNNEL_ALREADY_SET");
         fxChildTunnel = _fxChildTunnel;
     }
@@ -67,6 +67,7 @@ abstract contract FxBaseRootTunnel {
      *   abi.encode(tokenId);
      *   abi.encode(tokenId, tokenMetadata);
      *   abi.encode(messageType, messageData);
+     * @custom:security non-reentrant
      */
     function _sendMessageToChild(bytes memory message) internal {
         fxRoot.sendMessageToChild(fxChildTunnel, message);
@@ -134,7 +135,7 @@ abstract contract FxBaseRootTunnel {
         bytes32 receiptRoot,
         uint256 headerNumber,
         bytes memory blockProof
-    ) private view returns (uint256) {
+    ) private view {
         (bytes32 headerRoot, uint256 startBlock, , uint256 createdAt, ) = checkpointManager.headerBlocks(headerNumber);
 
         require(
@@ -145,7 +146,6 @@ abstract contract FxBaseRootTunnel {
             ),
             "FxRootTunnel: INVALID_HEADER"
         );
-        return createdAt;
     }
 
     /**
@@ -164,7 +164,7 @@ abstract contract FxBaseRootTunnel {
      *  8 - branchMask - 32 bits denoting the path of receipt in merkle tree
      *  9 - receiptLogIndex - Log Index to read from the receipt
      */
-    function receiveMessage(bytes memory inputData) public {
+    function receiveMessage(bytes memory inputData) public virtual {
         bytes memory message = _validateAndExtractMessage(inputData);
         _processMessageFromChild(message);
     }
@@ -172,7 +172,7 @@ abstract contract FxBaseRootTunnel {
     /**
      * @notice Process message received from Child Tunnel
      * @dev function needs to be implemented to handle message as per requirement
-     * This is called by onStateReceive function.
+     * This is called by receiveMessage function.
      * Since it is called via a system call, any event will not be emitted during its execution.
      * @param message bytes message that was sent from Child Tunnel
      */

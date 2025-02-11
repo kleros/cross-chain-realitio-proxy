@@ -14,7 +14,7 @@ Enables cross-chain arbitration for Realitio (Reality.eth) using Kleros as arbit
 ### Testnets
 The testnet of the above chains except Redstone.
 
-## High-Level Flow Description
+## High-Level Flow
 
 1. Alice requests arbitration on the main chain paying the arbitration fee to the ETH proxy and indicates the maximum value of the bond for the question (A.K.A. `max_previous`).
 1. The ETH proxy communicates the request to the Gnosis proxy through the AMB.
@@ -70,13 +70,13 @@ Each directory at the root of this repository contains code for each individual 
 * Test, review etc
 
 #### 3. Dynamic & Evidence scripts
-* Add the Reality.eth contract and deployment block number to the script files [here](https://github.com/kleros/cross-chain-realitio-proxy-optimism/blob/1ed08c3ea06ef00398b02f64d1657de3d4ac50c8/dynamic-script/src/index.js#L8) and [here](https://github.com/kleros/cross-chain-realitio-proxy-optimism/blob/1ed08c3ea06ef00398b02f64d1657de3d4ac50c8/evidence-display/src/containers/realitio.js#L10). 
+* Add the Reality.eth contract and deployment block number to the script files [here](https://github.com/kleros/cross-chain-realitio-proxy/blob/ea719c731254609b4efdbc08d6c888d9dd4ac6e6/dynamic-script/src/index.js#L7) and [here](https://github.com/kleros/cross-chain-realitio-proxy/blob/ea719c731254609b4efdbc08d6c888d9dd4ac6e6/evidence-display/src/containers/realitio.js#L9). 
 * `yarn build`
 * Upload the file `dynamic-script/dist/realitio-dynamic-script-vx.x.x.js` to IPFS.
 * Upload the folder `evidence-display/evidence-display-vx.x.x` to IPFS.
 
 #### 4. MetaEvidence
-* [In this script](https://github.com/kleros/cross-chain-realitio-proxy-optimism/blob/1ed08c3ea06ef00398b02f64d1657de3d4ac50c8/contracts/tasks/generate-metaevidence.js#L36-L37), update the CIDs with the latest dynamic and evidence scripts uploaded to IPFS in the above steps.
+* [In this script](https://github.com/kleros/cross-chain-realitio-proxy/blob/ea719c731254609b4efdbc08d6c888d9dd4ac6e6/contracts/tasks/generate-metaevidence.js#L36-L37), update the CIDs with the latest dynamic and evidence scripts uploaded to IPFS in the above steps.
 * Run `yarn metaevidence:xxx` for the new chain
 * Upload the resulting metaevidence-xxx.json to IPFS
 

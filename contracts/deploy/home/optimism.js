@@ -10,7 +10,7 @@ const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeC
 const homeParameters = {
   [unichainSepolia.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/1301/ETH/RealityETH-3.0.json
-    realitio: "0x288799697AE9EbceDC1b30BBAE6a38e03e41CdDb",
+    realitio: "0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517",
     variant: "Unichain",
   },
   [optimismSepolia.chainId]: {

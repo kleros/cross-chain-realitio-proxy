@@ -21,7 +21,7 @@ const REALITY_STARTS_AT = {
   "0x0eF940F7f053a2eF5D6578841072488aF0c7d89A": 2462149, // Reality 3.0 Optimism,
   "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA": 14341474, // Reality 3.0 OptimismSepolia
   "0xc716c23D75f523eF0C511456528F2A1980256a87": 3034954, // Reality 3.0 Redstone
-  "0x288799697ae9ebcedc1b30bbae6a38e03e41cddb": 8809697, // Reality 3.0 UnichainSepolia,
+  "0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517": 10747559, // Reality 3.0 UnichainSepolia,
 };
 
 class RealitioDisplayInterface extends Component {

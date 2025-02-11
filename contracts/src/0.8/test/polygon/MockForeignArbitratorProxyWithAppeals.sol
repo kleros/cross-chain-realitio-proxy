@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity 0.8.25;
 
 import {IArbitrator} from "@kleros/erc-792/contracts/IArbitrator.sol";
 import {RealitioForeignProxyPolygon} from "../../RealitioForeignProxyPolygon.sol";

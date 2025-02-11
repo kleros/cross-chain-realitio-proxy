@@ -120,7 +120,7 @@ interface IHomeArbitrationProxy {
     function metadata() external view returns (string calldata);
 }
 
-interface IForeignArbitrationProxy is IArbitrable, IEvidence {
+interface IForeignArbitrationProxy {
     /**
      * @notice Should be emitted when the arbitration is requested.
      * @param _questionID The ID of the question with the request for arbitration.

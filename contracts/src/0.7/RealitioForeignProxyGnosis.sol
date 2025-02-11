@@ -10,7 +10,7 @@
 
 pragma solidity ^0.7.2;
 
-import {IArbitrator} from "@kleros/erc-792/contracts/IArbitrator.sol";
+import {IArbitrator, IEvidence, IArbitrable} from "@kleros/dispute-resolver-interface-contract-0.7/contracts/solc-0.7.x/IDisputeResolver.sol";
 import {IAMB} from "./interfaces/IAMB.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 
@@ -18,7 +18,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArb
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract RealitioForeignProxyGnosis is IForeignArbitrationProxy {
+contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IEvidence, IArbitrable {
     /// @dev ArbitraryMessageBridge contract address. TRUSTED.
     IAMB public immutable amb;
 

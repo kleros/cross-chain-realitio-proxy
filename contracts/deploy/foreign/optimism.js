@@ -34,7 +34,7 @@ const foreignParameters = {
     numberOfJurors: 15,
     // https://redstone.xyz/docs/contract-addresses
     foreignBridge: "0x592C1299e0F8331D81A28C0FC7352Da24eDB444a",
-    metaEvidence: "/ipfs/bafybeibho6gzezi7ludu6zxfzetmicho7ekuh3gu3oouihmbfsabhcg7te/",
+    metaEvidence: "/ipfs/TODO",
     variant: `Redstone`,
   },
 };

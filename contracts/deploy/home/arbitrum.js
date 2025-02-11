@@ -10,7 +10,7 @@ const homeParameters = {
     realitio: "0xB78396EFaF0a177d125e9d45B2C6398Ac5f803B9",
   },
   [arbitrum.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/42161/ETH/RealityETH-3.0.json
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/42161/ARETH/RealityETH-3.0.json
     realitio: "0x5D18bD4dC5f1AC8e9bD9B666Bd71cB35A327C4A9",
   },
 };

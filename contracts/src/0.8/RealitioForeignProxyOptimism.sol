@@ -405,7 +405,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(realitioRuling));
         messenger.sendMessage(homeProxy, data, minGasLimit);
 
-        emit Ruling(IArbitrator(msg.sender), _disputeID, finalRuling);
+        emit Ruling(arbitrator, _disputeID, finalRuling);
     }
 
     // ********************************* //

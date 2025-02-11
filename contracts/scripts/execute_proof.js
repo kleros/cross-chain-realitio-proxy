@@ -1,6 +1,6 @@
 const hre = require("hardhat");
 const { Provider, utils } = require("zksync-web3");
-const { getL1MessageSentEvent, getCalldata } = require("../helpers/get_event_properties");
+const { getL1MessageSentEvent, getCalldata } = require("./get_event_properties");
 const RealitioForeignArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts-zk/src/zkRealitioForeignProxy.sol/zkRealitioForeignProxy.json");
 const RealitioHomeArbitrationProxy = require("@kleros/cross-chain-realitio-contracts/artifacts-zk/src/zkRealitioHomeProxy.sol/zkRealitioHomeProxy.json");
 
@@ -10,7 +10,6 @@ async function executeProof() {
 
   const { providers } = ethers;
   const foreignNetworks = {
-    280: hre.config.networks.goerli,
     324: hre.config.networks.mainnet,
     300: hre.config.networks.sepolia,
   };

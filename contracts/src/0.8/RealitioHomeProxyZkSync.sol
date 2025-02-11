@@ -66,7 +66,7 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
      * @param _metadata Metadata for Realitio.
      * @param _foreignProxy Address of the proxy on L1.
      * @param _foreignProxyAlias Alias of the proxy on L1.
-     * @param _foreignChainId The ID of foreign chain (Goerli/Mainnet).
+     * @param _foreignChainId The ID of foreign chain (Sepolia/Mainnet).
      */
     constructor(
         IRealitio _realitio,

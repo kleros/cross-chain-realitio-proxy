@@ -9,7 +9,7 @@ const foreignParameters = {
   chiado: {
     numberOfJurors: 1,
     foreignAmb: "0xf2546D6648BD2af6a008A7e7C1542BB240329E11",
-    metaEvidence: "/ipfs/QmTrejLM1ythucs5TsRNFUot5bqoPwiMXF66Y5VaJBUHTi",
+    metaEvidence: "/ipfs/TOD",
   },
   gnosis: {
     numberOfJurors: 15,

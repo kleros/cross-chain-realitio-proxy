@@ -11,7 +11,7 @@
 pragma solidity 0.8.25;
 
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
-import {IAMB} from "./interfaces/IAMB.sol";
+import {IAMB} from "./interfaces/gnosis/IAMB.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 
 /**

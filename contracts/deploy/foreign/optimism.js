@@ -13,13 +13,13 @@ const foreignParameters = {
     numberOfJurors: 1,
     // https://docs.optimism.io/chain/addresses
     foreignBridge: "0x58Cc85b8D04EA49cC6DBd3CbFFd00B4B8D6cb3ef",
-    metaEvidence: "/ipfs/QmSoWtpA9rLoDU37vpP4fVu49Gf9fZdk2M4RxZFodC6MSN/",
+    metaEvidence: "/ipfs/QmSoWtpA9rLoDU37vpP4fVu49Gf9fZdk2M4RxZFodC6MSN",
     variant: `Optimism`,
   },
   unichain: {
     numberOfJurors: 15,
     // https://docs.unichain.org/docs/technical-information/contract-addresses
-    foreignBridge: "FIXME", // Not launched yet
+    foreignBridge: "0x9A3D64E386C18Cb1d6d5179a9596A4B5736e98A6",
     metaEvidence: "/ipfs/QmaqbCY9QvnoRmZQtmhhmsdFVWaNYkFfTVNj7a3oetmpt4",
     variant: `Unichain`,
   },

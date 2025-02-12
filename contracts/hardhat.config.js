@@ -5,6 +5,7 @@ require("hardhat-deploy-ethers");
 require("./tasks/generate-metaevidence");
 require("./tasks/relay-arbitrum");
 require("./tasks/find-dispute-id");
+require("./tasks/update-deployments");
 
 module.exports = {
   solidity: {
@@ -115,7 +116,7 @@ module.exports = {
       verify: {
         etherscan: {
           apiURL: "https://api-sepolia.arbiscan.io/api",
-          apiKey: process.env.ARBITSCAN_API_KEY,
+          apiKey: process.env.ARBISCAN_API_KEY,
         },
       },
     },
@@ -160,7 +161,7 @@ module.exports = {
     },
     gnosis: {
       chainId: 100,
-      url: "https://rpc.gnosis.gateway.fm",
+      url: `https://gnosis-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {
@@ -168,7 +169,7 @@ module.exports = {
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.gnosisscan.com/api",
+          apiURL: "https://api.gnosisscan.io/api",
           apiKey: process.env.GNOSISSCAN_API_KEY,
         },
       },

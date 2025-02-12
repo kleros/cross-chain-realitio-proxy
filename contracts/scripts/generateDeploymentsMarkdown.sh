@@ -1,22 +1,21 @@
 #!/usr/bin/env bash
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-function generate() { #deploymentDir #explorerUrl
+function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     deploymentDir=$1
-    explorerUrl=$2
-    # shellcheck disable=SC2068
-    for f in $(ls -1 $deploymentDir/*.json 2>/dev/null | grep -v ${IGNORED_ARTIFACTS[@]/#/-e } | sort); do
-        contractName=$(basename "$f" .json)
-        address=$(jq -r .address "$f")
-        implementation=$(jq -r .implementation "$f")
-
-        if [ "$implementation" != "null" ]; then
-            echo "- [$contractName: proxy]($explorerUrl$address), [implementation]($explorerUrl$implementation)"
-        else
-            echo "- [$contractName]($explorerUrl$address)"
-        fi
-    done
+    homeExplorerUrl=$2
+    foreignExplorerUrl=$3
+    deployments_file="$deploymentDir/RealitioProxy-v1.2.0.json"
+    if [ -f "$deployments_file" ]; then
+        temp_output=$(jq -r '.deployments[] | "\(.name)\t\(.homeProxy.address)\t\(.foreignProxy.address)"' "$deployments_file")
+        while IFS=$'\t' read -r name home_address foreign_address; do
+            echo "- $name 
+  - [Home Proxy](${homeExplorerUrl}$home_address)
+  - [Foreign Proxy](${foreignExplorerUrl}$foreign_address)
+"
+        done <<<"$temp_output"
+    fi
 }
 
 IGNORED_ARTIFACTS=("NOP")
@@ -66,32 +65,29 @@ declare -A FILTERS=(
 
 echo "### Testnets"
 for network in "${TESTNET_NETWORKS[@]}"; do
-    home_output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_TESTNETS_EXPLORERS[$network]}")
-    foreign_output=$(generate "$SCRIPT_DIR/../deployments/sepolia" "${FOREIGN_NETWORK_EXPLORERS[sepolia]}" | grep "${FILTERS[$network]}")
-    
-    # Skip if both outputs are empty
-    [ -z "$home_output" ] && [ -z "$foreign_output" ] && continue
-    
+    output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_TESTNETS_EXPLORERS[$network]}" "${FOREIGN_NETWORK_EXPLORERS[sepolia]}")
+
+    # Skip if not output
+    [ -z "$output" ] && continue
+
     echo
     echo "#### ${network^}"
     echo
-    [ -n "$home_output" ] && echo "$home_output"
-    [ -n "$foreign_output" ] && echo "$foreign_output"
+    echo "$output"
     echo
 done
 
 echo
 echo "### Mainnets"
 for network in "${MAINNET_NETWORKS[@]}"; do
-    home_output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_MAINNET_EXPLORERS[$network]}")
-    foreign_output=$(generate "$SCRIPT_DIR/../deployments/mainnet" "${FOREIGN_NETWORK_EXPLORERS[mainnet]}" | grep "${FILTERS[$network]}")
-    
-    # Skip if both outputs are empty
-    [ -z "$home_output" ] && [ -z "$foreign_output" ] && continue
-    
+    output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_MAINNET_EXPLORERS[$network]}" "${FOREIGN_NETWORK_EXPLORERS[mainnet]}")
+
+    # Skip if not output
+    [ -z "$output" ] && continue
+
     echo
     echo "#### ${network^}"
     echo
-    [ -n "$home_output" ] && echo "$home_output"
-    [ -n "$foreign_output" ] && echo "$foreign_output"
+    echo "$output"
+    echo
 done

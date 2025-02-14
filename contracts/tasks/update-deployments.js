@@ -67,11 +67,13 @@ task("update-deployments", "Update deployments JSON with contract information")
         homeProxyBlockNumber = receipt.blockNumber;
       }
 
-      const abi = await fetchContractABI(network.verify.etherscan, homeProxy);
+      const homeProxyAbi = await fetchContractABI(network.verify.etherscan, homeProxy);
 
       // Get the home proxy contract instance and fetch realitio address
-      const homeProxyContract = await ethers.getContractAt(abi, homeProxy);
+      const homeProxyContract = await ethers.getContractAt(homeProxyAbi, homeProxy);
       const realitioAddress = await homeProxyContract.realitio();
+      const metadata = await homeProxyContract.metadata();
+      const tos = JSON.parse(metadata).tos.replace("ipfs://", "https://cdn.kleros.link/ipfs/");
 
       // Get Realitio contract name from Etherscan
       const realitioContractInfo = await fetchContractInfo(network.verify.etherscan, realitioAddress);
@@ -123,6 +125,16 @@ task("update-deployments", "Update deployments JSON with contract information")
       if (foreignHomeProxy.toLowerCase() !== homeProxy.toLowerCase())
         throw new Error(`Foreign proxy home address mismatch: expected ${homeProxy}, got ${foreignHomeProxy}`);
 
+      // const metaevidence = replaceIpfsUri(await foreignProxyContract.metaevidence());
+      // Get the MetaEvidence event from foreign proxy contract
+      const metaEvidenceFilter = foreignProxyContract.filters.MetaEvidence();
+      const metaEvidenceEvents = await foreignProxyContract.queryFilter(
+        metaEvidenceFilter,
+        Number(foreignProxyBlockNumber)
+      );
+      if (metaEvidenceEvents.length === 0) throw new Error("No MetaEvidence event found");
+      const metaevidence = `https://cdn.kleros.link${metaEvidenceEvents[0].args[1]}`;
+
       // Get and decode arbitrator extra data
       const extraData = await foreignProxyContract.arbitratorExtraData();
       const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -141,12 +153,14 @@ task("update-deployments", "Update deployments JSON with contract information")
             },
             homeProxy: {
               address: homeProxy,
+              tos,
               blockNumber: homeProxyBlockNumber.toString(),
               transactionHash: homeProxyTxHash,
             },
             foreignProxy: {
               courtId: courtId.toString(),
               minJurors: minJurors.toString(),
+              metaevidence,
               address: foreignProxyAddress,
               chainId: foreignChainId,
               blockNumber: foreignProxyBlockNumber.toString(),
@@ -154,8 +168,8 @@ task("update-deployments", "Update deployments JSON with contract information")
             },
           },
         ],
-        homeProxyAbi: abi,
-        foreignProxyAbi: foreignProxyAbi,
+        homeProxyAbi,
+        foreignProxyAbi,
       };
 
       // Output to stdout

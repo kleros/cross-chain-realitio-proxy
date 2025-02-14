@@ -8,42 +8,27 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 
 ### Testnets
 
-#### Chiado
-
-- [RealitioHomeArbitrationProxy](https://gnosis-chiado.blockscout.com/address/0xE620947519E8102aa625BBB4669fE317c9FffeD7)
-- [RealitioForeignProxyWithAppealsGnosis](https://sepolia.etherscan.io/address/0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42)
-
-
 #### UnichainSepolia
 
-- [RealitioHomeProxyUnichain](https://sepolia.uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6)
-- [RealitioForeignProxyUnichain](https://sepolia.etherscan.io/address/0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE)
-
-
-#### OptimismSepolia
-
-- [RealitioHomeProxyOptimism](https://sepolia-optimism.etherscan.io/address/0xFe0eb5fC686f929Eb26D541D75Bb59F816c0Aa68)
-- [RealitioForeignProxyOptimism](https://sepolia.etherscan.io/address/0x6a41AF8FC7f68bdd13B2c7D50824Ed49155DC3bA)
-
-
-#### ArbitrumSepolia
-
-- [RealitioHomeProxyArbitrum](https://sepolia.arbiscan.io/address/0x890deB4111F92fE9447e83aBEF1b754372d6770e)
-- [RealitioForeignProxyArbitrum](https://sepolia.etherscan.io/address/0x26222Ec1F548953a4fEaE4C5A216337E26A821F9)
+- Butter 
+  - [Home Proxy](https://sepolia.uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6)
+  - [Foreign Proxy](https://sepolia.etherscan.io/address/0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE)
 
 
 ### Mainnets
 
-#### Gnosis
+#### Unichain
 
-- [RealitioHomeArbitrationProxy](https://gnosisscan.io/address/0x88Fb25D399310c07d35cB9091b8346d8b1893aa5)
-- [RealitioForeignProxyGnosis](https://etherscan.io/address/0x79d0464Ec27F67663DADf761432fC8DD0AeA3D49)
-- [RealitioForeignProxyWithAppealsGnosis](https://etherscan.io/address/0x32bcDC9776692679CfBBf8350BAd67Da13FaaA3F)
+- Unichain default 
+  - [Home Proxy](https://uniscan.xyz/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18)
+  - [Foreign Proxy](https://etherscan.io/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6)
 
-#### Polygon
 
-- [RealitioHomeProxyPolygon](https://polygonscan.com/address/0x5AFa42b30955f137e10f89dfb5EF1542a186F90e)
-- [RealitioForeignProxyPolygon](https://etherscan.io/address/0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52)
+#### Base
+
+- Base default 
+  - [Home Proxy](https://basescan.org/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18)
+  - [Foreign Proxy](https://etherscan.io/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18)
 
 
 ## Contributing

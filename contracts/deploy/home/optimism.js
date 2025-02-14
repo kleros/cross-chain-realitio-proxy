@@ -1,5 +1,5 @@
 const { homeChains, metadata } = require("../shared");
-const { unichain, optimism, redstone, unichainSepolia, optimismSepolia } = homeChains;
+const { unichain, optimism, redstone, unichainSepolia, optimismSepolia, base } = homeChains;
 
 // CrossDomainMessenger precompile is identical for all OP L2s
 // Redstone Messenger - https://redstone.xyz/docs/contract-addresses
@@ -20,7 +20,7 @@ const homeParameters = {
   },
   [unichain.chainId]: {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/130/ETH/RealityETH-3.0.json
-    realitio: "0x0000000000000000000000000000000000000000", // FIXME!
+    realitio: "0xB920dBedE88B42aA77eE55ebcE3671132ee856fC",
     variant: "Unichain",
   },
   [optimism.chainId]: {
@@ -32,6 +32,11 @@ const homeParameters = {
     // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/690/ETH/RealityETH-3.0.json
     realitio: "0xc716c23D75f523eF0C511456528F2A1980256a87",
     variant: "Redstone",
+  },
+  [base.chainId]: {
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/8453/ETH/RealityETH-3.0.json
+    realitio: "0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8",
+    variant: "Base",
   },
 };
 

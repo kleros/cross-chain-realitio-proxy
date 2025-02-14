@@ -20,7 +20,7 @@ const foreignParameters = {
     numberOfJurors: 15,
     // https://docs.unichain.org/docs/technical-information/contract-addresses
     foreignBridge: "0x9A3D64E386C18Cb1d6d5179a9596A4B5736e98A6",
-    metaEvidence: "/ipfs/QmaqbCY9QvnoRmZQtmhhmsdFVWaNYkFfTVNj7a3oetmpt4",
+    metaEvidence: "/ipfs/QmQJUPLrzjS2AQUo2VTw21utgCfAuCyTZzZ7Cv5fgcLZ4K",
     variant: `Unichain`,
   },
   optimism: {
@@ -36,6 +36,13 @@ const foreignParameters = {
     foreignBridge: "0x592C1299e0F8331D81A28C0FC7352Da24eDB444a",
     metaEvidence: "/ipfs/QmWBFu65DJGUPBqfZdwR21isaC5FotFKaXMnFrpRDCehVm",
     variant: `Redstone`,
+  },
+  base: {
+    numberOfJurors: 15,
+    // https://docs.base.org/docs/base-contracts#l1-contract-addresses
+    foreignBridge: "0x866E82a600A1414e583f7F13623F1aC5d58b0Afa",
+    metaEvidence: "/ipfs/QmPy5ZMpEmnnGUC1g4P2EX9AeUwrUf7BorxoofgpeSjiPW",
+    variant: `Base`,
   },
 };
 

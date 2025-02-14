@@ -18,8 +18,6 @@ function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     fi
 }
 
-IGNORED_ARTIFACTS=("NOP")
-
 # Use regular arrays to preserve the ordering
 TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy" "zksyncSepolia")
 declare -A HOME_TESTNETS_EXPLORERS=(
@@ -31,12 +29,13 @@ declare -A HOME_TESTNETS_EXPLORERS=(
     ["zksyncSepolia"]="https://sepolia.explorer.zksync.io/address/"
 )
 
-MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "arbitrum" "polygon" "zksyncMainnet")
+MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "base" "arbitrum" "polygon" "zksyncMainnet")
 declare -A HOME_MAINNET_EXPLORERS=(
     ["gnosis"]="https://gnosisscan.io/address/"
     ["unichain"]="https://uniscan.xyz/address/"
     ["optimism"]="https://etherscan.io/address/"
     ["redstone"]="https://explorer.redstone.xyz/address/"
+    ["base"]="https://basescan.org/address/"
     ["arbitrum"]="https://arbiscan.io/address/"
     ["polygon"]="https://polygonscan.com/address/"
     ["zksyncMainnet"]="https://explorer.zksync.io/address/"
@@ -45,22 +44,6 @@ declare -A HOME_MAINNET_EXPLORERS=(
 declare -A FOREIGN_NETWORK_EXPLORERS=(
     ["sepolia"]="https://sepolia.etherscan.io/address/"
     ["mainnet"]="https://etherscan.io/address/"
-)
-
-declare -A FILTERS=(
-    ["chiado"]="Gnosis"
-    ["unichainSepolia"]="Unichain"
-    ["optimismSepolia"]="Optimism"
-    ["arbitrumSepolia"]="Arbitrum"
-    ["amoy"]="Polygon"
-    ["zksyncSepolia"]="ZkSync"
-    ["gnosis"]="Gnosis"
-    ["unichain"]="Unichain"
-    ["optimism"]="Optimism"
-    ["redstone"]="Redstone"
-    ["arbitrum"]="Arbitrum"
-    ["polygon"]="Polygon"
-    ["zksyncMainnet"]="ZkSync"
 )
 
 echo "### Testnets"

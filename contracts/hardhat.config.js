@@ -149,6 +149,7 @@ module.exports = {
         homeUnichain: "unichain",
         homeOptimism: "optimism",
         homeRedstone: "redstone",
+        homeBase: "base",
         homeArbitrum: "arbitrum",
         homePolygon: "polygon",
       },
@@ -176,7 +177,7 @@ module.exports = {
     },
     unichain: {
       chainId: 130,
-      url: `https://FIXME.unichain.org/`,
+      url: `https://unichain-rpc.publicnode.com`,
       accounts: [process.env.PRIVATE_KEY],
       tags: ["home"],
       companionNetworks: {
@@ -216,6 +217,21 @@ module.exports = {
         etherscan: {
           apiURL: "https://api.redstone.xyz/api",
           apiKey: process.env.REDSTONE_API_KEY,
+        },
+      },
+    },
+    base: {
+      chainId: 8453,
+      url: `https://base-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      accounts: [process.env.PRIVATE_KEY],
+      tags: ["home"],
+      companionNetworks: {
+        foreign: "mainnet",
+      },
+      verify: {
+        etherscan: {
+          apiURL: "https://api.basescan.org/api",
+          apiKey: process.env.BASESCAN_API_KEY,
         },
       },
     },

@@ -94,8 +94,11 @@ task("add-deployment", "Add a deployment to the deployments JSON")
 
       // Get Realitio contract name from Etherscan
       const realitioContractInfo = await fetchContractInfo(network.verify.etherscan, realitioAddress);
-      const realitioContractName =
+      let realitioContractName =
         (realitioContractInfo.ContractName && realitioContractInfo.ContractName.trim()) || "RealityUnverified";
+      realitioContractName = realitioContractName.includes(":") // Example: contracts/RealityETH-3.0.sol:RealityETH_zksync_v3_0
+        ? realitioContractName.split(":").pop()
+        : realitioContractName;
 
       // Try to get the token address
       let tokenAddress = "";

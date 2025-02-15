@@ -4,6 +4,7 @@ require("@matterlabs/hardhat-zksync-deploy");
 require("@matterlabs/hardhat-zksync-solc");
 require("@matterlabs/hardhat-zksync-verify");
 require("hardhat-deploy");
+require("./tasks/update-deployments");
 // require("./tasks/generate-metaevidence");
 
 module.exports = {
@@ -61,10 +62,10 @@ module.exports = {
       companionNetworks: {
         foreign: "sepolia",
       },
-      verifyURL: "https://explorer.sepolia.era.zksync.dev/contract_verification",
+      verifyURL: "https://block-explorer-api.sepolia.zksync.dev/api",
       verify: {
         etherscan: {
-          apiURL: "https://explorer.sepolia.era.zksync.dev/contract_verification",
+          apiURL: "https://block-explorer-api.sepolia.zksync.dev/api",
         },
       },
     },

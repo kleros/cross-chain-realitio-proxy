@@ -38,6 +38,7 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 | Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
 |---------|------|------------|---------------|----------|-----------|----------|
 | v1.1.0 | Polygon default | [0x5AFa42b30955f137e10f89dfb5EF1542a186F90e](https://polygonscan.com/address/0x5AFa42b30955f137e10f89dfb5EF1542a186F90e) | [0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52](https://etherscan.io/address/0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52) | 0 | 31 | [RealityETH_v3_0](https://polygonscan.com/address/0x60573B8DcE539aE5bF9aD7932310668997ef0428) |
+| v1.1.0 | Polkamarkets | [0x68154EA682f95BF582b80Dd6453FA401737491Dc](https://polygonscan.com/address/0x68154EA682f95BF582b80Dd6453FA401737491Dc) | [0x68c4cc21378301cfdd5702D66D58a036D7bAFE28](https://etherscan.io/address/0x68c4cc21378301cfdd5702D66D58a036D7bAFE28) | 0 | 31 | [RealityETH_ERC20_v3_0](https://polygonscan.com/address/0x83d3f4769A19F1B43337888B0290F5473cf508b2) |
 
 
 ### Testnets
@@ -68,6 +69,13 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 | Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
 |---------|------|------------|---------------|----------|-----------|----------|
 | v1.1.0 | ArbitrumSepolia default | [0x890deB4111F92fE9447e83aBEF1b754372d6770e](https://sepolia.arbiscan.io/address/0x890deB4111F92fE9447e83aBEF1b754372d6770e) | [0x26222Ec1F548953a4fEaE4C5A216337E26A821F9](https://sepolia.etherscan.io/address/0x26222Ec1F548953a4fEaE4C5A216337E26A821F9) | 0 | 0 | [RealityUnverified](https://sepolia.arbiscan.io/address/0xB78396EFaF0a177d125e9d45B2C6398Ac5f803B9) |
+
+
+#### ZksyncSepolia
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.1.0 | zkSyncSepolia default | [0x473DC4158bEA5eB9a72b6e51Fa5668CE6A41530D](https://sepolia.explorer.zksync.io/address/0x473DC4158bEA5eB9a72b6e51Fa5668CE6A41530D) | [0x54C68fa979883d317C10F3cfDdc33522889d5612](https://sepolia.etherscan.io/address/0x54C68fa979883d317C10F3cfDdc33522889d5612) | 0 | 0 | [RealityETH_zksync_v3_0](https://sepolia.explorer.zksync.io/address/0x4E346436e99fb7d6567A2bd024d8806Fc10d84D2) |
 
 
 ## Contributing

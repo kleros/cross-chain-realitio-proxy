@@ -6,36 +6,6 @@ Smart contracts for the Reality.eth cross-chain proxies.
 
 Refresh the list of deployed contracts by running `./scripts/generateDeploymentsMarkdown.sh` or `./scripts/populateReadme.sh`.
 
-### Testnets
-
-#### Chiado
-
-| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
-|---------|------|------------|---------------|----------|-----------|----------|
-| v1.1.0 | Chiado default | [0xE620947519E8102aa625BBB4669fE317c9FffeD7](https://gnosis-chiado.blockscout.com/address/0xE620947519E8102aa625BBB4669fE317c9FffeD7) | [0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42](https://sepolia.etherscan.io/address/0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42) | 0 | 0 | [RealityUnverified](https://gnosis-chiado.blockscout.com/address/0x1E732a1C5e9181622DD5A931Ec6801889ce66185) |
-
-
-#### UnichainSepolia
-
-| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
-|---------|------|------------|---------------|----------|-----------|----------|
-| v1.2.0 | UnichainSepolia default | [0x8FeAB350A304140b1593A38a13607d122BEC44b6](https://sepolia.uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6) | [0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE](https://sepolia.etherscan.io/address/0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE) | 3 | 1 | [RealityETH_v3_0](https://sepolia.uniscan.xyz/address/0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517) |
-
-
-#### OptimismSepolia
-
-| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
-|---------|------|------------|---------------|----------|-----------|----------|
-| v1.1.0 | OptimismSepolia default | [0xFe0eb5fC686f929Eb26D541D75Bb59F816c0Aa68](https://sepolia-optimism.etherscan.io/address/0xFe0eb5fC686f929Eb26D541D75Bb59F816c0Aa68) | [0x6a41AF8FC7f68bdd13B2c7D50824Ed49155DC3bA](https://sepolia.etherscan.io/address/0x6a41AF8FC7f68bdd13B2c7D50824Ed49155DC3bA) | 0 | 0 | [RealityUnverified](https://sepolia-optimism.etherscan.io/address/0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA) |
-
-
-#### ArbitrumSepolia
-
-| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
-|---------|------|------------|---------------|----------|-----------|----------|
-| v1.1.0 | ArbitrumSepolia default | [0x890deB4111F92fE9447e83aBEF1b754372d6770e](https://sepolia.arbiscan.io/address/0x890deB4111F92fE9447e83aBEF1b754372d6770e) | [0x26222Ec1F548953a4fEaE4C5A216337E26A821F9](https://sepolia.etherscan.io/address/0x26222Ec1F548953a4fEaE4C5A216337E26A821F9) | 0 | 0 | [RealityUnverified](https://sepolia.arbiscan.io/address/0xB78396EFaF0a177d125e9d45B2C6398Ac5f803B9) |
-
-
 ### Mainnets
 
 #### Gnosis
@@ -68,6 +38,36 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 | Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
 |---------|------|------------|---------------|----------|-----------|----------|
 | v1.1.0 | Polygon default | [0x5AFa42b30955f137e10f89dfb5EF1542a186F90e](https://polygonscan.com/address/0x5AFa42b30955f137e10f89dfb5EF1542a186F90e) | [0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52](https://etherscan.io/address/0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52) | 0 | 31 | [RealityETH_v3_0](https://polygonscan.com/address/0x60573B8DcE539aE5bF9aD7932310668997ef0428) |
+
+
+### Testnets
+
+#### Chiado
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.1.0 | Chiado default | [0xE620947519E8102aa625BBB4669fE317c9FffeD7](https://gnosis-chiado.blockscout.com/address/0xE620947519E8102aa625BBB4669fE317c9FffeD7) | [0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42](https://sepolia.etherscan.io/address/0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42) | 0 | 0 | [RealityUnverified](https://gnosis-chiado.blockscout.com/address/0x1E732a1C5e9181622DD5A931Ec6801889ce66185) |
+
+
+#### UnichainSepolia
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.2.0 | UnichainSepolia default | [0x8FeAB350A304140b1593A38a13607d122BEC44b6](https://sepolia.uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6) | [0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE](https://sepolia.etherscan.io/address/0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE) | 3 | 1 | [RealityETH_v3_0](https://sepolia.uniscan.xyz/address/0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517) |
+
+
+#### OptimismSepolia
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.1.0 | OptimismSepolia default | [0xFe0eb5fC686f929Eb26D541D75Bb59F816c0Aa68](https://sepolia-optimism.etherscan.io/address/0xFe0eb5fC686f929Eb26D541D75Bb59F816c0Aa68) | [0x6a41AF8FC7f68bdd13B2c7D50824Ed49155DC3bA](https://sepolia.etherscan.io/address/0x6a41AF8FC7f68bdd13B2c7D50824Ed49155DC3bA) | 0 | 0 | [RealityUnverified](https://sepolia-optimism.etherscan.io/address/0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA) |
+
+
+#### ArbitrumSepolia
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.1.0 | ArbitrumSepolia default | [0x890deB4111F92fE9447e83aBEF1b754372d6770e](https://sepolia.arbiscan.io/address/0x890deB4111F92fE9447e83aBEF1b754372d6770e) | [0x26222Ec1F548953a4fEaE4C5A216337E26A821F9](https://sepolia.etherscan.io/address/0x26222Ec1F548953a4fEaE4C5A216337E26A821F9) | 0 | 0 | [RealityUnverified](https://sepolia.arbiscan.io/address/0xB78396EFaF0a177d125e9d45B2C6398Ac5f803B9) |
 
 
 ## Contributing

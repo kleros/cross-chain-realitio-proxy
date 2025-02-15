@@ -31,16 +31,6 @@ function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
 }
 
 # Use regular arrays to preserve the ordering
-TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy" "zksyncSepolia")
-declare -A HOME_TESTNETS_EXPLORERS=(
-    ["chiado"]="https://gnosis-chiado.blockscout.com/address/"
-    ["unichainSepolia"]="https://sepolia.uniscan.xyz/address/"
-    ["optimismSepolia"]="https://sepolia-optimism.etherscan.io/address/"
-    ["arbitrumSepolia"]="https://sepolia.arbiscan.io/address/"
-    ["amoy"]="https://amoy.polygonscan.com/address/"
-    ["zksyncSepolia"]="https://sepolia.explorer.zksync.io/address/"
-)
-
 MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "base" "arbitrum" "polygon" "zksyncMainnet")
 declare -A HOME_MAINNET_EXPLORERS=(
     ["gnosis"]="https://gnosisscan.io/address/"
@@ -53,14 +43,24 @@ declare -A HOME_MAINNET_EXPLORERS=(
     ["zksyncMainnet"]="https://explorer.zksync.io/address/"
 )
 
+TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy" "zksyncSepolia")
+declare -A HOME_TESTNETS_EXPLORERS=(
+    ["chiado"]="https://gnosis-chiado.blockscout.com/address/"
+    ["unichainSepolia"]="https://sepolia.uniscan.xyz/address/"
+    ["optimismSepolia"]="https://sepolia-optimism.etherscan.io/address/"
+    ["arbitrumSepolia"]="https://sepolia.arbiscan.io/address/"
+    ["amoy"]="https://amoy.polygonscan.com/address/"
+    ["zksyncSepolia"]="https://sepolia.explorer.zksync.io/address/"
+)
+
 declare -A FOREIGN_NETWORK_EXPLORERS=(
     ["sepolia"]="https://sepolia.etherscan.io/address/"
     ["mainnet"]="https://etherscan.io/address/"
 )
 
-echo "### Testnets"
-for network in "${TESTNET_NETWORKS[@]}"; do
-    output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_TESTNETS_EXPLORERS[$network]}" "${FOREIGN_NETWORK_EXPLORERS[sepolia]}")
+echo "### Mainnets"
+for network in "${MAINNET_NETWORKS[@]}"; do
+    output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_MAINNET_EXPLORERS[$network]}" "${FOREIGN_NETWORK_EXPLORERS[mainnet]}")
 
     # Skip if not output
     [ -z "$output" ] && continue
@@ -73,9 +73,10 @@ for network in "${TESTNET_NETWORKS[@]}"; do
 done
 
 echo
-echo "### Mainnets"
-for network in "${MAINNET_NETWORKS[@]}"; do
-    output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_MAINNET_EXPLORERS[$network]}" "${FOREIGN_NETWORK_EXPLORERS[mainnet]}")
+
+echo "### Testnets"
+for network in "${TESTNET_NETWORKS[@]}"; do
+    output=$(generate "$SCRIPT_DIR/../deployments/${network}" "${HOME_TESTNETS_EXPLORERS[$network]}" "${FOREIGN_NETWORK_EXPLORERS[sepolia]}")
 
     # Skip if not output
     [ -z "$output" ] && continue

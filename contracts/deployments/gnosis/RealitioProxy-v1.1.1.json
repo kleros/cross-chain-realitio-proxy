@@ -11,12 +11,14 @@
       },
       "homeProxy": {
         "address": "0x5AFa42b30955f137e10f89dfb5EF1542a186F90e",
+        "tos": "",
         "blockNumber": "34581889",
         "transactionHash": "0x134e47eab55ee0150cf4cafd4d0288c59aa8b61ea90df5c119159a2aacdacb70"
       },
       "foreignProxy": {
         "courtId": "0",
         "minJurors": "5",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmV4VhBEgAf93WquKvedkFQmNJHhcWPPT6FdYYSdN6v6Mc",
         "address": "0x8453bA2C9eA5Bae36fDe6cBd61c12c05b6552425",
         "chainId": "1",
         "blockNumber": "20142065",
@@ -32,12 +34,14 @@
       },
       "homeProxy": {
         "address": "0x29f39de98d750eb77b5fafb31b2837f079fce222",
+        "tos": "",
         "blockNumber": "20270767",
         "transactionHash": "0x1d926f5a319676e6e3d2e554fa895add3e350c8fb29cc5cbfce93ebd64e6ca7a"
       },
       "foreignProxy": {
         "courtId": "0",
         "minJurors": "31",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmeWZL2LzVYH6oEDJXcHfeSHYdZmebv3Q9zLuRgsCLSCVg/realitio.json",
         "address": "0x2F0895732bfacdCF2fdB19962fE609D0dA695F21",
         "chainId": "1",
         "blockNumber": "14066928",

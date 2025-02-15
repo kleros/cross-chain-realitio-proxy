@@ -11,12 +11,14 @@
       },
       "homeProxy": {
         "address": "0x68154EA682f95BF582b80Dd6453FA401737491Dc",
+        "tos": "https://cdn.kleros.link/ipfs/QmPmRkXFUmzP4rq2YfD3wNwL8bg3WDxkYuvTP9A9UZm9gJ/seer-markets-resolution-policy.pdf",
         "blockNumber": "36403963",
         "transactionHash": "0x8d8a7e08132cd48898842ff731432d2186b8d3f6b0a1d97d686107a75bbe3871"
       },
       "foreignProxy": {
         "courtId": "0",
         "minJurors": "31",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmVkcsYWd22JkG2rq29wQzNeXP5WEZ9vyVrrnhzry5vdHa",
         "address": "0xFe0eb5fC686f929Eb26D541D75Bb59F816c0Aa68",
         "chainId": "1",
         "blockNumber": "20922529",

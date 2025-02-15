@@ -36,7 +36,7 @@ async function fetchContractInfo({ apiURL, apiKey }, address) {
   return response.data.result[0];
 }
 
-task("update-deployments", "Update deployments JSON with contract information")
+task("add-deployment", "Add a deployment to the deployments JSON")
   .addParam("name", "Name of the deployment (e.g. Gnosis, Optimism)")
   .addParam("homeProxy", "Address of the Realitio home proxy")
   .addParam("homeProxyTxHash", "Transaction hash of the home proxy deployment")
@@ -44,6 +44,7 @@ task("update-deployments", "Update deployments JSON with contract information")
   .addOptionalParam("contractVersion", "Version of the deployment", version)
   .addOptionalParam("homeProxyBlockNumber", "Block number of the home proxy deployment")
   .addOptionalParam("foreignProxyBlockNumber", "Block number of the foreign proxy deployment")
+  .addFlag("force", "Force update if deployment already exists")
   .setAction(
     async (
       {
@@ -54,6 +55,7 @@ task("update-deployments", "Update deployments JSON with contract information")
         contractVersion,
         homeProxyBlockNumber,
         foreignProxyBlockNumber,
+        force,
       },
       { ethers, network, config }
     ) => {
@@ -73,7 +75,13 @@ task("update-deployments", "Update deployments JSON with contract information")
       const homeProxyContract = await ethers.getContractAt(homeProxyAbi, homeProxy);
       const realitioAddress = await homeProxyContract.realitio();
       const metadata = await homeProxyContract.metadata();
-      const tos = JSON.parse(metadata).tos.replace("ipfs://", "https://cdn.kleros.link/ipfs/");
+      let tos = "";
+      try {
+        const parsedMetadata = JSON.parse(metadata || "{}");
+        tos = parsedMetadata.tos ? parsedMetadata.tos.replace("ipfs://", "https://cdn.kleros.link/ipfs/") : "";
+      } catch (e) {
+        console.warn("Failed to parse metadata or access tos field:", e.message);
+      }
 
       // Get Realitio contract name from Etherscan
       const realitioContractInfo = await fetchContractInfo(network.verify.etherscan, realitioAddress);
@@ -185,7 +193,7 @@ task("update-deployments", "Update deployments JSON with contract information")
         const existingContent = JSON.parse(fs.readFileSync(filePath, "utf8"));
 
         // Validate ABIs match
-        if (JSON.stringify(existingContent.homeProxyAbi) !== JSON.stringify(abi)) {
+        if (JSON.stringify(existingContent.homeProxyAbi) !== JSON.stringify(homeProxyAbi)) {
           throw new Error("Home proxy ABI in existing file doesn't match current ABI");
         }
         if (JSON.stringify(existingContent.foreignProxyAbi) !== JSON.stringify(foreignProxyAbi)) {
@@ -193,19 +201,28 @@ task("update-deployments", "Update deployments JSON with contract information")
         }
 
         // Check if deployment with this home proxy already exists
-        const existingDeployment = existingContent.deployments.find(
+        const existingDeploymentIndex = existingContent.deployments.findIndex(
           (d) => d.homeProxy.address.toLowerCase() === homeProxy.toLowerCase()
         );
-        if (existingDeployment) {
-          throw new Error(`Deployment with home proxy ${homeProxy} already exists in ${filePath}`);
-        }
 
-        // Merge deployments
-        deploymentInfo.deployments = [...existingContent.deployments, deploymentInfo.deployments[0]];
-        console.log(
-          "Appending new deployment to existing ones:",
-          deploymentInfo.deployments.map((d) => d.name).join(", ")
-        );
+        if (existingDeploymentIndex !== -1) {
+          if (!force) {
+            throw new Error(`Deployment with home proxy ${homeProxy} already exists in ${filePath}`);
+          }
+          // Replace the existing deployment if force is true, but preserve versionNotes
+          deploymentInfo.versionNotes = existingContent.versionNotes;
+          console.log(`Force flag enabled - replacing existing deployment for ${homeProxy}`);
+          existingContent.deployments[existingDeploymentIndex] = deploymentInfo.deployments[0];
+          deploymentInfo.deployments = existingContent.deployments;
+        } else {
+          // Merge deployments if no existing deployment found
+          deploymentInfo.versionNotes = existingContent.versionNotes;
+          deploymentInfo.deployments = [...existingContent.deployments, deploymentInfo.deployments[0]];
+          console.log(
+            "Appending new deployment to existing ones:",
+            deploymentInfo.deployments.map((d) => d.name).join(", ")
+          );
+        }
       }
 
       fs.writeFileSync(filePath, JSON.stringify(deploymentInfo, null, 2));
@@ -236,3 +253,46 @@ task("update-deployments-from-artifact", "Update deployments JSON using deployme
       contractVersion,
     });
   });
+
+task("update-deployments", "Update all deployments from existing deployment files").setAction(
+  async (_, { run, network }) => {
+    const deploymentsDir = path.join(__dirname, "..", "deployments", network.name);
+
+    // Check if directory exists
+    if (!fs.existsSync(deploymentsDir)) {
+      console.log(`No deployments directory found for network ${network.name}`);
+      return;
+    }
+
+    // Find all RealitioProxy JSON files
+    const files = fs.readdirSync(deploymentsDir).filter((file) => file.match(/^RealitioProxy-v.*\.json$/));
+
+    if (files.length === 0) {
+      console.log(`No RealitioProxy deployment files found in ${deploymentsDir}`);
+      return;
+    }
+
+    for (const file of files) {
+      const filePath = path.join(deploymentsDir, file);
+      console.log(`\nProcessing ${file}...`);
+
+      const content = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      const contractVersion = content.version;
+
+      for (const deployment of content.deployments) {
+        console.log(`\nUpdating deployment for ${deployment.name}...`);
+
+        await run("add-deployment", {
+          name: deployment.name,
+          homeProxy: deployment.homeProxy.address,
+          homeProxyTxHash: deployment.homeProxy.transactionHash,
+          homeProxyBlockNumber: deployment.homeProxy.blockNumber,
+          foreignProxyTxHash: deployment.foreignProxy.transactionHash,
+          foreignProxyBlockNumber: deployment.foreignProxy.blockNumber,
+          contractVersion,
+          force: true,
+        });
+      }
+    }
+  }
+);

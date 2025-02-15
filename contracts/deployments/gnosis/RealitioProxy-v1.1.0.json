@@ -11,12 +11,14 @@
       },
       "homeProxy": {
         "address": "0x5562ac605764dc4039fb6ab56a74f7321396cdf2",
+        "tos": "https://cdn.kleros.link/ipfs/QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
         "blockNumber": "36881651",
         "transactionHash": "0x60de640a555720328ba0d76af53e8f9f779b3ec0fa1f37732974c5cb8c5822d0"
       },
       "foreignProxy": {
         "courtId": "0",
         "minJurors": "31",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmRo7BtewG421ZgkYfkDakQhEK9rwsdueLWvRyoYRZS8qx",
         "address": "0xeF2Ae6961Ec7F2105bc2693Bc32fA7b7386B2f59",
         "chainId": "1",
         "blockNumber": "21127212",

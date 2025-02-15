@@ -10,7 +10,7 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 
 #### UnichainSepolia
 
-- Butter 
+- UnichainSepolia default 
   - [Home Proxy](https://sepolia.uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6)
   - [Foreign Proxy](https://sepolia.etherscan.io/address/0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE)
 

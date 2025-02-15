@@ -11,12 +11,14 @@
       },
       "homeProxy": {
         "address": "0xe40DD83a262da3f56976038F1554Fe541Fa75ecd",
+        "tos": "",
         "blockNumber": "14332325",
         "transactionHash": "0x36f965a4ec0ef7460d8932b865087a7b85bfca3a350f00008e214cb52d8ca459"
       },
       "foreignProxy": {
         "courtId": "0",
         "minJurors": "500",
+        "metaevidence": "https://cdn.kleros.link/ipfs/Qmc6bWTzPMFeRx9VWHwnDpDXfimwNsvnEgJo3gymg37rRd/realitio.json",
         "address": "0x79d0464Ec27F67663DADf761432fC8DD0AeA3D49",
         "chainId": "1",
         "blockNumber": "11771713",

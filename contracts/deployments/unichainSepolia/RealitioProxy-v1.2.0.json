@@ -3,7 +3,7 @@
   "versionNotes": "Latest",
   "deployments": [
     {
-      "name": "Butter",
+      "name": "UnichainSepolia default",
       "realitio": {
         "contract": "RealityETH_v3_0",
         "address": "0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517",
@@ -11,12 +11,14 @@
       },
       "homeProxy": {
         "address": "0x8FeAB350A304140b1593A38a13607d122BEC44b6",
+        "tos": "https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
         "blockNumber": "12434183",
         "transactionHash": "0x4ab17a911c9b8b5ec54f6c9c98eadcbc4a931e1f5c5350c2c34ff3555582a4bc"
       },
       "foreignProxy": {
         "courtId": "3",
         "minJurors": "1",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmPzCS4Tw4m4gCqBPrNMvgcnwDyU2c8RPZabj9Rrfhjt7Q",
         "address": "0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE",
         "chainId": "11155111",
         "blockNumber": "7686679",

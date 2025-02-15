@@ -2,6 +2,11 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
+function prettify_address() {
+    address=$1
+    echo "${address:0:8}..${address: -6}"
+}
+
 function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     deploymentDir=$1
     homeExplorerUrl=$2
@@ -24,7 +29,9 @@ function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
         temp_output=$(jq -r --arg version "$version" '.deployments[] | "\(.name)\t\(.homeProxy.address)\t\(.foreignProxy.address)\t\(.foreignProxy.courtId)\t\(.foreignProxy.minJurors)\t\(.realitio.contract)\t\(.realitio.address)"' "$file")
         while IFS=$'\t' read -r name home_address foreign_address court_id min_jurors reality_contract realitio_address; do
             [ -z "$name" ] && continue
-            echo "| v$version | $name | [$home_address](${homeExplorerUrl}$home_address) | [$foreign_address](${foreignExplorerUrl}$foreign_address) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}$realitio_address) |"
+            pretty_home=$(prettify_address "$home_address")
+            pretty_foreign=$(prettify_address "$foreign_address")
+            echo "| v$version | $name | [$pretty_home](${homeExplorerUrl}$home_address) | [$pretty_foreign](${foreignExplorerUrl}$foreign_address) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}$realitio_address) |"
         done <<<"$temp_output"
     done <<<"$version_files"
     echo

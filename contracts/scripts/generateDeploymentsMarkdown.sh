@@ -6,16 +6,28 @@ function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     deploymentDir=$1
     homeExplorerUrl=$2
     foreignExplorerUrl=$3
-    deployments_file="$deploymentDir/RealitioProxy-v1.2.0.json"
-    if [ -f "$deployments_file" ]; then
-        temp_output=$(jq -r '.deployments[] | "\(.name)\t\(.homeProxy.address)\t\(.foreignProxy.address)"' "$deployments_file")
-        while IFS=$'\t' read -r name home_address foreign_address; do
-            echo "- $name 
-  - [Home Proxy](${homeExplorerUrl}$home_address)
-  - [Foreign Proxy](${foreignExplorerUrl}$foreign_address)
-"
+
+    # Find all RealitioProxy version files and sort them in reverse order
+    version_files=$(find "$deploymentDir" -name "RealitioProxy-v*.json" 2>/dev/null | sort -r)
+
+    # If no files found, return early
+    [ -z "$version_files" ] && return
+
+    # Print table header
+    echo "| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |"
+    echo "|---------|------|------------|---------------|----------|-----------|----------|"
+
+    while IFS= read -r file; do
+        version=$(basename "$file" | sed -E 's/RealitioProxy-v(.*).json/\1/')
+
+        # Process each deployment in the file
+        temp_output=$(jq -r --arg version "$version" '.deployments[] | "\(.name)\t\(.homeProxy.address)\t\(.foreignProxy.address)\t\(.foreignProxy.courtId)\t\(.foreignProxy.minJurors)\t\(.realitio.contract)\t\(.realitio.address)"' "$file")
+        while IFS=$'\t' read -r name home_address foreign_address court_id min_jurors reality_contract realitio_address; do
+            [ -z "$name" ] && continue
+            echo "| v$version | $name | [$home_address](${homeExplorerUrl}$home_address) | [$foreign_address](${foreignExplorerUrl}$foreign_address) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}$realitio_address) |"
         done <<<"$temp_output"
-    fi
+    done <<<"$version_files"
+    echo
 }
 
 # Use regular arrays to preserve the ordering

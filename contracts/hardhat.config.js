@@ -68,7 +68,7 @@ module.exports = {
       },
       verify: {
         etherscan: {
-          apiURL: "https://gnosis-chiado.blockscout.com",
+          apiURL: "https://gnosis-chiado.blockscout.com/api",
         },
       },
     },

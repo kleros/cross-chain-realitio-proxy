@@ -5,14 +5,18 @@ const fs = require("fs");
 const path = require("path");
 
 async function fetchContractABI({ apiURL, apiKey }, address) {
-  const response = await axios.get(apiURL, {
-    params: {
-      module: "contract",
-      action: "getabi",
-      address,
-      apikey: apiKey,
-    },
-  });
+  const params = {
+    module: "contract",
+    action: "getabi",
+    address,
+  };
+  if (apiKey) params.apikey = apiKey;
+
+  const url = new URL(apiURL);
+  url.search = new URLSearchParams(params).toString();
+  console.log("Full URL:", url.toString());
+
+  const response = await axios.get(apiURL, { params });
 
   if (response.data.status !== "1" || !response.data.result)
     throw new Error(`Failed to fetch ABI: ${response.data.message || "Unknown error"}`);
@@ -21,14 +25,19 @@ async function fetchContractABI({ apiURL, apiKey }, address) {
 }
 
 async function fetchContractInfo({ apiURL, apiKey }, address) {
-  const response = await axios.get(apiURL, {
-    params: {
-      module: "contract",
-      action: "getsourcecode",
-      address,
-      apikey: apiKey,
-    },
-  });
+  console.log("fetching contract info", apiURL, apiKey, address);
+  const params = {
+    module: "contract",
+    action: "getsourcecode",
+    address,
+  };
+  if (apiKey) params.apikey = apiKey;
+
+  const url = new URL(apiURL);
+  url.search = new URLSearchParams(params).toString();
+  console.log("Full URL:", url.toString());
+
+  const response = await axios.get(apiURL, { params });
 
   if (response.data.status !== "1" || !response.data.result || !response.data.result[0])
     throw new Error(`Failed to fetch contract info: ${response.data.message || "Unknown error"}`);
@@ -85,7 +94,8 @@ task("add-deployment", "Add a deployment to the deployments JSON")
 
       // Get Realitio contract name from Etherscan
       const realitioContractInfo = await fetchContractInfo(network.verify.etherscan, realitioAddress);
-      const realitioContractName = realitioContractInfo.ContractName;
+      const realitioContractName =
+        (realitioContractInfo.ContractName && realitioContractInfo.ContractName.trim()) || "RealityUnverified";
 
       // Try to get the token address
       let tokenAddress = "";
@@ -129,11 +139,14 @@ task("add-deployment", "Add a deployment to the deployments JSON")
 
       // Verify that the foreign proxy points back to our home proxy
       const foreignProxyContract = new ethers.Contract(foreignProxyAddress, foreignProxyAbi, foreignProvider);
-      const foreignHomeProxy = await foreignProxyContract.homeProxy();
-      if (foreignHomeProxy.toLowerCase() !== homeProxy.toLowerCase())
-        throw new Error(`Foreign proxy home address mismatch: expected ${homeProxy}, got ${foreignHomeProxy}`);
+      try {
+        const foreignHomeProxy = await foreignProxyContract.homeProxy();
+        if (foreignHomeProxy.toLowerCase() !== homeProxy.toLowerCase())
+          throw new Error(`Foreign proxy home address mismatch: expected ${homeProxy}, got ${foreignHomeProxy}`);
+      } catch (e) {
+        console.warn(`Warning: Could not verify foreign proxy's home address - contract may be legacy: ${e.message}`);
+      }
 
-      // const metaevidence = replaceIpfsUri(await foreignProxyContract.metaevidence());
       // Get the MetaEvidence event from foreign proxy contract
       const metaEvidenceFilter = foreignProxyContract.filters.MetaEvidence();
       const metaEvidenceEvents = await foreignProxyContract.queryFilter(
@@ -230,7 +243,7 @@ task("add-deployment", "Add a deployment to the deployments JSON")
     }
   );
 
-task("update-deployments-from-artifact", "Update deployments JSON using deployment artifacts")
+task("add-deployment-from-artifact", "Add a deployment to the deployments JSON using deployment artifacts")
   .addParam("homeProxy", "Path to the home proxy deployment artifact")
   .addParam("foreignProxy", "Path to the foreign proxy deployment artifact")
   .addParam("name", "Name of the deployment (e.g. Gnosis, Optimism)")
@@ -243,7 +256,7 @@ task("update-deployments-from-artifact", "Update deployments JSON using deployme
       throw new Error(`Invalid home proxy artifact: missing address or transactionHash`);
     if (!foreignArtifact.transactionHash) throw new Error(`Invalid foreign proxy artifact: missing transactionHash`);
 
-    await run("update-deployments", {
+    await run("add-deployment", {
       name,
       homeProxy: homeArtifact.address,
       homeProxyTxHash: homeArtifact.transactionHash,

@@ -1,28 +1,28 @@
 {
-  "version": "1.2.0",
+  "version": "1.1.0",
   "versionNotes": "FIX ME",
   "deployments": [
     {
-      "name": "Unichain default",
+      "name": "Polygon default",
       "realitio": {
-        "contract": "RealityUnverified",
-        "address": "0xB920dBedE88B42aA77eE55ebcE3671132ee856fC",
+        "contract": "RealityETH_v3_0",
+        "address": "0x60573B8DcE539aE5bF9aD7932310668997ef0428",
         "token": ""
       },
       "homeProxy": {
-        "address": "0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18",
+        "address": "0x5AFa42b30955f137e10f89dfb5EF1542a186F90e",
         "tos": "https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
-        "blockNumber": "8746203",
-        "transactionHash": "0x2e3710911f6d9b22d44c5ed2398013de20ee7f2a37e957c898fcccc92e15056e"
+        "blockNumber": "35024541",
+        "transactionHash": "0xbabbeaf8d32ac458aca8de6c1a3d9b1d1cebb38f58a177028d7b4e4cf78c2240"
       },
       "foreignProxy": {
-        "courtId": "24",
-        "minJurors": "15",
-        "metaevidence": "https://cdn.kleros.link/ipfs/QmQJUPLrzjS2AQUo2VTw21utgCfAuCyTZzZ7Cv5fgcLZ4K",
-        "address": "0x8FeAB350A304140b1593A38a13607d122BEC44b6",
+        "courtId": "0",
+        "minJurors": "31",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmXWr4ZWCpBYtAHNHzTbKW9SkV1MwQicpWfthhDHkNYxKk/realitio.json",
+        "address": "0x776e5853e3d61B2dFB22Bcf872a43bF9A1231e52",
         "chainId": "1",
-        "blockNumber": "21841268",
-        "transactionHash": "0x3cf1b88420ccf96cc36b219a543d21827d6dc5cd5f58809789675afb6dee313e"
+        "blockNumber": "15867680",
+        "transactionHash": "0x5764e238fbf9b9a6845353aa172a513eb20be6c441cf3c46aae43f49c63cb39a"
       }
     }
   ],
@@ -30,24 +30,24 @@
     {
       "inputs": [
         {
-          "internalType": "contract IRealitio",
-          "name": "_realitio",
+          "internalType": "address",
+          "name": "_fxChild",
           "type": "address"
         },
         {
-          "internalType": "string",
-          "name": "_metadata",
-          "type": "string"
-        },
-        {
-          "internalType": "address",
-          "name": "_foreignProxy",
+          "internalType": "contract RealitioInterface",
+          "name": "_realitio",
           "type": "address"
         },
         {
           "internalType": "uint256",
           "name": "_foreignChainId",
           "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_metadata",
+          "type": "string"
         }
       ],
       "stateMutability": "nonpayable",
@@ -102,6 +102,19 @@
         }
       ],
       "name": "ArbitratorAnswered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "message",
+          "type": "bytes"
+        }
+      ],
+      "name": "MessageSent",
       "type": "event"
     },
     {
@@ -200,19 +213,6 @@
     },
     {
       "inputs": [],
-      "name": "MIN_GAS_LIMIT",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "foreignChainId",
       "outputs": [
         {
@@ -227,6 +227,32 @@
     {
       "inputs": [],
       "name": "foreignProxy",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "fxChild",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "fxRootTunnel",
       "outputs": [
         {
           "internalType": "address",
@@ -275,19 +301,6 @@
     },
     {
       "inputs": [],
-      "name": "messenger",
-      "outputs": [
-        {
-          "internalType": "contract ICrossDomainMessenger",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "metadata",
       "outputs": [
         {
@@ -297,6 +310,29 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "stateId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "rootMessageSender",
+          "type": "address"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "processMessageFromRoot",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -323,7 +359,7 @@
       "name": "realitio",
       "outputs": [
         {
-          "internalType": "contract IRealitio",
+          "internalType": "contract RealitioInterface",
           "name": "",
           "type": "address"
         }
@@ -434,7 +470,7 @@
       "name": "requests",
       "outputs": [
         {
-          "internalType": "enum RealitioHomeProxyOptimism.Status",
+          "internalType": "enum RealitioHomeArbitrationProxy.Status",
           "name": "status",
           "type": "uint8"
         },
@@ -446,11 +482,34 @@
       ],
       "stateMutability": "view",
       "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_fxRootTunnel",
+          "type": "address"
+        }
+      ],
+      "name": "setFxRootTunnel",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
   ],
   "foreignProxyAbi": [
     {
       "inputs": [
+        {
+          "internalType": "address",
+          "name": "_checkpointManager",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_fxRoot",
+          "type": "address"
+        },
         {
           "internalType": "contract IArbitrator",
           "name": "_arbitrator",
@@ -480,16 +539,6 @@
           "internalType": "uint256",
           "name": "_loserAppealPeriodMultiplier",
           "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_homeProxy",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_messenger",
-          "type": "address"
         }
       ],
       "stateMutability": "nonpayable",
@@ -755,25 +804,6 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
-          "internalType": "bytes32",
-          "name": "_questionID",
-          "type": "bytes32"
-        },
-        {
-          "indexed": false,
-          "internalType": "bytes32",
-          "name": "_ruling",
-          "type": "bytes32"
-        }
-      ],
-      "name": "RulingRelayed",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
           "indexed": true,
           "internalType": "uint256",
           "name": "_localDisputeID",
@@ -861,31 +891,25 @@
     },
     {
       "inputs": [],
-      "name": "VERSION",
+      "name": "SEND_MESSAGE_EVENT_SIG",
       "outputs": [
         {
-          "internalType": "string",
+          "internalType": "bytes32",
           "name": "",
-          "type": "string"
+          "type": "bytes32"
         }
       ],
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "arbitrationCreatedBlock",
+      "inputs": [],
+      "name": "VERSION",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "string",
           "name": "",
-          "type": "uint256"
+          "type": "string"
         }
       ],
       "stateMutability": "view",
@@ -945,7 +969,7 @@
       "name": "arbitrationRequests",
       "outputs": [
         {
-          "internalType": "enum RealitioForeignProxyOptimism.Status",
+          "internalType": "enum RealitioForeignArbitrationProxyWithAppeals.Status",
           "name": "status",
           "type": "uint8"
         },
@@ -989,6 +1013,19 @@
           "internalType": "bytes",
           "name": "",
           "type": "bytes"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "checkpointManager",
+      "outputs": [
+        {
+          "internalType": "contract ICheckpointManager",
+          "name": "",
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -1059,6 +1096,32 @@
         }
       ],
       "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "fxChildTunnel",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "fxRoot",
+      "outputs": [
+        {
+          "internalType": "contract IFxStateSender",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -1273,20 +1336,7 @@
       ],
       "name": "handleFailedDisputeCreation",
       "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "homeProxy",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -1316,32 +1366,6 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "messenger",
-      "outputs": [
-        {
-          "internalType": "contract ICrossDomainMessenger",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "minGasLimit",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1358,6 +1382,25 @@
         }
       ],
       "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "processedExits",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -1418,6 +1461,19 @@
     {
       "inputs": [
         {
+          "internalType": "bytes",
+          "name": "inputData",
+          "type": "bytes"
+        }
+      ],
+      "name": "receiveMessage",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "_questionID",
           "type": "bytes32"
@@ -1447,6 +1503,19 @@
         }
       ],
       "name": "rule",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_fxChildTunnel",
+          "type": "address"
+        }
+      ],
+      "name": "setFxChildTunnel",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

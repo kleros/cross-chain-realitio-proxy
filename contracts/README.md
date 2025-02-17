@@ -26,11 +26,25 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 | v1.2.0 | Unichain default | [0x052959..083D18](https://uniscan.xyz/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18) | [0x8FeAB3..EC44b6](https://etherscan.io/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6) | 24 | 15 | [RealityUnverified](https://uniscan.xyz/address/0xB920dBedE88B42aA77eE55ebcE3671132ee856fC) |
 
 
+#### Optimism
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.2.0 | Optimism default | [0x052959..083D18](https://etherscan.io/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18) | [0xBeeB21..FBe96B](https://etherscan.io/address/0xBeeB211CfE6632E75992488A66F65b0477FBe96B) | 24 | 15 | [RealityETH_v3_0](https://etherscan.io/address/0x0eF940F7f053a2eF5D6578841072488aF0c7d89A) |
+
+
 #### Base
 
 | Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
 |---------|------|------------|---------------|----------|-----------|----------|
 | v1.2.0 | Base default | [0x052959..083D18](https://basescan.org/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18) | [0x052959..083D18](https://etherscan.io/address/0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18) | 24 | 15 | [RealityETH_v3_0](https://basescan.org/address/0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8) |
+
+
+#### Arbitrum
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.2.0 | Arbitrum default | [0xcB4B48..b045a6](https://arbiscan.io/address/0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6) | [0xcB4B48..b045a6](https://etherscan.io/address/0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6) | 24 | 15 | [RealityETH_v3_0](https://arbiscan.io/address/0x5D18bD4dC5f1AC8e9bD9B666Bd71cB35A327C4A9) |
 
 
 #### Polygon

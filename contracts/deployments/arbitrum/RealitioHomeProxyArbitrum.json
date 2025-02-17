@@ -1,0 +1,699 @@
+{
+  "address": "0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IRealitio",
+          "name": "_realitio",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "_metadata",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "_foreignProxy",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_foreignChainId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "ArbitrationFailed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ArbitrationFinished",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "_answer",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ArbitratorAnswered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "withdrawalId",
+          "type": "uint256"
+        }
+      ],
+      "name": "L2ToL1TxCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "RequestAcknowledged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "RequestCanceled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_maxPrevious",
+          "type": "uint256"
+        }
+      ],
+      "name": "RequestNotified",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_maxPrevious",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "_reason",
+          "type": "string"
+        }
+      ],
+      "name": "RequestRejected",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "foreignChainId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "foreignProxy",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "handleNotifiedRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "handleRejectedRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "metadata",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "questionIDToRequester",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "realitio",
+      "outputs": [
+        {
+          "internalType": "contract IRealitio",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_answer",
+          "type": "bytes32"
+        }
+      ],
+      "name": "receiveArbitrationAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        }
+      ],
+      "name": "receiveArbitrationFailure",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_requester",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_maxPrevious",
+          "type": "uint256"
+        }
+      ],
+      "name": "receiveArbitrationRequest",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_questionID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_lastHistoryHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_lastAnswerOrCommitmentID",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "_lastAnswerer",
+          "type": "address"
+        }
+      ],
+      "name": "reportArbitrationAnswer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "requests",
+      "outputs": [
+        {
+          "internalType": "enum RealitioHomeProxyArbitrum.Status",
+          "name": "status",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "arbitratorAnswer",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x2c0694e1f70a66424c23ef0bd6b8307d6d1fa49f32abaf58c09bfcbf25ef9d43",
+  "receipt": {
+    "to": null,
+    "from": "0x0efFC4A996045aff0489774051f94f42F2D6dfc9",
+    "contractAddress": "0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6",
+    "transactionIndex": 2,
+    "gasUsed": "1323753",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x2eda8107b7e68ff0ae0f34999861722d745588e008d076a894e0556b661a39dd",
+    "transactionHash": "0x2c0694e1f70a66424c23ef0bd6b8307d6d1fa49f32abaf58c09bfcbf25ef9d43",
+    "logs": [],
+    "blockNumber": 307110203,
+    "cumulativeGasUsed": "1362776",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x5D18bD4dC5f1AC8e9bD9B666Bd71cB35A327C4A9",
+    "{\"tos\":\"ipfs://QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf\", \"foreignProxy\":true}",
+    "0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6",
+    1
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "010d7b29ac8da32664f0881f8401ccf6",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.25+commit.b61c2a91\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract IRealitio\",\"name\":\"_realitio\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"_metadata\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_foreignProxy\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_foreignChainId\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"ArbitrationFailed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"}],\"name\":\"ArbitrationFinished\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"_answer\",\"type\":\"bytes32\"}],\"name\":\"ArbitratorAnswered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"withdrawalId\",\"type\":\"uint256\"}],\"name\":\"L2ToL1TxCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"RequestAcknowledged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"RequestCanceled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_maxPrevious\",\"type\":\"uint256\"}],\"name\":\"RequestNotified\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_maxPrevious\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"_reason\",\"type\":\"string\"}],\"name\":\"RequestRejected\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"foreignChainId\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"foreignProxy\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"handleNotifiedRequest\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"handleRejectedRequest\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"metadata\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"questionIDToRequester\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"realitio\",\"outputs\":[{\"internalType\":\"contract IRealitio\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_answer\",\"type\":\"bytes32\"}],\"name\":\"receiveArbitrationAnswer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"}],\"name\":\"receiveArbitrationFailure\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_requester\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_maxPrevious\",\"type\":\"uint256\"}],\"name\":\"receiveArbitrationRequest\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_questionID\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_lastHistoryHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"_lastAnswerOrCommitmentID\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"_lastAnswerer\",\"type\":\"address\"}],\"name\":\"reportArbitrationAnswer\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"requests\",\"outputs\":[{\"internalType\":\"enum RealitioHomeProxyArbitrum.Status\",\"name\":\"status\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"arbitratorAnswer\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"This contract is meant to be deployed to L2 where Reality.eth is deployed. https://docs.arbitrum.io/arbos/l2-to-l1-messaging Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/arbitrum/GreeterL2.sol\",\"events\":{\"ArbitrationFailed(bytes32,address)\":{\"details\":\"This will happen if the arbitration fee increases in between the arbitration request and acknowledgement.\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the arbitration requester.\"}},\"ArbitrationFinished(bytes32)\":{\"params\":{\"_questionID\":\"The ID of the question.\"}},\"ArbitratorAnswered(bytes32,bytes32)\":{\"params\":{\"_answer\":\"The answer from the arbitrator.\",\"_questionID\":\"The ID of the question.\"}},\"RequestAcknowledged(bytes32,address)\":{\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the arbitration requester.\"}},\"RequestCanceled(bytes32,address)\":{\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the arbitration requester.\"}},\"RequestNotified(bytes32,address,uint256)\":{\"params\":{\"_maxPrevious\":\"The maximum value of the previous bond for the question.\",\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the arbitration requester.\"}},\"RequestRejected(bytes32,address,uint256,string)\":{\"details\":\"This can happen if the current bond for the question is higher than maxPrevious or if the question is already finalized.\",\"params\":{\"_maxPrevious\":\"The maximum value of the current bond for the question.\",\"_questionID\":\"The ID of the question.\",\"_reason\":\"The reason why the request was rejected.\",\"_requester\":\"The address of the arbitration requester.\"}}},\"kind\":\"dev\",\"methods\":{\"constructor\":{\"params\":{\"_foreignChainId\":\"The ID of foreign chain (Sepolia/Mainnet).\",\"_foreignProxy\":\"Address of the proxy on L1.\",\"_metadata\":\"Metadata for Realitio.\",\"_realitio\":\"Realitio contract address.\"}},\"handleNotifiedRequest(bytes32,address)\":{\"details\":\"Relays arbitration request back to L1 after it has been notified by Realitio for a given question.\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\"}},\"handleRejectedRequest(bytes32,address)\":{\"details\":\"Relays arbitration request back to L1 after it has been rejected. Reasons why the request might be rejected:  - The question does not exist  - The question was not answered yet  - The quesiton bond value changed while the arbitration was being requested  - Another request was already accepted\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\"}},\"receiveArbitrationAnswer(bytes32,bytes32)\":{\"params\":{\"_answer\":\"The answer from the arbitrator.\",\"_questionID\":\"The ID of the question.\"}},\"receiveArbitrationFailure(bytes32,address)\":{\"details\":\"Currently this can happen only if the arbitration cost increased.\",\"params\":{\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\"}},\"receiveArbitrationRequest(bytes32,address,uint256)\":{\"details\":\"Receives the requested arbitration for a question. TRUSTED.\",\"params\":{\"_maxPrevious\":\"The maximum value of the previous bond for the question.\",\"_questionID\":\"The ID of the question.\",\"_requester\":\"The address of the user that requested arbitration.\"}},\"reportArbitrationAnswer(bytes32,bytes32,bytes32,address)\":{\"details\":\"The Realitio contract validates the input parameters passed to this method, so making this publicly accessible is safe.\",\"params\":{\"_lastAnswerOrCommitmentID\":\"The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.\",\"_lastAnswerer\":\"The last answerer to the question in the Realitio contract.\",\"_lastHistoryHash\":\"The history hash given with the last answer to the question in the Realitio contract.\",\"_questionID\":\"The ID of the question.\"}}},\"stateVariables\":{\"foreignChainId\":{\"details\":\"ID of the foreign chain, required for Realitio.\"},\"metadata\":{\"details\":\"Metadata for Realitio interface.\"},\"questionIDToRequester\":{\"details\":\"Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]\"},\"realitio\":{\"details\":\"The address of the Realitio contract (v3.0 required). TRUSTED.\"},\"requests\":{\"details\":\"Associates an arbitration request with a question ID and a requester address. requests[questionID][requester]\"}},\"title\":\"Arbitration proxy for Realitio on Arbitrum.\",\"version\":1},\"userdoc\":{\"events\":{\"ArbitrationFailed(bytes32,address)\":{\"notice\":\"To be emitted when the dispute could not be created on the Foreign Chain.\"},\"ArbitrationFinished(bytes32)\":{\"notice\":\"To be emitted when reporting the arbitrator answer to Realitio.\"},\"ArbitratorAnswered(bytes32,bytes32)\":{\"notice\":\"To be emitted when receiving the answer from the arbitrator.\"},\"RequestAcknowledged(bytes32,address)\":{\"notice\":\"To be emitted when the arbitration request acknowledgement is sent to the Foreign Chain.\"},\"RequestCanceled(bytes32,address)\":{\"notice\":\"To be emitted when the arbitration request is canceled.\"},\"RequestNotified(bytes32,address,uint256)\":{\"notice\":\"To be emitted when the Realitio contract has been notified of an arbitration request.\"},\"RequestRejected(bytes32,address,uint256,string)\":{\"notice\":\"To be emitted when arbitration request is rejected.\"}},\"kind\":\"user\",\"methods\":{\"constructor\":{\"notice\":\"Creates an arbitration proxy on the home chain.\"},\"receiveArbitrationAnswer(bytes32,bytes32)\":{\"notice\":\"Receives an answer to a specified question. TRUSTED.\"},\"receiveArbitrationFailure(bytes32,address)\":{\"notice\":\"Receives a failed attempt to request arbitration. TRUSTED.\"},\"reportArbitrationAnswer(bytes32,bytes32,bytes32,address)\":{\"notice\":\"Reports the answer provided by the arbitrator to a specified question.\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"src/0.8/RealitioHomeProxyArbitrum.sol\":\"RealitioHomeProxyArbitrum\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@arbitrum/nitro-contracts/src/libraries/AddressAliasHelper.sol\":{\"content\":\"// Copyright 2021-2022, Offchain Labs, Inc.\\n// For license information, see https://github.com/OffchainLabs/nitro-contracts/blob/main/LICENSE\\n// SPDX-License-Identifier: BUSL-1.1\\n\\npragma solidity ^0.8.0;\\n\\nlibrary AddressAliasHelper {\\n    uint160 internal constant OFFSET = uint160(0x1111000000000000000000000000000000001111);\\n\\n    /// @notice Utility function that converts the address in the L1 that submitted a tx to\\n    /// the inbox to the msg.sender viewed in the L2\\n    /// @param l1Address the address in the L1 that triggered the tx to L2\\n    /// @return l2Address L2 address as viewed in msg.sender\\n    function applyL1ToL2Alias(address l1Address) internal pure returns (address l2Address) {\\n        unchecked {\\n            l2Address = address(uint160(l1Address) + OFFSET);\\n        }\\n    }\\n\\n    /// @notice Utility function that converts the msg.sender viewed in the L2 to the\\n    /// address in the L1 that submitted a tx to the inbox\\n    /// @param l2Address L2 address as viewed in msg.sender\\n    /// @return l1Address the address in the L1 that triggered the tx to L2\\n    function undoL1ToL2Alias(address l2Address) internal pure returns (address l1Address) {\\n        unchecked {\\n            l1Address = address(uint160(l2Address) - OFFSET);\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0x53ab7b4f3e0179f4579bdaccbd68ef79246d28ce95632f8e3b585356fca0d6c0\",\"license\":\"BUSL-1.1\"},\"@arbitrum/nitro-contracts/src/precompiles/ArbSys.sol\":{\"content\":\"// Copyright 2021-2022, Offchain Labs, Inc.\\n// For license information, see https://github.com/OffchainLabs/nitro-contracts/blob/main/LICENSE\\n// SPDX-License-Identifier: BUSL-1.1\\n\\npragma solidity >=0.4.21 <0.9.0;\\n\\n/**\\n * @title System level functionality\\n * @notice For use by contracts to interact with core L2-specific functionality.\\n * Precompiled contract that exists in every Arbitrum chain at address(100), 0x0000000000000000000000000000000000000064.\\n */\\ninterface ArbSys {\\n    /**\\n     * @notice Get Arbitrum block number (distinct from L1 block number; Arbitrum genesis block has block number 0)\\n     * @return block number as int\\n     */\\n    function arbBlockNumber() external view returns (uint256);\\n\\n    /**\\n     * @notice Get Arbitrum block hash (reverts unless currentBlockNum-256 <= arbBlockNum < currentBlockNum)\\n     * @return block hash\\n     */\\n    function arbBlockHash(uint256 arbBlockNum) external view returns (bytes32);\\n\\n    /**\\n     * @notice Gets the rollup's unique chain identifier\\n     * @return Chain identifier as int\\n     */\\n    function arbChainID() external view returns (uint256);\\n\\n    /**\\n     * @notice Get internal version number identifying an ArbOS build\\n     * @return version number as int\\n     */\\n    function arbOSVersion() external view returns (uint256);\\n\\n    /**\\n     * @notice Returns 0 since Nitro has no concept of storage gas\\n     * @return uint 0\\n     */\\n    function getStorageGasAvailable() external view returns (uint256);\\n\\n    /**\\n     * @notice (deprecated) check if current call is top level (meaning it was triggered by an EoA or a L1 contract)\\n     * @dev this call has been deprecated and may be removed in a future release\\n     * @return true if current execution frame is not a call by another L2 contract\\n     */\\n    function isTopLevelCall() external view returns (bool);\\n\\n    /**\\n     * @notice map L1 sender contract address to its L2 alias\\n     * @param sender sender address\\n     * @param unused argument no longer used\\n     * @return aliased sender address\\n     */\\n    function mapL1SenderContractAddressToL2Alias(address sender, address unused)\\n        external\\n        pure\\n        returns (address);\\n\\n    /**\\n     * @notice check if the caller (of this caller of this) is an aliased L1 contract address\\n     * @return true iff the caller's address is an alias for an L1 contract address\\n     */\\n    function wasMyCallersAddressAliased() external view returns (bool);\\n\\n    /**\\n     * @notice return the address of the caller (of this caller of this), without applying L1 contract address aliasing\\n     * @return address of the caller's caller, without applying L1 contract address aliasing\\n     */\\n    function myCallersAddressWithoutAliasing() external view returns (address);\\n\\n    /**\\n     * @notice Send given amount of Eth to dest from sender.\\n     * This is a convenience function, which is equivalent to calling sendTxToL1 with empty data.\\n     * @param destination recipient address on L1\\n     * @return unique identifier for this L2-to-L1 transaction.\\n     */\\n    function withdrawEth(address destination) external payable returns (uint256);\\n\\n    /**\\n     * @notice Send a transaction to L1\\n     * @dev it is not possible to execute on the L1 any L2-to-L1 transaction which contains data\\n     * to a contract address without any code (as enforced by the Bridge contract).\\n     * @param destination recipient address on L1\\n     * @param data (optional) calldata for L1 contract call\\n     * @return a unique identifier for this L2-to-L1 transaction.\\n     */\\n    function sendTxToL1(address destination, bytes calldata data)\\n        external\\n        payable\\n        returns (uint256);\\n\\n    /**\\n     * @notice Get send Merkle tree state\\n     * @return size number of sends in the history\\n     * @return root root hash of the send history\\n     * @return partials hashes of partial subtrees in the send history tree\\n     */\\n    function sendMerkleTreeState()\\n        external\\n        view\\n        returns (\\n            uint256 size,\\n            bytes32 root,\\n            bytes32[] memory partials\\n        );\\n\\n    /**\\n     * @notice creates a send txn from L2 to L1\\n     * @param position = (level << 192) + leaf = (0 << 192) + leaf = leaf\\n     */\\n    event L2ToL1Tx(\\n        address caller,\\n        address indexed destination,\\n        uint256 indexed hash,\\n        uint256 indexed position,\\n        uint256 arbBlockNum,\\n        uint256 ethBlockNum,\\n        uint256 timestamp,\\n        uint256 callvalue,\\n        bytes data\\n    );\\n\\n    /// @dev DEPRECATED in favour of the new L2ToL1Tx event above after the nitro upgrade\\n    event L2ToL1Transaction(\\n        address caller,\\n        address indexed destination,\\n        uint256 indexed uniqueId,\\n        uint256 indexed batchNumber,\\n        uint256 indexInBatch,\\n        uint256 arbBlockNum,\\n        uint256 ethBlockNum,\\n        uint256 timestamp,\\n        uint256 callvalue,\\n        bytes data\\n    );\\n\\n    /**\\n     * @notice logs a merkle branch for proof synthesis\\n     * @param reserved an index meant only to align the 4th index with L2ToL1Transaction's 4th event\\n     * @param hash the merkle hash\\n     * @param position = (level << 192) + leaf\\n     */\\n    event SendMerkleUpdate(\\n        uint256 indexed reserved,\\n        bytes32 indexed hash,\\n        uint256 indexed position\\n    );\\n\\n    error InvalidBlockNumber(uint256 requested, uint256 current);\\n}\\n\",\"keccak256\":\"0x4bc9f91d6a3973af46cc95dd5fe9a29d23e2e64b13512dd0b2d1bfcde705f132\",\"license\":\"BUSL-1.1\"},\"@kleros/erc-792/contracts/IArbitrable.sol\":{\"content\":\"/**\\n * @authors: [@ferittuncer, @hbarcelos]\\n * @reviewers: [@remedcu*]\\n * @auditors: []\\n * @bounties: []\\n * @deployments: []\\n * SPDX-License-Identifier: MIT\\n */\\npragma solidity >=0.7;\\n\\nimport \\\"./IArbitrator.sol\\\";\\n\\n/**\\n * @title IArbitrable\\n * Arbitrable interface.\\n * When developing arbitrable contracts, we need to:\\n * - Define the action taken when a ruling is received by the contract.\\n * - Allow dispute creation. For this a function must call arbitrator.createDispute{value: _fee}(_choices,_extraData);\\n */\\ninterface IArbitrable {\\n    /**\\n     * @dev To be raised when a ruling is given.\\n     * @param _arbitrator The arbitrator giving the ruling.\\n     * @param _disputeID ID of the dispute in the Arbitrator contract.\\n     * @param _ruling The ruling which was given.\\n     */\\n    event Ruling(IArbitrator indexed _arbitrator, uint256 indexed _disputeID, uint256 _ruling);\\n\\n    /**\\n     * @dev Give a ruling for a dispute. Must be called by the arbitrator.\\n     * The purpose of this function is to ensure that the address calling it has the right to rule on the contract.\\n     * @param _disputeID ID of the dispute in the Arbitrator contract.\\n     * @param _ruling Ruling given by the arbitrator. Note that 0 is reserved for \\\"Not able/wanting to make a decision\\\".\\n     */\\n    function rule(uint256 _disputeID, uint256 _ruling) external;\\n}\\n\",\"keccak256\":\"0x1803a3433a78c509b20bd9477a2c60a71b2ce1ee7e17eb0ef0601618a8a72526\",\"license\":\"MIT\"},\"@kleros/erc-792/contracts/IArbitrator.sol\":{\"content\":\"/**\\n * @authors: [@ferittuncer, @hbarcelos]\\n * @reviewers: [@remedcu*]\\n * @auditors: []\\n * @bounties: []\\n * @deployments: []\\n * SPDX-License-Identifier: MIT\\n */\\n\\npragma solidity >=0.7;\\n\\nimport \\\"./IArbitrable.sol\\\";\\n\\n/**\\n * @title Arbitrator\\n * Arbitrator abstract contract.\\n * When developing arbitrator contracts we need to:\\n * - Define the functions for dispute creation (createDispute) and appeal (appeal). Don't forget to store the arbitrated contract and the disputeID (which should be unique, may nbDisputes).\\n * - Define the functions for cost display (arbitrationCost and appealCost).\\n * - Allow giving rulings. For this a function must call arbitrable.rule(disputeID, ruling).\\n */\\ninterface IArbitrator {\\n    enum DisputeStatus {Waiting, Appealable, Solved}\\n\\n    /**\\n     * @dev To be emitted when a dispute is created.\\n     * @param _disputeID ID of the dispute.\\n     * @param _arbitrable The contract which created the dispute.\\n     */\\n    event DisputeCreation(uint256 indexed _disputeID, IArbitrable indexed _arbitrable);\\n\\n    /**\\n     * @dev To be emitted when a dispute can be appealed.\\n     * @param _disputeID ID of the dispute.\\n     * @param _arbitrable The contract which created the dispute.\\n     */\\n    event AppealPossible(uint256 indexed _disputeID, IArbitrable indexed _arbitrable);\\n\\n    /**\\n     * @dev To be emitted when the current ruling is appealed.\\n     * @param _disputeID ID of the dispute.\\n     * @param _arbitrable The contract which created the dispute.\\n     */\\n    event AppealDecision(uint256 indexed _disputeID, IArbitrable indexed _arbitrable);\\n\\n    /**\\n     * @dev Create a dispute. Must be called by the arbitrable contract.\\n     * Must be paid at least arbitrationCost(_extraData).\\n     * @param _choices Amount of choices the arbitrator can make in this dispute.\\n     * @param _extraData Can be used to give additional info on the dispute to be created.\\n     * @return disputeID ID of the dispute created.\\n     */\\n    function createDispute(uint256 _choices, bytes calldata _extraData) external payable returns (uint256 disputeID);\\n\\n    /**\\n     * @dev Compute the cost of arbitration. It is recommended not to increase it often, as it can be highly time and gas consuming for the arbitrated contracts to cope with fee augmentation.\\n     * @param _extraData Can be used to give additional info on the dispute to be created.\\n     * @return cost Amount to be paid.\\n     */\\n    function arbitrationCost(bytes calldata _extraData) external view returns (uint256 cost);\\n\\n    /**\\n     * @dev Appeal a ruling. Note that it has to be called before the arbitrator contract calls rule.\\n     * @param _disputeID ID of the dispute to be appealed.\\n     * @param _extraData Can be used to give extra info on the appeal.\\n     */\\n    function appeal(uint256 _disputeID, bytes calldata _extraData) external payable;\\n\\n    /**\\n     * @dev Compute the cost of appeal. It is recommended not to increase it often, as it can be higly time and gas consuming for the arbitrated contracts to cope with fee augmentation.\\n     * @param _disputeID ID of the dispute to be appealed.\\n     * @param _extraData Can be used to give additional info on the dispute to be created.\\n     * @return cost Amount to be paid.\\n     */\\n    function appealCost(uint256 _disputeID, bytes calldata _extraData) external view returns (uint256 cost);\\n\\n    /**\\n     * @dev Compute the start and end of the dispute's current or next appeal period, if possible. If not known or appeal is impossible: should return (0, 0).\\n     * @param _disputeID ID of the dispute.\\n     * @return start The start of the period.\\n     * @return end The end of the period.\\n     */\\n    function appealPeriod(uint256 _disputeID) external view returns (uint256 start, uint256 end);\\n\\n    /**\\n     * @dev Return the status of a dispute.\\n     * @param _disputeID ID of the dispute to rule.\\n     * @return status The status of the dispute.\\n     */\\n    function disputeStatus(uint256 _disputeID) external view returns (DisputeStatus status);\\n\\n    /**\\n     * @dev Return the current ruling of a dispute. This is useful for parties to know if they should appeal.\\n     * @param _disputeID ID of the dispute.\\n     * @return ruling The ruling which has been given or the one which will be given if there is no appeal.\\n     */\\n    function currentRuling(uint256 _disputeID) external view returns (uint256 ruling);\\n}\\n\",\"keccak256\":\"0x240a4142f9ec379da0333dfc82409b7b058cff9ea118368eb5e8f15447996c1e\",\"license\":\"MIT\"},\"@kleros/erc-792/contracts/erc-1497/IEvidence.sol\":{\"content\":\"/**\\n * @authors: [@ferittuncer, @hbarcelos]\\n * @reviewers: []\\n * @auditors: []\\n * @bounties: []\\n * @deployments: []\\n * SPDX-License-Identifier: MIT\\n */\\npragma solidity >=0.7;\\n\\nimport \\\"../IArbitrator.sol\\\";\\n\\n/** @title IEvidence\\n *  ERC-1497: Evidence Standard\\n */\\ninterface IEvidence {\\n    /**\\n     * @dev To be emitted when meta-evidence is submitted.\\n     * @param _metaEvidenceID Unique identifier of meta-evidence.\\n     * @param _evidence A link to the meta-evidence JSON.\\n     */\\n    event MetaEvidence(uint256 indexed _metaEvidenceID, string _evidence);\\n\\n    /**\\n     * @dev To be raised when evidence is submitted. Should point to the resource (evidences are not to be stored on chain due to gas considerations).\\n     * @param _arbitrator The arbitrator of the contract.\\n     * @param _evidenceGroupID Unique identifier of the evidence group the evidence belongs to.\\n     * @param _party The address of the party submiting the evidence. Note that 0x0 refers to evidence not submitted by any party.\\n     * @param _evidence A URI to the evidence JSON file whose name should be its keccak256 hash followed by .json.\\n     */\\n    event Evidence(\\n        IArbitrator indexed _arbitrator,\\n        uint256 indexed _evidenceGroupID,\\n        address indexed _party,\\n        string _evidence\\n    );\\n\\n    /**\\n     * @dev To be emitted when a dispute is created to link the correct meta-evidence to the disputeID.\\n     * @param _arbitrator The arbitrator of the contract.\\n     * @param _disputeID ID of the dispute in the Arbitrator contract.\\n     * @param _metaEvidenceID Unique identifier of meta-evidence.\\n     * @param _evidenceGroupID Unique identifier of the evidence group that is linked to this dispute.\\n     */\\n    event Dispute(\\n        IArbitrator indexed _arbitrator,\\n        uint256 indexed _disputeID,\\n        uint256 _metaEvidenceID,\\n        uint256 _evidenceGroupID\\n    );\\n}\\n\",\"keccak256\":\"0x1ccedf5213730632540c748486637d7b1977ee73375818bf498a8276ca49dd13\",\"license\":\"MIT\"},\"src/0.8/RealitioHomeProxyArbitrum.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\n/**\\n *  @authors: [@unknownunknown1]\\n *  @reviewers: []\\n *  @auditors: []\\n *  @bounties: []\\n *  @deployments: []\\n */\\n\\npragma solidity 0.8.25;\\n\\nimport \\\"./interfaces/IRealitio.sol\\\";\\nimport {IForeignArbitrationProxy, IHomeArbitrationProxy} from \\\"./interfaces/IArbitrationProxies.sol\\\";\\nimport \\\"@arbitrum/nitro-contracts/src/precompiles/ArbSys.sol\\\";\\nimport \\\"@arbitrum/nitro-contracts/src/libraries/AddressAliasHelper.sol\\\";\\n\\n/**\\n * @title Arbitration proxy for Realitio on Arbitrum.\\n * @dev This contract is meant to be deployed to L2 where Reality.eth is deployed.\\n * https://docs.arbitrum.io/arbos/l2-to-l1-messaging\\n * Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/arbitrum/GreeterL2.sol\\n */\\ncontract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {\\n    // Precompiled contract for L2 -> L1 communication\\n    // https://docs.arbitrum.io/build-decentralized-apps/precompiles/reference#arbsys\\n    ArbSys constant ARB_SYS = ArbSys(address(100));\\n\\n    /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.\\n    IRealitio public immutable realitio;\\n    address public immutable foreignProxy; // Address of the proxy on L1.\\n    /// @dev ID of the foreign chain, required for Realitio.\\n    bytes32 public immutable foreignChainId;\\n\\n    /// @dev Metadata for Realitio interface.\\n    string public override metadata;\\n\\n    enum Status {\\n        None,\\n        Rejected,\\n        Notified,\\n        AwaitingRuling,\\n        Ruled,\\n        Finished\\n    }\\n\\n    struct Request {\\n        Status status;\\n        bytes32 arbitratorAnswer;\\n    }\\n\\n    /// @dev Associates an arbitration request with a question ID and a requester address. requests[questionID][requester]\\n    mapping(bytes32 => mapping(address => Request)) public requests;\\n\\n    /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]\\n    mapping(bytes32 => address) public questionIDToRequester;\\n\\n    event L2ToL1TxCreated(uint256 indexed withdrawalId);\\n\\n    /// @dev Foreign proxy uses its alias to make calls on L2.\\n    modifier onlyForeignProxyAlias() virtual {\\n        require(msg.sender == AddressAliasHelper.applyL1ToL2Alias(foreignProxy), \\\"Can only be called by foreign proxy\\\");\\n        _;\\n    }\\n\\n    /**\\n     * @notice Creates an arbitration proxy on the home chain.\\n     * @param _realitio Realitio contract address.\\n     * @param _metadata Metadata for Realitio.\\n     * @param _foreignProxy Address of the proxy on L1.\\n     * @param _foreignChainId The ID of foreign chain (Sepolia/Mainnet).\\n     */\\n    constructor(IRealitio _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {\\n        realitio = _realitio;\\n        metadata = _metadata;\\n        foreignChainId = bytes32(_foreignChainId);\\n        foreignProxy = _foreignProxy;\\n    }\\n\\n    /**\\n     * @dev Receives the requested arbitration for a question. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the user that requested arbitration.\\n     * @param _maxPrevious The maximum value of the previous bond for the question.\\n     */\\n    function receiveArbitrationRequest(\\n        bytes32 _questionID,\\n        address _requester,\\n        uint256 _maxPrevious\\n    ) external override onlyForeignProxyAlias {\\n        Request storage request = requests[_questionID][_requester];\\n        require(request.status == Status.None, \\\"Request already exists\\\");\\n\\n        try realitio.notifyOfArbitrationRequest(_questionID, _requester, _maxPrevious) {\\n            request.status = Status.Notified;\\n            questionIDToRequester[_questionID] = _requester;\\n\\n            emit RequestNotified(_questionID, _requester, _maxPrevious);\\n        } catch Error(string memory reason) {\\n            /*\\n             * Will fail if:\\n             *  - The question does not exist.\\n             *  - The question was not answered yet.\\n             *  - Another request was already accepted.\\n             *  - Someone increased the bond on the question to a value > _maxPrevious\\n             */\\n            request.status = Status.Rejected;\\n\\n            emit RequestRejected(_questionID, _requester, _maxPrevious, reason);\\n        } catch {\\n            // In case `reject` did not have a reason string or some other error happened\\n            request.status = Status.Rejected;\\n\\n            emit RequestRejected(_questionID, _requester, _maxPrevious, \\\"\\\");\\n        }\\n    }\\n\\n    /**\\n     * @dev Relays arbitration request back to L1 after it has been notified by Realitio for a given question.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    function handleNotifiedRequest(bytes32 _questionID, address _requester) external override {\\n        Request storage request = requests[_questionID][_requester];\\n        require(request.status == Status.Notified, \\\"Invalid request status\\\");\\n\\n        request.status = Status.AwaitingRuling;\\n\\n        bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;\\n        bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);\\n        sendToL1(data);\\n        emit RequestAcknowledged(_questionID, _requester);\\n    }\\n\\n    /**\\n     * @dev Relays arbitration request back to L1 after it has been rejected.\\n     * Reasons why the request might be rejected:\\n     *  - The question does not exist\\n     *  - The question was not answered yet\\n     *  - The quesiton bond value changed while the arbitration was being requested\\n     *  - Another request was already accepted\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    function handleRejectedRequest(bytes32 _questionID, address _requester) external override {\\n        Request storage request = requests[_questionID][_requester];\\n        require(request.status == Status.Rejected, \\\"Invalid request status\\\");\\n\\n        // At this point, only the request.status is set, simply resetting the status to Status.None is enough.\\n        request.status = Status.None;\\n\\n        bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;\\n        bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);\\n        sendToL1(data);\\n        emit RequestCanceled(_questionID, _requester);\\n    }\\n\\n    /**\\n     * @notice Receives a failed attempt to request arbitration. TRUSTED.\\n     * @dev Currently this can happen only if the arbitration cost increased.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the user that requested arbitration.\\n     */\\n    function receiveArbitrationFailure(\\n        bytes32 _questionID,\\n        address _requester\\n    ) external override onlyForeignProxyAlias {\\n        Request storage request = requests[_questionID][_requester];\\n        require(request.status == Status.AwaitingRuling, \\\"Invalid request status\\\");\\n\\n        // At this point, only the request.status is set, simply resetting the status to Status.None is enough.\\n        request.status = Status.None;\\n\\n        realitio.cancelArbitration(_questionID);\\n\\n        emit ArbitrationFailed(_questionID, _requester);\\n    }\\n\\n    /**\\n     * @notice Receives an answer to a specified question. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _answer The answer from the arbitrator.\\n     */\\n    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external override onlyForeignProxyAlias {\\n        address requester = questionIDToRequester[_questionID];\\n        Request storage request = requests[_questionID][requester];\\n        require(request.status == Status.AwaitingRuling, \\\"Invalid request status\\\");\\n\\n        request.status = Status.Ruled;\\n        request.arbitratorAnswer = _answer;\\n\\n        emit ArbitratorAnswered(_questionID, _answer);\\n    }\\n\\n    /**\\n     * @notice Reports the answer provided by the arbitrator to a specified question.\\n     * @dev The Realitio contract validates the input parameters passed to this method,\\n     * so making this publicly accessible is safe.\\n     * @param _questionID The ID of the question.\\n     * @param _lastHistoryHash The history hash given with the last answer to the question in the Realitio contract.\\n     * @param _lastAnswerOrCommitmentID The last answer given, or its commitment ID if it was a commitment,\\n     * to the question in the Realitio contract.\\n     * @param _lastAnswerer The last answerer to the question in the Realitio contract.\\n     */\\n    function reportArbitrationAnswer(\\n        bytes32 _questionID,\\n        bytes32 _lastHistoryHash,\\n        bytes32 _lastAnswerOrCommitmentID,\\n        address _lastAnswerer\\n    ) external {\\n        address requester = questionIDToRequester[_questionID];\\n        Request storage request = requests[_questionID][requester];\\n        require(request.status == Status.Ruled, \\\"Arbitrator has not ruled yet\\\");\\n\\n        realitio.assignWinnerAndSubmitAnswerByArbitrator(\\n            _questionID,\\n            request.arbitratorAnswer,\\n            requester,\\n            _lastHistoryHash,\\n            _lastAnswerOrCommitmentID,\\n            _lastAnswerer\\n        );\\n\\n        request.status = Status.Finished;\\n\\n        emit ArbitrationFinished(_questionID);\\n    }\\n\\n    /**\\n     * @notice Sends a message to L1.\\n     * @param _data The data sent.\\n     */\\n    function sendToL1(bytes memory _data) internal virtual {\\n        uint256 withdrawalId = ARB_SYS.sendTxToL1(foreignProxy, _data);\\n        emit L2ToL1TxCreated(withdrawalId);\\n    }\\n}\\n\",\"keccak256\":\"0x6ab837927f1de888edda3ebdb31dd38bb5f47e944c8933341a407b72a67eb2db\",\"license\":\"MIT\"},\"src/0.8/interfaces/IArbitrationProxies.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.25;\\n\\nimport {IArbitrable} from \\\"@kleros/erc-792/contracts/IArbitrable.sol\\\";\\nimport {IEvidence} from \\\"@kleros/erc-792/contracts/erc-1497/IEvidence.sol\\\";\\n\\ninterface IHomeArbitrationProxy {\\n    /**\\n     * @notice To be emitted when the Realitio contract has been notified of an arbitration request.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     * @param _maxPrevious The maximum value of the previous bond for the question.\\n     */\\n    event RequestNotified(bytes32 indexed _questionID, address indexed _requester, uint256 _maxPrevious);\\n\\n    /**\\n     * @notice To be emitted when arbitration request is rejected.\\n     * @dev This can happen if the current bond for the question is higher than maxPrevious\\n     * or if the question is already finalized.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     * @param _maxPrevious The maximum value of the current bond for the question.\\n     * @param _reason The reason why the request was rejected.\\n     */\\n    event RequestRejected(\\n        bytes32 indexed _questionID,\\n        address indexed _requester,\\n        uint256 _maxPrevious,\\n        string _reason\\n    );\\n\\n    /**\\n     * @notice To be emitted when the arbitration request acknowledgement is sent to the Foreign Chain.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    event RequestAcknowledged(bytes32 indexed _questionID, address indexed _requester);\\n\\n    /**\\n     * @notice To be emitted when the arbitration request is canceled.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    event RequestCanceled(bytes32 indexed _questionID, address indexed _requester);\\n\\n    /**\\n     * @notice To be emitted when the dispute could not be created on the Foreign Chain.\\n     * @dev This will happen if the arbitration fee increases in between the arbitration request and acknowledgement.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);\\n\\n    /**\\n     * @notice To be emitted when receiving the answer from the arbitrator.\\n     * @param _questionID The ID of the question.\\n     * @param _answer The answer from the arbitrator.\\n     */\\n    event ArbitratorAnswered(bytes32 indexed _questionID, bytes32 _answer);\\n\\n    /**\\n     * @notice To be emitted when reporting the arbitrator answer to Realitio.\\n     * @param _questionID The ID of the question.\\n     */\\n    event ArbitrationFinished(bytes32 indexed _questionID);\\n\\n    /**\\n     * @dev Receives the requested arbitration for a question. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.\\n     */\\n    function receiveArbitrationRequest(bytes32 _questionID, address _requester, uint256 _maxPrevious) external;\\n\\n    /**\\n     * @notice Handles arbitration request after it has been notified to Realitio for a given question.\\n     * @dev This method exists because `receiveArbitrationRequest` is called by\\n     * the bridge and cannot send messages back to it.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    function handleNotifiedRequest(bytes32 _questionID, address _requester) external;\\n\\n    /**\\n     * @notice Handles arbitration request after it has been rejected.\\n     * @dev This method exists because `receiveArbitrationRequest` is called by\\n     * the bridge and cannot send messages back to it.\\n     * Reasons why the request might be rejected:\\n     *  - The question does not exist\\n     *  - The question was not answered yet\\n     *  - The quesiton bond value changed while the arbitration was being requested\\n     *  - Another request was already accepted\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    function handleRejectedRequest(bytes32 _questionID, address _requester) external;\\n\\n    /**\\n     * @notice Receives a failed attempt to request arbitration. TRUSTED.\\n     * @dev Currently this can happen only if the arbitration cost increased.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    function receiveArbitrationFailure(bytes32 _questionID, address _requester) external;\\n\\n    /**\\n     * @notice Receives the answer to a specified question. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _answer The answer from the arbitrator.\\n     */\\n    function receiveArbitrationAnswer(bytes32 _questionID, bytes32 _answer) external;\\n\\n    /** @notice Provides a string of json-encoded metadata with the following properties:\\n         - tos: A URI representing the location of a terms-of-service document for the arbitrator.\\n         - template_hashes: An array of hashes of templates supported by the arbitrator. If you have a numerical ID for a template registered with Reality.eth, you can look up this hash by calling the Reality.eth template_hashes() function.\\n     *  @dev Template_hashes won't be used by this home proxy. \\n     */\\n    function metadata() external view returns (string calldata);\\n}\\n\\ninterface IForeignArbitrationProxy {\\n    /**\\n     * @notice Should be emitted when the arbitration is requested.\\n     * @param _questionID The ID of the question with the request for arbitration.\\n     * @param _requester The address of the arbitration requester.\\n     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.\\n     */\\n    event ArbitrationRequested(bytes32 indexed _questionID, address indexed _requester, uint256 _maxPrevious);\\n\\n    /**\\n     * @notice Should be emitted when the dispute is created.\\n     * @param _questionID The ID of the question with the request for arbitration.\\n     * @param _requester The address of the arbitration requester.\\n     * @param _disputeID The ID of the dispute.\\n     */\\n    event ArbitrationCreated(bytes32 indexed _questionID, address indexed _requester, uint256 indexed _disputeID);\\n\\n    /**\\n     * @notice Should be emitted when the arbitration is canceled by the Home Chain.\\n     * @param _questionID The ID of the question with the request for arbitration.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    event ArbitrationCanceled(bytes32 indexed _questionID, address indexed _requester);\\n\\n    /**\\n     * @notice Should be emitted when the dispute could not be created.\\n     * @dev This will happen if there is an increase in the arbitration fees\\n     * between the time the arbitration is made and the time it is acknowledged.\\n     * @param _questionID The ID of the question with the request for arbitration.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    event ArbitrationFailed(bytes32 indexed _questionID, address indexed _requester);\\n\\n    /**\\n     * @notice Should be emitted when the ruling is relayed to home proxy manually. Some implementations may not emit this event.\\n     * @param _questionID The ID of the question with the ruling to relay.\\n     * @param _ruling Ruling converted into Realitio format.\\n     */\\n    event RulingRelayed(bytes32 _questionID, bytes32 _ruling);\\n\\n    /**\\n     * @notice Requests arbitration for the given question and contested answer.\\n     * @param _questionID The ID of the question.\\n     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.\\n     */\\n    function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable;\\n\\n    /**\\n     * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) external;\\n\\n    /**\\n     * @notice Receives the cancelation of the arbitration request for the given question and requester. TRUSTED.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external;\\n\\n    /**\\n     * @notice Cancels the arbitration in case the dispute could not be created.\\n     * @param _questionID The ID of the question.\\n     * @param _requester The address of the arbitration requester.\\n     */\\n    function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable;\\n\\n    /**\\n     * @notice Gets the fee to create a dispute.\\n     * @param _questionID the ID of the question.\\n     * @return The fee to create a dispute.\\n     */\\n    function getDisputeFee(bytes32 _questionID) external view returns (uint256);\\n}\\n\\n\",\"keccak256\":\"0x4f2dd0c7372274a2382fad70cc8165c7c970e4d859f604b8441ebfe091fa62e3\",\"license\":\"MIT\"},\"src/0.8/interfaces/IRealitio.sol\":{\"content\":\"/* solhint-disable var-name-mixedcase */\\n// SPDX-License-Identifier: MIT\\n\\n/** \\n *  Interface of https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/flat/RealityETH-3.0.sol.\\n *  @reviewers: [@hbarcelos, @fnanni-0, @nix1g, @unknownunknown1, @ferittuncer, @jaybuidl]\\n *  @auditors: []\\n *  @bounties: []\\n *  @deployments: []\\n */\\n\\npragma solidity 0.8.25;\\n\\ninterface IRealitio {\\n    event LogNewAnswer(\\n        bytes32 answer,\\n        bytes32 indexed question_id,\\n        bytes32 history_hash,\\n        address indexed user,\\n        uint256 bond,\\n        uint256 ts,\\n        bool is_commitment\\n    );\\n\\n    event LogNewTemplate(uint256 indexed template_id, address indexed user, string question_text);\\n\\n    event LogNewQuestion(\\n        bytes32 indexed question_id,\\n        address indexed user,\\n        uint256 template_id,\\n        string question,\\n        bytes32 indexed content_hash,\\n        address arbitrator,\\n        uint32 timeout,\\n        uint32 opening_ts,\\n        uint256 nonce,\\n        uint256 created\\n    );\\n\\n    /**\\n     * @dev The arbitrator contract is trusted to only call this if they've been paid, and tell us who paid them.\\n     * @notice Notify the contract that the arbitrator has been paid for a question, freezing it pending their decision.\\n     * @param question_id The ID of the question.\\n     * @param requester The account that requested arbitration.\\n     * @param max_previous If specified, reverts if a bond higher than this was submitted after you sent your transaction.\\n     */\\n    function notifyOfArbitrationRequest(bytes32 question_id, address requester, uint256 max_previous) external;\\n\\n    /**\\n     * @notice Cancel a previously-requested arbitration and extend the timeout\\n     * @dev Useful when doing arbitration across chains that can't be requested atomically\\n     * @param question_id The ID of the question\\n     */\\n    function cancelArbitration(bytes32 question_id) external;\\n\\n    /**\\n     * @notice Submit the answer for a question, for use by the arbitrator, working out the appropriate winner based on the last answer details.\\n     * @dev Doesn't require (or allow) a bond.\\n     * @param question_id The ID of the question\\n     * @param answer The answer, encoded into bytes32\\n     * @param payee_if_wrong The account to be credited as winner if the last answer given is wrong, usually the account that paid the arbitrator\\n     * @param last_history_hash The history hash before the final one\\n     * @param last_answer_or_commitment_id The last answer given, or the commitment ID if it was a commitment.\\n     * @param last_answerer The address that supplied the last answer\\n     */\\n    function assignWinnerAndSubmitAnswerByArbitrator(\\n        bytes32 question_id,\\n        bytes32 answer,\\n        address payee_if_wrong,\\n        bytes32 last_history_hash,\\n        bytes32 last_answer_or_commitment_id,\\n        address last_answerer\\n    ) external;\\n}\\n\",\"keccak256\":\"0x8dbb0a31da3b2d24aa25868559be12a451bf9d677c4f302337cf48e451f5f6ed\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60e060405234801561001057600080fd5b5060405161130938038061130983398101604081905261002f9161009e565b6001600160a01b0384166080526000610048848261021e565b5060c0526001600160a01b031660a052506102dd9050565b6001600160a01b038116811461007557600080fd5b50565b634e487b7160e01b600052604160045260246000fd5b805161009981610060565b919050565b600080600080608085870312156100b457600080fd5b84516100bf81610060565b602086810151919550906001600160401b03808211156100de57600080fd5b818801915088601f8301126100f257600080fd5b81518181111561010457610104610078565b604051601f8201601f19908116603f0116810190838211818310171561012c5761012c610078565b816040528281528b8684870101111561014457600080fd5b600093505b828410156101665784840186015181850187015292850192610149565b60008684830101528098505050505050506101836040860161008e565b6060959095015193969295505050565b600181811c908216806101a757607f821691505b6020821081036101c757634e487b7160e01b600052602260045260246000fd5b50919050565b601f821115610219576000816000526020600020601f850160051c810160208610156101f65750805b601f850160051c820191505b8181101561021557828155600101610202565b5050505b505050565b81516001600160401b0381111561023757610237610078565b61024b816102458454610193565b846101cd565b602080601f83116001811461028057600084156102685750858301515b600019600386901b1c1916600185901b178555610215565b600085815260208120601f198616915b828110156102af57888601518255948401946001909101908401610290565b50858210156102cd5787850151600019600388901b60f8161c191681555b5050505050600190811b01905550565b60805160a05160c051610fcc61033d600039600061016801526000818161012e01528181610557015281816107b101528181610a5d0152610b7201526000818161019d0152818161032d0152818161061c01526108a50152610fcc6000f3fe608060405234801561001057600080fd5b50600436106100b45760003560e01c8063bc8802a211610071578063bc8802a214610198578063bf6569e0146101bf578063c510faf7146101d2578063c77cccc914610215578063ccd6e8d214610228578063d75a86e01461023b57600080fd5b80631865fed1146100b9578063241a9f82146100ff578063392f37e9146101145780636e190f171461012957806391602fd71461015057806395e088fc14610163575b600080fd5b6100e26100c7366004610c11565b6002602052600090815260409020546001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b61011261010d366004610c46565b61024e565b005b61011c6103c7565b6040516100f69190610ccb565b6100e27f000000000000000000000000000000000000000000000000000000000000000081565b61011261015e366004610ce5565b610455565b61018a7f000000000000000000000000000000000000000000000000000000000000000081565b6040519081526020016100f6565b6100e27f000000000000000000000000000000000000000000000000000000000000000081565b6101126101cd366004610ce5565b61054c565b6102076101e0366004610ce5565b60016020818152600093845260408085209091529183529120805491015460ff9091169082565b6040516100f6929190610d27565b610112610223366004610ce5565b6106b3565b610112610236366004610d53565b6107a6565b610112610249366004610d88565b610a52565b600084815260026020908152604080832054600183528184206001600160a01b0390911680855292529091206004815460ff16600581111561029257610292610d11565b146102e45760405162461bcd60e51b815260206004820152601c60248201527f41726269747261746f7220686173206e6f742072756c6564207965740000000060448201526064015b60405180910390fd5b60018101546040516335138a4f60e21b81526004810188905260248101919091526001600160a01b038381166044830152606482018790526084820186905284811660a48301527f0000000000000000000000000000000000000000000000000000000000000000169063d44e293c9060c401600060405180830381600087803b15801561037157600080fd5b505af1158015610385573d6000803e3d6000fd5b5050825460ff19166005178355505060405186907f2abf2fd86256e4607561adae782a4853682b6c0b976995a9a45c5fc3a175738690600090a2505050505050565b600080546103d490610daa565b80601f016020809104026020016040519081016040528092919081815260200182805461040090610daa565b801561044d5780601f106104225761010080835404028352916020019161044d565b820191906000526020600020905b81548152906001019060200180831161043057829003601f168201915b505050505081565b60008281526001602090815260408083206001600160a01b038516845290915290206002815460ff16600581111561048f5761048f610d11565b146104ac5760405162461bcd60e51b81526004016102db90610de4565b805460ff1916600317815560408051602481018590526001600160a01b03841660448083019190915282518083039091018152606490910190915260208101805163e742e2ed60e01b6001600160e01b0390911681179091529061050f81610b53565b6040516001600160a01b0385169086907fff09615c531ab8799ea1c67a0952ddbef1c864ef91d390995d0dc07656f4210f90600090a35050505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000061111161111160901b0101161461059f5760405162461bcd60e51b81526004016102db90610e14565b60008281526001602090815260408083206001600160a01b038516845290915290206003815460ff1660058111156105d9576105d9610d11565b146105f65760405162461bcd60e51b81526004016102db90610de4565b805460ff19168155604051630ebbdd2b60e41b8152600481018490526001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000169063ebbdd2b090602401600060405180830381600087803b15801561066057600080fd5b505af1158015610674573d6000803e3d6000fd5b50506040516001600160a01b03851692508591507f9beda0c81abc1c65da7685f113195974dfddb781dfde6263e5a1b13a5356ffad90600090a3505050565b60008281526001602081815260408084206001600160a01b038616855290915290912090815460ff1660058111156106ed576106ed610d11565b1461070a5760405162461bcd60e51b81526004016102db90610de4565b805460ff1916815560408051602481018590526001600160a01b0384166044808301919091528251808303909101815260649091019091526020810180516001600160e01b03166317c4df9160e31b9081179091529061076981610b53565b6040516001600160a01b0385169086907ff313a768599b60b7f8aedb7757d867d09463365b79b55b86ed3c961e6da5a24990600090a35050505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000061111161111160901b010116146107f95760405162461bcd60e51b81526004016102db90610e14565b60008381526001602090815260408083206001600160a01b0386168452909152812090815460ff16600581111561083257610832610d11565b146108785760405162461bcd60e51b81526020600482015260166024820152755265717565737420616c72656164792065786973747360501b60448201526064016102db565b60405163f6a94ecb60e01b8152600481018590526001600160a01b038481166024830152604482018490527f0000000000000000000000000000000000000000000000000000000000000000169063f6a94ecb90606401600060405180830381600087803b1580156108e957600080fd5b505af19250505080156108fa575060015b6109dd57610906610e57565b806308c379a00361097d575061091a610eae565b80610925575061097f565b815460ff191660011782556040516001600160a01b0385169086907ff677e762f2ddc710deec335dd0cfa8a65cc9c9c351b268243be8629f2e8d1b5f9061096f9087908690610f38565b60405180910390a350610a4c565b505b805460ff19166001178155604080518381526020810182905260008183015290516001600160a01b0385169186917ff677e762f2ddc710deec335dd0cfa8a65cc9c9c351b268243be8629f2e8d1b5f916060908290030190a3610a4c565b805460ff1916600290811782556000858152602091825260409081902080546001600160a01b0387166001600160a01b031990911681179091559051848152909186917ff56e18fc84dbd66db78337b5bd0973943fa70c9b52243a540bdac79274f6682d910160405180910390a35b50505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000061111161111160901b01011614610aa55760405162461bcd60e51b81526004016102db90610e14565b600082815260026020908152604080832054600183528184206001600160a01b0390911680855292529091206003815460ff166005811115610ae957610ae9610d11565b14610b065760405162461bcd60e51b81526004016102db90610de4565b805460ff191660041781556001810183905560405183815284907f1813d15d8cef51cff8bbd419a8e13e0655c1babea320dea4174d5e7bc40c42949060200160405180910390a250505050565b6040516349460b4d60e11b815260009060649063928c169a90610b9c907f0000000000000000000000000000000000000000000000000000000000000000908690600401610f59565b6020604051808303816000875af1158015610bbb573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610bdf9190610f7d565b60405190915081907facd96f3817031b95eab52de9132d4a9dd13dac3d9dfcfe950ca9283c89b851a590600090a25050565b600060208284031215610c2357600080fd5b5035919050565b80356001600160a01b0381168114610c4157600080fd5b919050565b60008060008060808587031215610c5c57600080fd5b843593506020850135925060408501359150610c7a60608601610c2a565b905092959194509250565b6000815180845260005b81811015610cab57602081850181015186830182015201610c8f565b506000602082860101526020601f19601f83011685010191505092915050565b602081526000610cde6020830184610c85565b9392505050565b60008060408385031215610cf857600080fd5b82359150610d0860208401610c2a565b90509250929050565b634e487b7160e01b600052602160045260246000fd5b6040810160068410610d4957634e487b7160e01b600052602160045260246000fd5b9281526020015290565b600080600060608486031215610d6857600080fd5b83359250610d7860208501610c2a565b9150604084013590509250925092565b60008060408385031215610d9b57600080fd5b50508035926020909101359150565b600181811c90821680610dbe57607f821691505b602082108103610dde57634e487b7160e01b600052602260045260246000fd5b50919050565b602080825260169082015275496e76616c696420726571756573742073746174757360501b604082015260600190565b60208082526023908201527f43616e206f6e6c792062652063616c6c656420627920666f726569676e2070726040820152626f787960e81b606082015260800190565b600060033d1115610e705760046000803e5060005160e01c5b90565b601f8201601f1916810167ffffffffffffffff81118282101715610ea757634e487b7160e01b600052604160045260246000fd5b6040525050565b600060443d1015610ebc5790565b6040516003193d81016004833e81513d67ffffffffffffffff8160248401118184111715610eec57505050505090565b8285019150815181811115610f045750505050505090565b843d8701016020828501011115610f1e5750505050505090565b610f2d60208286010187610e73565b509095945050505050565b828152604060208201526000610f516040830184610c85565b949350505050565b6001600160a01b0383168152604060208201819052600090610f5190830184610c85565b600060208284031215610f8f57600080fd5b505191905056fea2646970667358221220c2f7b9f2a5230959e57f804f6a32fab4c925cd5020b547f84df5ffc970415cdb64736f6c63430008190033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100b45760003560e01c8063bc8802a211610071578063bc8802a214610198578063bf6569e0146101bf578063c510faf7146101d2578063c77cccc914610215578063ccd6e8d214610228578063d75a86e01461023b57600080fd5b80631865fed1146100b9578063241a9f82146100ff578063392f37e9146101145780636e190f171461012957806391602fd71461015057806395e088fc14610163575b600080fd5b6100e26100c7366004610c11565b6002602052600090815260409020546001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b61011261010d366004610c46565b61024e565b005b61011c6103c7565b6040516100f69190610ccb565b6100e27f000000000000000000000000000000000000000000000000000000000000000081565b61011261015e366004610ce5565b610455565b61018a7f000000000000000000000000000000000000000000000000000000000000000081565b6040519081526020016100f6565b6100e27f000000000000000000000000000000000000000000000000000000000000000081565b6101126101cd366004610ce5565b61054c565b6102076101e0366004610ce5565b60016020818152600093845260408085209091529183529120805491015460ff9091169082565b6040516100f6929190610d27565b610112610223366004610ce5565b6106b3565b610112610236366004610d53565b6107a6565b610112610249366004610d88565b610a52565b600084815260026020908152604080832054600183528184206001600160a01b0390911680855292529091206004815460ff16600581111561029257610292610d11565b146102e45760405162461bcd60e51b815260206004820152601c60248201527f41726269747261746f7220686173206e6f742072756c6564207965740000000060448201526064015b60405180910390fd5b60018101546040516335138a4f60e21b81526004810188905260248101919091526001600160a01b038381166044830152606482018790526084820186905284811660a48301527f0000000000000000000000000000000000000000000000000000000000000000169063d44e293c9060c401600060405180830381600087803b15801561037157600080fd5b505af1158015610385573d6000803e3d6000fd5b5050825460ff19166005178355505060405186907f2abf2fd86256e4607561adae782a4853682b6c0b976995a9a45c5fc3a175738690600090a2505050505050565b600080546103d490610daa565b80601f016020809104026020016040519081016040528092919081815260200182805461040090610daa565b801561044d5780601f106104225761010080835404028352916020019161044d565b820191906000526020600020905b81548152906001019060200180831161043057829003601f168201915b505050505081565b60008281526001602090815260408083206001600160a01b038516845290915290206002815460ff16600581111561048f5761048f610d11565b146104ac5760405162461bcd60e51b81526004016102db90610de4565b805460ff1916600317815560408051602481018590526001600160a01b03841660448083019190915282518083039091018152606490910190915260208101805163e742e2ed60e01b6001600160e01b0390911681179091529061050f81610b53565b6040516001600160a01b0385169086907fff09615c531ab8799ea1c67a0952ddbef1c864ef91d390995d0dc07656f4210f90600090a35050505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000061111161111160901b0101161461059f5760405162461bcd60e51b81526004016102db90610e14565b60008281526001602090815260408083206001600160a01b038516845290915290206003815460ff1660058111156105d9576105d9610d11565b146105f65760405162461bcd60e51b81526004016102db90610de4565b805460ff19168155604051630ebbdd2b60e41b8152600481018490526001600160a01b037f0000000000000000000000000000000000000000000000000000000000000000169063ebbdd2b090602401600060405180830381600087803b15801561066057600080fd5b505af1158015610674573d6000803e3d6000fd5b50506040516001600160a01b03851692508591507f9beda0c81abc1c65da7685f113195974dfddb781dfde6263e5a1b13a5356ffad90600090a3505050565b60008281526001602081815260408084206001600160a01b038616855290915290912090815460ff1660058111156106ed576106ed610d11565b1461070a5760405162461bcd60e51b81526004016102db90610de4565b805460ff1916815560408051602481018590526001600160a01b0384166044808301919091528251808303909101815260649091019091526020810180516001600160e01b03166317c4df9160e31b9081179091529061076981610b53565b6040516001600160a01b0385169086907ff313a768599b60b7f8aedb7757d867d09463365b79b55b86ed3c961e6da5a24990600090a35050505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000061111161111160901b010116146107f95760405162461bcd60e51b81526004016102db90610e14565b60008381526001602090815260408083206001600160a01b0386168452909152812090815460ff16600581111561083257610832610d11565b146108785760405162461bcd60e51b81526020600482015260166024820152755265717565737420616c72656164792065786973747360501b60448201526064016102db565b60405163f6a94ecb60e01b8152600481018590526001600160a01b038481166024830152604482018490527f0000000000000000000000000000000000000000000000000000000000000000169063f6a94ecb90606401600060405180830381600087803b1580156108e957600080fd5b505af19250505080156108fa575060015b6109dd57610906610e57565b806308c379a00361097d575061091a610eae565b80610925575061097f565b815460ff191660011782556040516001600160a01b0385169086907ff677e762f2ddc710deec335dd0cfa8a65cc9c9c351b268243be8629f2e8d1b5f9061096f9087908690610f38565b60405180910390a350610a4c565b505b805460ff19166001178155604080518381526020810182905260008183015290516001600160a01b0385169186917ff677e762f2ddc710deec335dd0cfa8a65cc9c9c351b268243be8629f2e8d1b5f916060908290030190a3610a4c565b805460ff1916600290811782556000858152602091825260409081902080546001600160a01b0387166001600160a01b031990911681179091559051848152909186917ff56e18fc84dbd66db78337b5bd0973943fa70c9b52243a540bdac79274f6682d910160405180910390a35b50505050565b336001600160a01b037f000000000000000000000000000000000000000000000000000000000000000061111161111160901b01011614610aa55760405162461bcd60e51b81526004016102db90610e14565b600082815260026020908152604080832054600183528184206001600160a01b0390911680855292529091206003815460ff166005811115610ae957610ae9610d11565b14610b065760405162461bcd60e51b81526004016102db90610de4565b805460ff191660041781556001810183905560405183815284907f1813d15d8cef51cff8bbd419a8e13e0655c1babea320dea4174d5e7bc40c42949060200160405180910390a250505050565b6040516349460b4d60e11b815260009060649063928c169a90610b9c907f0000000000000000000000000000000000000000000000000000000000000000908690600401610f59565b6020604051808303816000875af1158015610bbb573d6000803e3d6000fd5b505050506040513d601f19601f82011682018060405250810190610bdf9190610f7d565b60405190915081907facd96f3817031b95eab52de9132d4a9dd13dac3d9dfcfe950ca9283c89b851a590600090a25050565b600060208284031215610c2357600080fd5b5035919050565b80356001600160a01b0381168114610c4157600080fd5b919050565b60008060008060808587031215610c5c57600080fd5b843593506020850135925060408501359150610c7a60608601610c2a565b905092959194509250565b6000815180845260005b81811015610cab57602081850181015186830182015201610c8f565b506000602082860101526020601f19601f83011685010191505092915050565b602081526000610cde6020830184610c85565b9392505050565b60008060408385031215610cf857600080fd5b82359150610d0860208401610c2a565b90509250929050565b634e487b7160e01b600052602160045260246000fd5b6040810160068410610d4957634e487b7160e01b600052602160045260246000fd5b9281526020015290565b600080600060608486031215610d6857600080fd5b83359250610d7860208501610c2a565b9150604084013590509250925092565b60008060408385031215610d9b57600080fd5b50508035926020909101359150565b600181811c90821680610dbe57607f821691505b602082108103610dde57634e487b7160e01b600052602260045260246000fd5b50919050565b602080825260169082015275496e76616c696420726571756573742073746174757360501b604082015260600190565b60208082526023908201527f43616e206f6e6c792062652063616c6c656420627920666f726569676e2070726040820152626f787960e81b606082015260800190565b600060033d1115610e705760046000803e5060005160e01c5b90565b601f8201601f1916810167ffffffffffffffff81118282101715610ea757634e487b7160e01b600052604160045260246000fd5b6040525050565b600060443d1015610ebc5790565b6040516003193d81016004833e81513d67ffffffffffffffff8160248401118184111715610eec57505050505090565b8285019150815181811115610f045750505050505090565b843d8701016020828501011115610f1e5750505050505090565b610f2d60208286010187610e73565b509095945050505050565b828152604060208201526000610f516040830184610c85565b949350505050565b6001600160a01b0383168152604060208201819052600090610f5190830184610c85565b600060208284031215610f8f57600080fd5b505191905056fea2646970667358221220c2f7b9f2a5230959e57f804f6a32fab4c925cd5020b547f84df5ffc970415cdb64736f6c63430008190033",
+  "devdoc": {
+    "details": "This contract is meant to be deployed to L2 where Reality.eth is deployed. https://docs.arbitrum.io/arbos/l2-to-l1-messaging Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/arbitrum/GreeterL2.sol",
+    "events": {
+      "ArbitrationFailed(bytes32,address)": {
+        "details": "This will happen if the arbitration fee increases in between the arbitration request and acknowledgement.",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the arbitration requester."
+        }
+      },
+      "ArbitrationFinished(bytes32)": {
+        "params": {
+          "_questionID": "The ID of the question."
+        }
+      },
+      "ArbitratorAnswered(bytes32,bytes32)": {
+        "params": {
+          "_answer": "The answer from the arbitrator.",
+          "_questionID": "The ID of the question."
+        }
+      },
+      "RequestAcknowledged(bytes32,address)": {
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the arbitration requester."
+        }
+      },
+      "RequestCanceled(bytes32,address)": {
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the arbitration requester."
+        }
+      },
+      "RequestNotified(bytes32,address,uint256)": {
+        "params": {
+          "_maxPrevious": "The maximum value of the previous bond for the question.",
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the arbitration requester."
+        }
+      },
+      "RequestRejected(bytes32,address,uint256,string)": {
+        "details": "This can happen if the current bond for the question is higher than maxPrevious or if the question is already finalized.",
+        "params": {
+          "_maxPrevious": "The maximum value of the current bond for the question.",
+          "_questionID": "The ID of the question.",
+          "_reason": "The reason why the request was rejected.",
+          "_requester": "The address of the arbitration requester."
+        }
+      }
+    },
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "params": {
+          "_foreignChainId": "The ID of foreign chain (Sepolia/Mainnet).",
+          "_foreignProxy": "Address of the proxy on L1.",
+          "_metadata": "Metadata for Realitio.",
+          "_realitio": "Realitio contract address."
+        }
+      },
+      "handleNotifiedRequest(bytes32,address)": {
+        "details": "Relays arbitration request back to L1 after it has been notified by Realitio for a given question.",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration."
+        }
+      },
+      "handleRejectedRequest(bytes32,address)": {
+        "details": "Relays arbitration request back to L1 after it has been rejected. Reasons why the request might be rejected:  - The question does not exist  - The question was not answered yet  - The quesiton bond value changed while the arbitration was being requested  - Another request was already accepted",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration."
+        }
+      },
+      "receiveArbitrationAnswer(bytes32,bytes32)": {
+        "params": {
+          "_answer": "The answer from the arbitrator.",
+          "_questionID": "The ID of the question."
+        }
+      },
+      "receiveArbitrationFailure(bytes32,address)": {
+        "details": "Currently this can happen only if the arbitration cost increased.",
+        "params": {
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration."
+        }
+      },
+      "receiveArbitrationRequest(bytes32,address,uint256)": {
+        "details": "Receives the requested arbitration for a question. TRUSTED.",
+        "params": {
+          "_maxPrevious": "The maximum value of the previous bond for the question.",
+          "_questionID": "The ID of the question.",
+          "_requester": "The address of the user that requested arbitration."
+        }
+      },
+      "reportArbitrationAnswer(bytes32,bytes32,bytes32,address)": {
+        "details": "The Realitio contract validates the input parameters passed to this method, so making this publicly accessible is safe.",
+        "params": {
+          "_lastAnswerOrCommitmentID": "The last answer given, or its commitment ID if it was a commitment, to the question in the Realitio contract.",
+          "_lastAnswerer": "The last answerer to the question in the Realitio contract.",
+          "_lastHistoryHash": "The history hash given with the last answer to the question in the Realitio contract.",
+          "_questionID": "The ID of the question."
+        }
+      }
+    },
+    "stateVariables": {
+      "foreignChainId": {
+        "details": "ID of the foreign chain, required for Realitio."
+      },
+      "metadata": {
+        "details": "Metadata for Realitio interface."
+      },
+      "questionIDToRequester": {
+        "details": "Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]"
+      },
+      "realitio": {
+        "details": "The address of the Realitio contract (v3.0 required). TRUSTED."
+      },
+      "requests": {
+        "details": "Associates an arbitration request with a question ID and a requester address. requests[questionID][requester]"
+      }
+    },
+    "title": "Arbitration proxy for Realitio on Arbitrum.",
+    "version": 1
+  },
+  "userdoc": {
+    "events": {
+      "ArbitrationFailed(bytes32,address)": {
+        "notice": "To be emitted when the dispute could not be created on the Foreign Chain."
+      },
+      "ArbitrationFinished(bytes32)": {
+        "notice": "To be emitted when reporting the arbitrator answer to Realitio."
+      },
+      "ArbitratorAnswered(bytes32,bytes32)": {
+        "notice": "To be emitted when receiving the answer from the arbitrator."
+      },
+      "RequestAcknowledged(bytes32,address)": {
+        "notice": "To be emitted when the arbitration request acknowledgement is sent to the Foreign Chain."
+      },
+      "RequestCanceled(bytes32,address)": {
+        "notice": "To be emitted when the arbitration request is canceled."
+      },
+      "RequestNotified(bytes32,address,uint256)": {
+        "notice": "To be emitted when the Realitio contract has been notified of an arbitration request."
+      },
+      "RequestRejected(bytes32,address,uint256,string)": {
+        "notice": "To be emitted when arbitration request is rejected."
+      }
+    },
+    "kind": "user",
+    "methods": {
+      "constructor": {
+        "notice": "Creates an arbitration proxy on the home chain."
+      },
+      "receiveArbitrationAnswer(bytes32,bytes32)": {
+        "notice": "Receives an answer to a specified question. TRUSTED."
+      },
+      "receiveArbitrationFailure(bytes32,address)": {
+        "notice": "Receives a failed attempt to request arbitration. TRUSTED."
+      },
+      "reportArbitrationAnswer(bytes32,bytes32,bytes32,address)": {
+        "notice": "Reports the answer provided by the arbitrator to a specified question."
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 19663,
+        "contract": "src/0.8/RealitioHomeProxyArbitrum.sol:RealitioHomeProxyArbitrum",
+        "label": "metadata",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_string_storage"
+      },
+      {
+        "astId": 19684,
+        "contract": "src/0.8/RealitioHomeProxyArbitrum.sol:RealitioHomeProxyArbitrum",
+        "label": "requests",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_bytes32,t_mapping(t_address,t_struct(Request)19676_storage))"
+      },
+      {
+        "astId": 19689,
+        "contract": "src/0.8/RealitioHomeProxyArbitrum.sol:RealitioHomeProxyArbitrum",
+        "label": "questionIDToRequester",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_bytes32,t_address)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_enum(Status)19670": {
+        "encoding": "inplace",
+        "label": "enum RealitioHomeProxyArbitrum.Status",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_struct(Request)19676_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct RealitioHomeProxyArbitrum.Request)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Request)19676_storage"
+      },
+      "t_mapping(t_bytes32,t_address)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => address)",
+        "numberOfBytes": "32",
+        "value": "t_address"
+      },
+      "t_mapping(t_bytes32,t_mapping(t_address,t_struct(Request)19676_storage))": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => mapping(address => struct RealitioHomeProxyArbitrum.Request))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_struct(Request)19676_storage)"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(Request)19676_storage": {
+        "encoding": "inplace",
+        "label": "struct RealitioHomeProxyArbitrum.Request",
+        "members": [
+          {
+            "astId": 19673,
+            "contract": "src/0.8/RealitioHomeProxyArbitrum.sol:RealitioHomeProxyArbitrum",
+            "label": "status",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_enum(Status)19670"
+          },
+          {
+            "astId": 19675,
+            "contract": "src/0.8/RealitioHomeProxyArbitrum.sol:RealitioHomeProxyArbitrum",
+            "label": "arbitratorAnswer",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bytes32"
+          }
+        ],
+        "numberOfBytes": "64"
+      }
+    }
+  }
+}

@@ -200,7 +200,7 @@ module.exports = {
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.optimistic.etherscan.io/api",
+          apiURL: "https://api-optimistic.etherscan.io/api",
           apiKey: process.env.OPTIMISM_API_KEY,
         },
       },
@@ -246,7 +246,7 @@ module.exports = {
       verify: {
         etherscan: {
           apiURL: "https://api.arbiscan.io/api",
-          apiKey: process.env.ARBITSCAN_API_KEY,
+          apiKey: process.env.ARBISCAN_API_KEY,
         },
       },
     },

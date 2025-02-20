@@ -15,5 +15,7 @@
   }
   evaluator()
 
-  returnPromise.then(result => { console.log(result) })
+  returnPromise
+    .then(result => { console.log('Success:', result) })
+    .catch(error => { console.error('Error:', error) })
 </script>

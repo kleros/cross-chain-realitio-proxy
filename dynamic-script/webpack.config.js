@@ -1,6 +1,8 @@
 const path = require("path");
 const Dotenv = require("dotenv-webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { DefinePlugin } = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   mode: "production",
@@ -15,6 +17,14 @@ module.exports = {
     new CleanWebpackPlugin(),
     new Dotenv({
       safe: true,
+    }),
+    new DefinePlugin({
+      "process.env.VERSION": JSON.stringify(process.env.npm_package_version),
+    }),
+    new HtmlWebpackPlugin({
+      template: "./src/test.html",
+      filename: "test.html",
+      inject: "head",
     }),
   ],
   module: {

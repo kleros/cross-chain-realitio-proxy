@@ -27,7 +27,8 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     IRealitio public immutable realitio;
     address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
-    address public immutable foreignProxy; // Address of the proxy on L1. Required for Realitio UI.
+    /// @dev Address of the proxy on L1. Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
+    address public immutable foreignProxy;
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
 
@@ -64,7 +65,7 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
      * @param _metadata Metadata for Realitio.
-     * @param _foreignProxy Address of the proxy on L1.
+     * @param _foreignProxy Address of the proxy on L1. Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
      * @param _foreignProxyAlias Alias of the proxy on L1.
      * @param _foreignChainId The ID of foreign chain (Sepolia/Mainnet).
      */

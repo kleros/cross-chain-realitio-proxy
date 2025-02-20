@@ -23,7 +23,8 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     IRealitio public immutable realitio;
-    address public immutable foreignProxy; // Address of the proxy on L1.
+    /// @dev Address of the proxy on L1. Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
+    address public immutable foreignProxy;
 
     /// @dev ID of the foreign chain, required for Realitio.
     bytes32 public immutable foreignChainId;
@@ -61,7 +62,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
      * @param _metadata Metadata for Realitio.
-     * @param _foreignProxy Address of the proxy on L1.
+     * @param _foreignProxy Address of the proxy on L1. Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
      * @param _foreignChainId The ID of foreign chain (Sepolia/Mainnet).
      */
     constructor(IRealitio _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {

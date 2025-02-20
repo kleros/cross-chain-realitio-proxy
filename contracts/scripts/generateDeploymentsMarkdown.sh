@@ -13,7 +13,7 @@ function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     foreignExplorerUrl=$3
 
     # Find all RealitioProxy version files and sort them in reverse order
-    version_files=$(find "$deploymentDir" -name "RealitioProxy-v*.json" 2>/dev/null | sort -r)
+    version_files=$(find "$deploymentDir" -name "RealitioProxy-v*.json" 2>/dev/null | grep -v "\-broken" | sort -r)
 
     # If no files found, return early
     [ -z "$version_files" ] && return

@@ -1,4 +1,4 @@
-const { encodeExtraData } = require("../shared");
+const { encodeExtraData, getMetaEvidenceCID } = require("../shared");
 
 // Bridge addresses:
 // https://docs.gnosischain.com/developers/Usefulcontracts#mainnet-bridge-contract-addresses
@@ -9,12 +9,10 @@ const foreignParameters = {
   chiado: {
     numberOfJurors: 1,
     foreignAmb: "0xf2546D6648BD2af6a008A7e7C1542BB240329E11",
-    metaEvidence: "/ipfs/QmX2398mQY92ALTFZKs5r6g7RUJ8JzJaK9JP5RRg4CsxKL",
   },
   gnosis: {
     numberOfJurors: 15,
     foreignAmb: "0x4C36d2919e407f0Cc2Ee3c993ccF8ac26d9CE64e",
-    metaEvidence: "/ipfs/Qmd6kpcSxPjecHwf8UQRPkPRWi1LSYJXqDYryjaNhrd27D",
   },
 };
 
@@ -22,13 +20,15 @@ async function deployForeignProxy({
   deploy,
   from,
   parameters,
+  homeNetworkName,
   homeChainId,
   homeProxy,
   arbitrator,
   courts,
   multipliers,
 }) {
-  const { numberOfJurors, foreignAmb, metaEvidence } = parameters;
+  const { numberOfJurors, foreignAmb } = parameters;
+  const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
 
   // Fully qualified contract name because there's also an 0.7 artifact

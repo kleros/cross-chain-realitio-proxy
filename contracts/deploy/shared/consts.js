@@ -18,15 +18,33 @@ const courts = {
   },
 };
 
-const termsOfService = "QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf";
-const termsOfServiceUri = `ipfs://${termsOfService}`; // for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
-const termsOfServiceMultiformat = `/ipfs/${termsOfService}`; // for Kleros: https://multiformats.io/multiaddr/
-const metadata = `{"tos":"${termsOfServiceUri}", "foreignProxy":true}`;
+const termsOfServices = {
+  default: "QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
+  butter: "QmSv9ohhChMtyqwqsvfgeJtZQBWkwAboBc1n3UGvprfdd7/Conditional_Funding_Markets_-_Question_Resolution_Policy.pdf",
+}
+
+function generateMultiformat(tosKey = 'default') {
+  const tosPath = termsOfServices[tosKey]
+  if (!tosPath) throw new Error(`Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(', ')}.`)
+  return `/ipfs/${tosPath}` // for Kleros: https://multiformats.io/multiaddr/
+}
+
+function generateMetadata(tosKey = 'default') {
+  const tosPath = termsOfServices[tosKey]
+  if (!tosPath) throw new Error(`Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(', ')}.`)
+  const tosUri = `ipfs://${tosPath}` // URI format for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
+  return `{"tos":"${tosUri}", "foreignProxy":true}`
+}
+
+const metadata = generateMetadata('default')
+const metadataButter = generateMetadata('butter')
 
 module.exports = {
   arbitrators,
   courts,
-  termsOfServiceUri,
-  termsOfServiceMultiformat,
+  termsOfServices,
+  generateMultiformat,
+  generateMetadata,
   metadata,
+  metadataButter,
 };

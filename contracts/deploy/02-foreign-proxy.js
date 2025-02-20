@@ -44,6 +44,7 @@ async function deployForeignProxy({ deployments, getChainId, ethers, companionNe
     deploy,
     from,
     parameters,
+    homeNetworkName,
     homeChainId,
     homeProxy,
     arbitrator: arbitrators[chainId],

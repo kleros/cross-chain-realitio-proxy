@@ -36,6 +36,14 @@ Refresh the list of deployed contracts by running `./scripts/generateDeployments
 | v1.1.0 | Chiado default | [0xE62094..FffeD7](https://gnosis-chiado.blockscout.com/address/0xE620947519E8102aa625BBB4669fE317c9FffeD7) | [0x5d7cB7..969D42](https://sepolia.etherscan.io/address/0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42) | 0 | 0 | [RealityUnverified](https://gnosis-chiado.blockscout.com/address/0x1E732a1C5e9181622DD5A931Ec6801889ce66185) |
 
 
+#### UnichainSepolia
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |
+|---------|------|------------|---------------|----------|-----------|----------|
+| v1.3.0 | UnichainSepolia default | [0x122D6B..b7954D](https://sepolia.uniscan.xyz/address/0x122D6B4197531bF4e9314fD00259b1dc1Db7954D) | [0x4C10F0..26191D](https://sepolia.etherscan.io/address/0x4C10F03E45e11F58Bd9561B6572a60aCc226191D) | 3 | 1 | [RealityETH_v3_0](https://sepolia.uniscan.xyz/address/0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517) |
+| v1.3.0 | Butter | [0x87f58F..e2EAf9](https://sepolia.uniscan.xyz/address/0x87f58F0dCF3c99BA2F3eB0604e5c335893e2EAf9) | [0xA42986..fFDF15](https://sepolia.etherscan.io/address/0xA42986c969B544A641100f959e67cd43b1fFDF15) | 3 | 1 | [RealityETH_v3_0](https://sepolia.uniscan.xyz/address/0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517) |
+
+
 #### OptimismSepolia
 
 | Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |

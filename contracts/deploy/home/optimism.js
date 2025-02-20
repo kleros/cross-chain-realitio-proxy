@@ -1,4 +1,4 @@
-const { homeChains, metadata } = require("../shared");
+const { homeChains, generateMetadata } = require("../shared");
 const { unichain, optimism, redstone, unichainSepolia, optimismSepolia, base } = homeChains;
 
 // CrossDomainMessenger precompile is identical for all OP L2s
@@ -42,6 +42,8 @@ const homeParameters = {
 
 async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio, variant } = parameters;
+  const metadata = generateMetadata(process.env.TOS);
+  console.log(`Metadata: ${metadata}`);
   return await deploy(`RealitioHomeProxy${variant}`, {
     contract: "RealitioHomeProxyOptimism",
     from,

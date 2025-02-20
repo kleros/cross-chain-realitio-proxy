@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { encodeExtraData, eth } = require("../shared");
+const { encodeExtraData, eth, getMetaEvidenceCID } = require("../shared");
 
 // Bridge addresses:
 // https://docs.zksync.io/zk-stack/zk-chain-addresses
@@ -9,17 +9,16 @@ const foreignParameters = {
   zkSyncSepolia: {
     numberOfJurors: 1,
     zkAddress: "0x9A6DE0f62Aa270A8bCB1e2610078650D539B1Ef9",
-    metaEvidence: "/ipfs/QmPieAoDBaFYdoZUeZv7xgrpmcGxzDkFCvBG2SixqSfcRe",
   },
   zkSyncMainnet: {
     numberOfJurors: 15,
     zkAddress: "0x32400084C286CF3E17e7B677ea9583e60a000324",
-    metaEvidence: "TODO",
   },
 };
 
-async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitrator, courts, multipliers }) {
-  const { numberOfJurors, zkAddress, metaEvidence } = parameters;
+async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, homeProxy, arbitrator, courts, multipliers }) {
+  const { numberOfJurors, zkAddress } = parameters;
+  const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   const surplus = eth("0.03"); // The surplus will be automatically reimbursed when the dispute is created.
   const l2GasLimit = 1500000; // Gas limit for a tx on L2.

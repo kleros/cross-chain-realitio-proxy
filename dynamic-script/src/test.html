@@ -1,19 +1,62 @@
 <!-- For testing only, no need to upload to IPFS -->
-<script type="text/javascript">
-  const scriptParameters = {
-  }
+<html>
+  <script type="text/javascript">
+    const message = Object.fromEntries(new URLSearchParams(decodeURIComponent(window.location.search.substring(1))));
 
-  let resolveScript
-  let rejectScript
-  const returnPromise = new Promise((resolve, reject) => {
-    resolveScript = resolve
-    rejectScript = reject
-  })
+    const {
+      arbitrableContractAddress,
+      disputeID,
+      arbitratorChainID,
+      arbitrableChainID,
+      chainID,
+      arbitratorJsonRpcUrl,
+      arbitrableJsonRpcUrl,
+      jsonRpcUrl,
+    } = message;
 
-  const evaluator = () => {
-    getMetaEvidence()
-  }
-  evaluator()
+    const rpcURL = arbitrableJsonRpcUrl || arbitratorJsonRpcUrl || jsonRpcUrl;
+    const cid = arbitrableChainID || arbitratorChainID || chainID;
 
-  returnPromise.then(result => { console.log(result) })
-</script>
+    if (!rpcURL || !disputeID || !cid) {
+      console.error("Evidence display is missing critical information.");
+      throw new Error("Evidence display is missing information");
+    }
+
+    const scriptParameters = {
+      arbitrableContractAddress,
+      disputeID,
+      arbitratorChainID,
+      arbitrableChainID,
+      chainID,
+      arbitratorJsonRpcUrl,
+      arbitrableJsonRpcUrl,
+      jsonRpcUrl,
+    }
+
+    let resolveScript
+    let rejectScript
+    const returnPromise = new Promise((resolve, reject) => {
+      resolveScript = resolve
+      rejectScript = reject
+    })
+
+    const evaluator = () => {
+      getMetaEvidence()
+    }
+    evaluator()
+
+    returnPromise.then(result => {
+      console.log(result);
+      const element = document.getElementById("container");
+      element.appendChild(
+        document.createTextNode(JSON.stringify(result, null, 2))
+      );
+    });
+  </script>
+  <body>
+    <div>
+      <h1>Test Result:</h1>
+      <p id="container" style="white-space: pre;" />
+    </div>
+  </body>
+</html>

@@ -45,13 +45,15 @@
     }
     evaluator()
 
-    returnPromise.then(result => {
-      console.log(result);
-      const element = document.getElementById("container");
-      element.appendChild(
-        document.createTextNode(JSON.stringify(result, null, 2))
-      );
-    });
+    returnPromise
+      .then(result => {
+        console.log(result);
+        const element = document.getElementById("container");
+        element.appendChild(
+          document.createTextNode(JSON.stringify(result, null, 2))
+        );
+      })
+      .catch(error => { console.error('Error:', error) });
   </script>
   <body>
     <div>

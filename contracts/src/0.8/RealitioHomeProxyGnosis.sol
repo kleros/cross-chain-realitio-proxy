@@ -26,6 +26,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
     IAMB public immutable amb;
 
     /// @dev Address of the counter-party proxy on the Foreign Chain. TRUSTED.
+    /// Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
     address public immutable foreignProxy;
 
     /// @dev The chain ID where the foreign proxy is deployed.
@@ -65,7 +66,7 @@ contract RealitioHomeProxyGnosis is IHomeArbitrationProxy {
      * @notice Creates an arbitration proxy on the home chain.
      * @param _realitio Realitio contract address.
      * @param _metadata Metadata for Realitio.
-     * @param _foreignProxy The address of the proxy.
+     * @param _foreignProxy The address of the proxy. Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
      * @param _foreignChainId The ID of the chain where the foreign proxy is deployed.
      * @param _amb ArbitraryMessageBridge contract address.
      */

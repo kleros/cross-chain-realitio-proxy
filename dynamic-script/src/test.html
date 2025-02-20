@@ -1,0 +1,21 @@
+<!-- For testing only, no need to upload to IPFS -->
+<script type="text/javascript">
+  const scriptParameters = {
+  }
+
+  let resolveScript
+  let rejectScript
+  const returnPromise = new Promise((resolve, reject) => {
+    resolveScript = resolve
+    rejectScript = reject
+  })
+
+  const evaluator = () => {
+    getMetaEvidence()
+  }
+  evaluator()
+
+  returnPromise
+    .then(result => { console.log('Success:', result) })
+    .catch(error => { console.error('Error:', error) })
+</script>

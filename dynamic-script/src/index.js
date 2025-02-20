@@ -4,6 +4,8 @@ const { homeProxyAbi, foreignProxyAbi, realitioAbi } = require("./abis");
 
 const isNil = (value) => value === undefined || value === null;
 
+console.log("dynamic-script version", process.env.VERSION);
+
 const REALITY_STARTS_AT = {
   "0x325a2e0f3cca2ddbaebb4dfc38df8d19ca165b47": 6531265, // Reality 2.0 Mainnet
   "0x5b7dd1e86623548af054a4985f7fc8ccbb554e2c": 13194676, // Reality 3.0 Mainnet

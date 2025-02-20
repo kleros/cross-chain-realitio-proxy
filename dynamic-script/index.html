@@ -1,17 +1,19 @@
-<script src='./src/index.js'></script>
-<script type='text/javascript'>
-    const scriptParameters = {}
-    let resolveScript
-    let rejectScript
-    const returnPromise = new Promise((resolve, reject) => {
-      resolveScript = resolve
-      rejectScript = reject
-    })
+<script src="./dist/realitio-dynamic-script-v0.3.0.js"></script>
+<script type="text/javascript">
+  const scriptParameters = {
+  }
 
-    const evaluator = () => {
-      getRulingOptions()
-    }
-    evaluator()
+  let resolveScript
+  let rejectScript
+  const returnPromise = new Promise((resolve, reject) => {
+    resolveScript = resolve
+    rejectScript = reject
+  })
 
-    returnPromise.then(result => {console.log(result)})
+  const evaluator = () => {
+    getMetaEvidence()
+  }
+  evaluator()
+
+  returnPromise.then(result => {console.log(result)})
 </script>

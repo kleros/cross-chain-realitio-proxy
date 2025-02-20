@@ -16,6 +16,19 @@ export const homeProxyAbi = [
 
 export const foreignProxyAbi = [
   {
+    inputs: [],
+    name: "homeProxy",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint256",

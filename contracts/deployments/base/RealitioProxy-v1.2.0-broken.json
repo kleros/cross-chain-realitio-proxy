@@ -3,7 +3,7 @@
   "versionNotes": "FIX ME",
   "deployments": [
     {
-      "name": "Base default",
+      "name": "Default",
       "realitio": {
         "contract": "RealityETH_v3_0",
         "address": "0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8",

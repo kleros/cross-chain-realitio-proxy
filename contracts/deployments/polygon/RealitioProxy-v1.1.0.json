@@ -3,7 +3,7 @@
   "versionNotes": "FIX ME",
   "deployments": [
     {
-      "name": "Polygon default",
+      "name": "Default",
       "realitio": {
         "contract": "RealityETH_v3_0",
         "address": "0x60573B8DcE539aE5bF9aD7932310668997ef0428",

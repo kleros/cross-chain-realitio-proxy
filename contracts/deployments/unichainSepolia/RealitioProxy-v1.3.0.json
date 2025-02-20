@@ -3,7 +3,7 @@
   "versionNotes": "FIX ME",
   "deployments": [
     {
-      "name": "UnichainSepolia default",
+      "name": "Default",
       "realitio": {
         "contract": "RealityETH_v3_0",
         "address": "0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517",

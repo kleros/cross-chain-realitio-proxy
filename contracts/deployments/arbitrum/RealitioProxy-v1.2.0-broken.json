@@ -3,7 +3,7 @@
   "versionNotes": "FIX ME",
   "deployments": [
     {
-      "name": "Arbitrum default",
+      "name": "Default",
       "realitio": {
         "contract": "RealityETH_v3_0",
         "address": "0x5D18bD4dC5f1AC8e9bD9B666Bd71cB35A327C4A9",

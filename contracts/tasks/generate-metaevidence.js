@@ -57,9 +57,17 @@ task("generate-metaevidence", "Generates metaevidence.json with populated chain 
     };
 
     const filename = getMetaEvidenceFilename(taskArgs.deployment, taskArgs.termsOfService);
-    fs.writeFileSync(path.join(__dirname, "..", "metaevidences", filename), JSON.stringify(template, null, 2));
+    try {
+      const dir = path.join(__dirname, "..", "metaevidences");
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      fs.writeFileSync(path.join(dir, filename), JSON.stringify(template, null, 2));
+    } catch (error) {
+      throw new Error(`Failed to write metaevidence file: ${error.message}`);
+    }
 
-    console.log(`Generated ${filename} with:`);
+    console.log(`Generated metaevidences/${filename} with:`);
     console.log(`- Home Network: ${taskArgs.deployment} (Chain ID: ${homeNetwork.chainId})`);
     console.log(`- Foreign Network: ${foreignNetworkName} (Chain ID: ${foreignNetwork.chainId})`);
     console.log(`- Terms of Service: ${fileURI}`);

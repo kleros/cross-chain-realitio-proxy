@@ -16,7 +16,15 @@ write "{\n"
 first=true
 for f in $SCRIPT_DIR/../metaevidences/metaevidence-*.json; do
     filename=$(basename "$f")
+    if ! command -v ipfs &> /dev/null; then
+        echo "Error: IPFS is not installed" >&2
+        exit 1
+    fi
     cid=$(ipfs add -q --only-hash "$f")
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to generate CID for $f" >&2
+        exit 1
+    fi
     if [ "$first" = true ]; then
         first=false
         write "  \"$filename\": \"$cid\""

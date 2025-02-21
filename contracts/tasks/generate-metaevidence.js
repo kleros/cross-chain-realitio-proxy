@@ -28,8 +28,8 @@ task("generate-metaevidence", "Generates metaevidence.json with populated chain 
       throw new Error(`Foreign network ${foreignNetworkName} not found in configuration`);
     }
 
-    const { generateMultiformat, getMetaEvidenceFilename } = require("../deploy/shared");
-    const fileURI = generateMultiformat(taskArgs.termsOfService.toLowerCase());
+    const { generatePolicyUri, getMetaEvidenceFilename } = require("../deploy/shared");
+    const fileURI = generatePolicyUri(taskArgs.termsOfService.toLowerCase());
 
     const template = {
       _v: "1.0.0",

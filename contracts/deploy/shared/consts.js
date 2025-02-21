@@ -18,7 +18,7 @@ const courts = {
   },
 };
 
-const termsOfServices = {
+const policies = {
   default: "QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
   noAnswerTooSoon: "QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
   butter: "QmSv9ohhChMtyqwqsvfgeJtZQBWkwAboBc1n3UGvprfdd7/Conditional_Funding_Markets_-_Question_Resolution_Policy.pdf",
@@ -26,24 +26,20 @@ const termsOfServices = {
   omen: "QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
 };
 
-function generateMultiformat(tosKey = "default") {
-  const tosPath = termsOfServices[tosKey];
-  if (!tosPath) {
-    throw new Error(
-      `Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(", ")}.`
-    );
+function generatePolicyUri(policy = "default") {
+  const policyPath = policies[policy];
+  if (!policyPath) {
+    throw new Error(`Policy not found: ${policy}. Valid options are: ${Object.keys(policies).join(", ")}.`);
   }
-  return `/ipfs/${tosPath}`; // for Kleros: https://multiformats.io/multiaddr/
+  return `/ipfs/${policyPath}`; // for Kleros: https://multiformats.io/multiaddr/
 }
 
-function generateMetadata(tosKey = "default") {
-  const tosPath = termsOfServices[tosKey];
-  if (!tosPath) {
-    throw new Error(
-      `Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(", ")}.`
-    );
+function generateMetadata(policy = "default") {
+  const policyPath = policies[policy];
+  if (!policyPath) {
+    throw new Error(`Policy not found: ${policy}. Valid options are: ${Object.keys(policies).join(", ")}.`);
   }
-  const tosUri = `ipfs://${tosPath}`; // URI format for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
+  const tosUri = `ipfs://${policyPath}`; // URI format for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
   return `{"tos":"${tosUri}", "foreignProxy":true}`;
 }
 
@@ -53,8 +49,8 @@ const metadataButter = generateMetadata("butter");
 module.exports = {
   arbitrators,
   courts,
-  termsOfServices,
-  generateMultiformat,
+  policies,
+  generatePolicyUri,
   generateMetadata,
   metadata,
   metadataButter,

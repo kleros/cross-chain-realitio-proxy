@@ -1,9 +1,9 @@
 {
   "version": "1.1.0",
-  "versionNotes": "FIX ME",
+  "versionNotes": "",
   "deployments": [
     {
-      "name": "Chiado default",
+      "name": "Default",
       "realitio": {
         "contract": "RealityUnverified",
         "address": "0x1E732a1C5e9181622DD5A931Ec6801889ce66185",

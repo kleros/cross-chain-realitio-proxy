@@ -1,0 +1,24 @@
+{
+  "_v": "1.0.0",
+  "category": "Oracle",
+  "title": "A reality.eth question",
+  "description": "A reality.eth question has been raised to arbitration.",
+  "question": "Give an answer to the question.",
+  "evidenceDisplayInterfaceURI": "/ipfs/Qmc6ptmVbihmBXiYzryME9HNEezJf6ndw8ZrYo2qz72gto/index.html",
+  "dynamicScriptURI": "/ipfs/QmcRGGmzzxSvXaajMCFYErZb5knuexoaDCZhJ5rSHRbcvw",
+  "fileURI": "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
+  "arbitrableChainID": "42161",
+  "arbitratorChainID": "1",
+  "dynamicScriptRequiredParams": [
+    "disputeID",
+    "arbitrableChainID",
+    "arbitrableJsonRpcUrl",
+    "arbitrableContractAddress"
+  ],
+  "evidenceDisplayInterfaceRequiredParams": [
+    "disputeID",
+    "arbitrableChainID",
+    "arbitrableJsonRpcUrl",
+    "arbitrableContractAddress"
+  ]
+}

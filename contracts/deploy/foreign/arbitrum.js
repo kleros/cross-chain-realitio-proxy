@@ -1,4 +1,4 @@
-const { encodeExtraData, eth } = require("../shared");
+const { encodeExtraData, eth, getMetaEvidenceCID } = require("../shared");
 
 // Bridge addresses:
 // https://docs.arbitrum.io/build-decentralized-apps/reference/contract-addresses#cross-chain-messaging-contracts
@@ -8,17 +8,16 @@ const foreignParameters = {
   arbitrumSepolia: {
     numberOfJurors: 1,
     inbox: "0xaAe29B0366299461418F5324a79Afc425BE5ae21",
-    metaEvidence: "/ipfs/QmeQjQ6nKx4zN4q5QDXVyRyRywY8jRekEjSx7pLiZXGJSX",
   },
   arbitrum: {
     numberOfJurors: 15,
     inbox: "0x4Dbd4fc535Ac27206064B68FfCf827b0A60BAB3f",
-    metaEvidence: "/ipfs/QmVNnQ9XXemFzVopUwK1Y6MBnzwvoLKE8eFuarfwpLxayB",
   },
 };
 
-async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitrator, courts, multipliers }) {
-  const { numberOfJurors, inbox, metaEvidence } = parameters;
+async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, homeProxy, arbitrator, courts, multipliers }) {
+  const { numberOfJurors, inbox } = parameters;
+  const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   const surplus = eth("0.03"); // The surplus will be automatically reimbursed when the dispute is created.
   const l2GasLimit = 1500000; // Gas limit for a tx on L2.

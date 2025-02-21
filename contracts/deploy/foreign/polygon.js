@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { encodeExtraData } = require("../shared");
+const { encodeExtraData, getMetaEvidenceCID } = require("../shared");
 
 // Bridge addresses:
 // https://docs.polygon.technology/pos/how-to/bridging/l1-l2-communication/state-transfer/#prerequisites
@@ -10,18 +10,17 @@ const foreignParameters = {
     numberOfJurors: 1,
     checkpointManager: "0xbd07D7E1E93c8d4b2a261327F3C28a8EA7167209",
     fxRoot: "0x0E13EBEdDb8cf9f5987512d5E081FdC2F5b0991e",
-    metaEvidence: "/ipfs/QmUmKB6hFjVz2rvKTkCobJrnoN7AQGMERcmcFVJUxYTrfF",
   },
   polygon: {
     numberOfJurors: 15,
     checkpointManager: "0x86e4dc95c7fbdbf52e33d563bbdb00823894c287",
     fxRoot: "0xfe5e5D361b2ad62c541bAb87C45a0B9B018389a2",
-    metaEvidence: "/ipfs/QmVdYoUCjwDaotwCzh7uJ9KZibr9ymuBfB9UaDenaFJ4P9",
   },
 };
 
-async function deployForeignProxy({ deploy, from, parameters, homeProxy, arbitrator, courts, multipliers }) {
-  const { numberOfJurors, checkpointManager, fxRoot, metaEvidence } = parameters;
+async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, homeProxy, arbitrator, courts, multipliers }) {
+  const { numberOfJurors, checkpointManager, fxRoot } = parameters;
+  const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   const deployed = await deploy("RealitioForeignProxyPolygon", {
     from,

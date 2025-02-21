@@ -1,28 +1,28 @@
 {
   "version": "1.2.0",
-  "versionNotes": "FIX ME",
+  "versionNotes": "Latest",
   "deployments": [
     {
-      "name": "Unichain default",
+      "name": "Default",
       "realitio": {
-        "contract": "RealityUnverified",
-        "address": "0xB920dBedE88B42aA77eE55ebcE3671132ee856fC",
+        "contract": "RealityETH_v3_0",
+        "address": "0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517",
         "token": ""
       },
       "homeProxy": {
-        "address": "0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18",
+        "address": "0x8FeAB350A304140b1593A38a13607d122BEC44b6",
         "tos": "https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
-        "blockNumber": "8746203",
-        "transactionHash": "0x2e3710911f6d9b22d44c5ed2398013de20ee7f2a37e957c898fcccc92e15056e"
+        "blockNumber": "12434183",
+        "transactionHash": "0x4ab17a911c9b8b5ec54f6c9c98eadcbc4a931e1f5c5350c2c34ff3555582a4bc"
       },
       "foreignProxy": {
-        "courtId": "24",
-        "minJurors": "15",
-        "metaevidence": "https://cdn.kleros.link/ipfs/QmQJUPLrzjS2AQUo2VTw21utgCfAuCyTZzZ7Cv5fgcLZ4K",
-        "address": "0x8FeAB350A304140b1593A38a13607d122BEC44b6",
-        "chainId": "1",
-        "blockNumber": "21841268",
-        "transactionHash": "0x3cf1b88420ccf96cc36b219a543d21827d6dc5cd5f58809789675afb6dee313e"
+        "courtId": "3",
+        "minJurors": "1",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmPzCS4Tw4m4gCqBPrNMvgcnwDyU2c8RPZabj9Rrfhjt7Q",
+        "address": "0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE",
+        "chainId": "11155111",
+        "blockNumber": "7686679",
+        "transactionHash": "0x9257e1962fae662a48fbb4be19fe804fb1496550a7377d5e13227bf0d9cb698a"
       }
     }
   ],

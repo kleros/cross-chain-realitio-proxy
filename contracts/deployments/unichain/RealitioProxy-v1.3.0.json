@@ -1,28 +1,51 @@
 {
-  "version": "1.2.0",
-  "versionNotes": "FIX ME",
+  "version": "1.3.0",
+  "versionNotes": "",
   "deployments": [
     {
-      "name": "Base default",
+      "name": "Default",
       "realitio": {
-        "contract": "RealityETH_v3_0",
-        "address": "0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8",
+        "contract": "RealityUnverified",
+        "address": "0xB920dBedE88B42aA77eE55ebcE3671132ee856fC",
         "token": ""
       },
       "homeProxy": {
-        "address": "0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18",
+        "address": "0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6",
         "tos": "https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
-        "blockNumber": "26352383",
-        "transactionHash": "0xe649a89487331dc59cc558ae7d2cca1ac8f859c3e6ff001a8e557efb02435de5"
+        "blockNumber": "9331200",
+        "transactionHash": "0x47431a79e14eeae4a20f1a48353ebaa8a1595b2581af9ace36e5b301b2c86e3d"
       },
       "foreignProxy": {
         "courtId": "24",
         "minJurors": "15",
-        "metaevidence": "https://cdn.kleros.link/ipfs/QmPy5ZMpEmnnGUC1g4P2EX9AeUwrUf7BorxoofgpeSjiPW",
-        "address": "0x05295972F75cFeE7fE66E6BDDC0435c9Fd083D18",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmeQx8RybUuz9YAVm8DfQpcyQVmJgFpZmr3cUSuTiPpVW7",
+        "address": "0x122D6B4197531bF4e9314fD00259b1dc1Db7954D",
         "chainId": "1",
-        "blockNumber": "21841249",
-        "transactionHash": "0x267ea63dd4826caaf3bd044091711189d2d2a1e089b267ec14c6c5dd7586fb9e"
+        "blockNumber": "21889639",
+        "transactionHash": "0x1d7e1eacc2650c54eb2cb03714b3d4062622732ff83c9922d31fc31c16ecc7e8"
+      }
+    },
+    {
+      "name": "Butter",
+      "realitio": {
+        "contract": "RealityUnverified",
+        "address": "0xB920dBedE88B42aA77eE55ebcE3671132ee856fC",
+        "token": ""
+      },
+      "homeProxy": {
+        "address": "0x8FeAB350A304140b1593A38a13607d122BEC44b6",
+        "tos": "https://cdn.kleros.link/ipfs/QmSv9ohhChMtyqwqsvfgeJtZQBWkwAboBc1n3UGvprfdd7/Conditional_Funding_Markets_-_Question_Resolution_Policy.pdf",
+        "blockNumber": "9330921",
+        "transactionHash": "0xe9f0bd558c135d91dbeaae39b1a885d727b8191a461f7f4692c242fd5c878f85"
+      },
+      "foreignProxy": {
+        "courtId": "24",
+        "minJurors": "15",
+        "metaevidence": "https://cdn.kleros.link/ipfs/QmV59acSczefsXSujaSrWq8NbJX6od4wgtQ1zzUvxCJTBu",
+        "address": "0x3FB8314C628E9afE7677946D3E23443Ce748Ac17",
+        "chainId": "1",
+        "blockNumber": "21889616",
+        "transactionHash": "0x2141df949d953d422a0e5c435e53f74afe915f63482dd1573a5d5993ef09a7b9"
       }
     }
   ],

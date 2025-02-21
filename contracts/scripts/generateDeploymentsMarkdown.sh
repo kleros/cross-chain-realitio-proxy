@@ -7,63 +7,57 @@ function prettify_address() {
     echo "${address:0:8}..${address: -6}"
 }
 
+function get_policy_from_metaevidence() {
+    uri=$1
+    curl -s "$uri" | jq -r '.fileURI'
+}
+
+function get_policy_name() {
+    policy_path=$1
+    clean_path=${policy_path#"https://cdn.kleros.link/ipfs/"}
+    key=$(grep "\"$clean_path\"" "$SCRIPT_DIR/../deploy/shared/consts.js" | head -n1 | cut -d: -f1 | tr -d ' ')
+    [ -z "$key" ] && echo "custom" || echo "$key"
+}
+
 function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     deploymentDir=$1
     homeExplorerUrl=$2
     foreignExplorerUrl=$3
 
     # Find all RealitioProxy version files and sort them in reverse order
-    version_files=$(find "$deploymentDir" -name "RealitioProxy-v*.json" 2>/dev/null | sort -r)
+    version_files=$(find "$deploymentDir" -name "RealitioProxy-v*.json" 2>/dev/null | grep -v "\-broken" | sort -r)
 
     # If no files found, return early
     [ -z "$version_files" ] && return
 
     # Print table header
-    echo "| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |"
-    echo "|---------|------|------------|---------------|----------|-----------|----------|"
+    echo "| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality | Policy | Comment |"
+    echo "|---------|------|------------|---------------|---------|-----------|---------|---------|---------|"
 
     while IFS= read -r file; do
         version=$(basename "$file" | sed -E 's/RealitioProxy-v(.*).json/\1/')
 
         # Process each deployment in the file
-        temp_output=$(jq -r --arg version "$version" '.deployments[] | "\(.name)\t\(.homeProxy.address)\t\(.foreignProxy.address)\t\(.foreignProxy.courtId)\t\(.foreignProxy.minJurors)\t\(.realitio.contract)\t\(.realitio.address)"' "$file")
-        while IFS=$'\t' read -r name home_address foreign_address court_id min_jurors reality_contract realitio_address; do
+        temp_output=$(jq -r --arg version "$version" '.deployments[] | [.name, .homeProxy.address, .foreignProxy.address, .foreignProxy.courtId, .foreignProxy.minJurors, .realitio.contract, .realitio.address, .homeProxy.tos, .foreignProxy.metaevidence] | join("§")' "$file")
+        while IFS='§' read -r name home_address foreign_address court_id min_jurors reality_contract realitio_address policyUrl metaevidence; do
             [ -z "$name" ] && continue
             pretty_home=$(prettify_address "$home_address")
             pretty_foreign=$(prettify_address "$foreign_address")
-            echo "| v$version | $name | [$pretty_home](${homeExplorerUrl}$home_address) | [$pretty_foreign](${foreignExplorerUrl}$foreign_address) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}$realitio_address) |"
+            relative_file_path=${file#"$SCRIPT_DIR/../"}
+            line_number=$(grep -n "\"name\": \"$name\"" "$file" | cut -d: -f1)
+            if [ -z "$policyUrl" ] && [ -n "$metaevidence" ]; then
+                policyUrl="https://cdn.kleros.link$(get_policy_from_metaevidence "$metaevidence")"
+                comment=":warning: bad metadata"
+            fi
+            policy_name=$(get_policy_name "$policyUrl")
+            echo "| v$version | [$name](${relative_file_path}#L${line_number}) | [$pretty_home](${homeExplorerUrl}$home_address) | [$pretty_foreign](${foreignExplorerUrl}${foreign_address}) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}${realitio_address}) | [${policy_name}]($policyUrl) | $comment |"
         done <<<"$temp_output"
     done <<<"$version_files"
     echo
 }
 
-# Use regular arrays to preserve the ordering
-MAINNET_NETWORKS=("gnosis" "unichain" "optimism" "redstone" "base" "arbitrum" "polygon" "zksyncMainnet")
-declare -A HOME_MAINNET_EXPLORERS=(
-    ["gnosis"]="https://gnosisscan.io/address/"
-    ["unichain"]="https://uniscan.xyz/address/"
-    ["optimism"]="https://etherscan.io/address/"
-    ["redstone"]="https://explorer.redstone.xyz/address/"
-    ["base"]="https://basescan.org/address/"
-    ["arbitrum"]="https://arbiscan.io/address/"
-    ["polygon"]="https://polygonscan.com/address/"
-    ["zksyncMainnet"]="https://explorer.zksync.io/address/"
-)
-
-TESTNET_NETWORKS=("chiado" "unichainSepolia" "optimismSepolia" "arbitrumSepolia" "amoy" "zksyncSepolia")
-declare -A HOME_TESTNETS_EXPLORERS=(
-    ["chiado"]="https://gnosis-chiado.blockscout.com/address/"
-    ["unichainSepolia"]="https://sepolia.uniscan.xyz/address/"
-    ["optimismSepolia"]="https://sepolia-optimism.etherscan.io/address/"
-    ["arbitrumSepolia"]="https://sepolia.arbiscan.io/address/"
-    ["amoy"]="https://amoy.polygonscan.com/address/"
-    ["zksyncSepolia"]="https://sepolia.explorer.zksync.io/address/"
-)
-
-declare -A FOREIGN_NETWORK_EXPLORERS=(
-    ["sepolia"]="https://sepolia.etherscan.io/address/"
-    ["mainnet"]="https://etherscan.io/address/"
-)
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/chains.env"
 
 echo "### Mainnets"
 for network in "${MAINNET_NETWORKS[@]}"; do

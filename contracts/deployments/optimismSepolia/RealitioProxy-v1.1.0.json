@@ -1,9 +1,9 @@
 {
   "version": "1.1.0",
-  "versionNotes": "FIX ME",
+  "versionNotes": "",
   "deployments": [
     {
-      "name": "OptimismSepolia default",
+      "name": "Default",
       "realitio": {
         "contract": "RealityUnverified",
         "address": "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA",

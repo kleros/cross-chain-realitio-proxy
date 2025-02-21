@@ -2,9 +2,31 @@
 
 Smart contracts for the Reality.eth cross-chain proxies.
 
+---
+- **[Deployments](#deployments)**
+  - **[Mainnets](#mainnets)**
+    - **[Gnosis](#gnosis)**
+    - **[Unichain](#unichain)**
+    - **[Polygon](#polygon)**
+  - **[Testnets](#testnets)**
+    - **[Chiado](#chiado)**
+    - **[UnichainSepolia](#unichainsepolia)**
+    - **[OptimismSepolia](#optimismsepolia)**
+    - **[ArbitrumSepolia](#arbitrumsepolia)**
+    - **[ZksyncSepolia](#zksyncsepolia)**
+- **[Contributing](#contributing)**
+  - **[Install Dependencies](#installdependencies)**
+  - **[Run Tests](#runtests)**
+  - **[Compile the Contracts](#compilethecontracts)**
+  - **[Deploy Instructions](#deployinstructions)**
+    - **[0. Set the Environment Variables](#0settheenvironmentvariables)**
+    - **[1. Update the Constructor Parameters (optional)](#1updatetheconstructorparametersoptional)**
+    - **[2. Deploy the Proxies](#2deploytheproxies)**
+---
+
 ## Deployments
 
-Refresh the list of deployed contracts by running `./scripts/generateDeploymentsMarkdown.sh` or `./scripts/populateReadme.sh`.
+Refresh the list of deployed contracts by running `./scripts/populateReadme.sh`.
 
 ### Mainnets
 

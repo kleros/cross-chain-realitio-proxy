@@ -2,9 +2,13 @@
 
 Smart contracts for the Reality.eth cross-chain proxies.
 
+---
+$toc
+---
+
 ## Deployments
 
-Refresh the list of deployed contracts by running `./scripts/generateDeploymentsMarkdown.sh` or `./scripts/populateReadme.sh`.
+Refresh the list of deployed contracts by running `./scripts/populateReadme.sh`.
 
 $deployments
 

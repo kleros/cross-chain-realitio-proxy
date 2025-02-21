@@ -20,24 +20,35 @@ const courts = {
 
 const termsOfServices = {
   default: "QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
+  noAnswerTooSoon: "QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
   butter: "QmSv9ohhChMtyqwqsvfgeJtZQBWkwAboBc1n3UGvprfdd7/Conditional_Funding_Markets_-_Question_Resolution_Policy.pdf",
+  seer: "QmPmRkXFUmzP4rq2YfD3wNwL8bg3WDxkYuvTP9A9UZm9gJ/seer-markets-resolution-policy.pdf",
+  omen: "QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
+};
+
+function generateMultiformat(tosKey = "default") {
+  const tosPath = termsOfServices[tosKey];
+  if (!tosPath) {
+    throw new Error(
+      `Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(", ")}.`
+    );
+  }
+  return `/ipfs/${tosPath}`; // for Kleros: https://multiformats.io/multiaddr/
 }
 
-function generateMultiformat(tosKey = 'default') {
-  const tosPath = termsOfServices[tosKey]
-  if (!tosPath) throw new Error(`Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(', ')}.`)
-  return `/ipfs/${tosPath}` // for Kleros: https://multiformats.io/multiaddr/
+function generateMetadata(tosKey = "default") {
+  const tosPath = termsOfServices[tosKey];
+  if (!tosPath) {
+    throw new Error(
+      `Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(", ")}.`
+    );
+  }
+  const tosUri = `ipfs://${tosPath}`; // URI format for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
+  return `{"tos":"${tosUri}", "foreignProxy":true}`;
 }
 
-function generateMetadata(tosKey = 'default') {
-  const tosPath = termsOfServices[tosKey]
-  if (!tosPath) throw new Error(`Terms of service not found: ${tosKey}. Valid options are: ${Object.keys(termsOfServices).join(', ')}.`)
-  const tosUri = `ipfs://${tosPath}` // URI format for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
-  return `{"tos":"${tosUri}", "foreignProxy":true}`
-}
-
-const metadata = generateMetadata('default')
-const metadataButter = generateMetadata('butter')
+const metadata = generateMetadata("default");
+const metadataButter = generateMetadata("butter");
 
 module.exports = {
   arbitrators,

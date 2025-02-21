@@ -7,6 +7,18 @@ function prettify_address() {
     echo "${address:0:8}..${address: -6}"
 }
 
+function get_tos_from_metaevidence() {
+    uri=$1
+    curl -s "$uri" | jq -r '.fileURI'
+}
+
+function get_tos_key() {
+    tos_path=$1
+    clean_path=${tos_path#"https://cdn.kleros.link/ipfs/"}
+    key=$(grep "\"$clean_path\"" "$SCRIPT_DIR/../deploy/shared/consts.js" | head -n1 | cut -d: -f1 | tr -d ' ')
+    [ -z "$key" ] && echo "custom" || echo "$key"
+}
+
 function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     deploymentDir=$1
     homeExplorerUrl=$2
@@ -19,24 +31,32 @@ function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl
     [ -z "$version_files" ] && return
 
     # Print table header
-    echo "| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality |"
-    echo "|---------|------|------------|---------------|----------|-----------|----------|"
+    echo "| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality | Terms of Service | Comment |"
+    echo "|---------|------|------------|---------------|---------|-----------|---------|------------------|---------|"
 
     while IFS= read -r file; do
         version=$(basename "$file" | sed -E 's/RealitioProxy-v(.*).json/\1/')
 
         # Process each deployment in the file
-        temp_output=$(jq -r --arg version "$version" '.deployments[] | "\(.name)\t\(.homeProxy.address)\t\(.foreignProxy.address)\t\(.foreignProxy.courtId)\t\(.foreignProxy.minJurors)\t\(.realitio.contract)\t\(.realitio.address)"' "$file")
-        while IFS=$'\t' read -r name home_address foreign_address court_id min_jurors reality_contract realitio_address; do
+        temp_output=$(jq -r --arg version "$version" '.deployments[] | [.name, .homeProxy.address, .foreignProxy.address, .foreignProxy.courtId, .foreignProxy.minJurors, .realitio.contract, .realitio.address, .homeProxy.tos, .foreignProxy.metaevidence] | join("§")' "$file")
+        while IFS='§' read -r name home_address foreign_address court_id min_jurors reality_contract realitio_address tos metaevidence; do
             [ -z "$name" ] && continue
             pretty_home=$(prettify_address "$home_address")
             pretty_foreign=$(prettify_address "$foreign_address")
-            echo "| v$version | $name | [$pretty_home](${homeExplorerUrl}$home_address) | [$pretty_foreign](${foreignExplorerUrl}$foreign_address) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}$realitio_address) |"
+            relative_file_path=${file#"$SCRIPT_DIR/../"}
+            line_number=$(grep -n "\"name\": \"$name\"" "$file" | cut -d: -f1)
+            if [ -z "$tos" ] && [ -n "$metaevidence" ]; then
+                tos="https://cdn.kleros.link$(get_tos_from_metaevidence "$metaevidence")"
+                comment=":warning: bad metadata"
+            fi
+            tos_key=$(get_tos_key "$tos")
+            echo "| v$version | [$name](${relative_file_path}#L${line_number}) | [$pretty_home](${homeExplorerUrl}$home_address) | [$pretty_foreign](${foreignExplorerUrl}${foreign_address}) | $court_id | $min_jurors | [$reality_contract](${homeExplorerUrl}${realitio_address}) | [${tos_key}]($tos) | $comment |"
         done <<<"$temp_output"
     done <<<"$version_files"
     echo
 }
 
+# shellcheck source=/dev/null
 source "$SCRIPT_DIR/chains.env"
 
 echo "### Mainnets"

@@ -21,7 +21,8 @@ generate_toc() {
             level = length($1)  # Count number of #
             title = substr($0, level + 2)  # Remove #s and space
             link = tolower(title)
-            gsub(/[^a-z0-9-]/, "", link)  # Create anchor link
+            gsub(/[[:space:]]/, "-", link)  # Replace spaces with hyphens
+            gsub(/[^a-z0-9-]/, "", link)  # Remove other special characters
             printf "%*s- **[%s](#%s)**\n", (level - 2) * 2, "", title, link
         }
     ' "$file"

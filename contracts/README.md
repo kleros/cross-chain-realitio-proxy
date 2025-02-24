@@ -14,15 +14,15 @@ Smart contracts for the Reality.eth cross-chain proxies.
     - **[OptimismSepolia](#optimismsepolia)**
     - **[ArbitrumSepolia](#arbitrumsepolia)**
     - **[ZksyncSepolia](#zksyncsepolia)**
-- **[Sequence diagram](#sequencediagram)**
+- **[Sequence diagram](#sequence-diagram)**
 - **[Contributing](#contributing)**
-  - **[Install Dependencies](#installdependencies)**
-  - **[Run Tests](#runtests)**
-  - **[Compile the Contracts](#compilethecontracts)**
-  - **[Deploy Instructions](#deployinstructions)**
-    - **[0. Set the Environment Variables](#0settheenvironmentvariables)**
-    - **[1. Update the Constructor Parameters (optional)](#1updatetheconstructorparametersoptional)**
-    - **[2. Deploy the Proxies](#2deploytheproxies)**
+  - **[Install Dependencies](#install-dependencies)**
+  - **[Run Tests](#run-tests)**
+  - **[Compile the Contracts](#compile-the-contracts)**
+  - **[Deploy Instructions](#deploy-instructions)**
+    - **[0. Set the Environment Variables](#0-set-the-environment-variables)**
+    - **[1. Update the Constructor Parameters (optional)](#1-update-the-constructor-parameters-optional)**
+    - **[2. Deploy the Proxies](#2-deploy-the-proxies)**
 ---
 
 ## Deployments

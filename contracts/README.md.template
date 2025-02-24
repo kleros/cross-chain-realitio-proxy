@@ -12,6 +12,108 @@ Refresh the list of deployed contracts by running `./scripts/populateReadme.sh`.
 
 $deployments
 
+## Sequence diagram
+
+Example for Optimism.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant L1 as Foreign Proxy (L1)
+    participant Arbitrator
+    participant Messenger as CrossDomainMessenger
+    participant L2 as Home Proxy (L2)
+    participant Realitio
+
+    %% Initial Arbitration Request
+    User->>L1: requestArbitration(questionID, maxPrevious) $arbitrationCost
+    activate L1
+    L1->>L1: Store arbitration request
+    Note over L1: emit ArbitrationRequested
+    L1->>Messenger: sendMessage(receiveArbitrationRequest)
+    deactivate L1
+
+    Messenger->>L2: receiveArbitrationRequest()
+    activate L2
+    L2->>Realitio: notifyOfArbitrationRequest()
+    
+    alt Success
+        Realitio-->>L2: Success
+        L2->>L2: Set status = Notified
+        Note over L2: emit RequestNotified
+    else Failure
+        Realitio-->>L2: Failure
+        L2->>L2: Set status = Rejected
+        Note over L2: emit RequestRejected
+    end
+    deactivate L2
+
+    %% Handle Notified Request
+    User->>L2: handleNotifiedRequest()
+    activate L2
+    L2->>L2: Set status = AwaitingRuling
+    Note over L2: emit RequestAcknowledged
+    L2->>Messenger: sendMessage(receiveArbitrationAcknowledgement)
+    deactivate L2
+
+    rect rgb(136, 136, 136)
+        Note over Messenger,L1: 7-day Optimistic Bridge Message
+        Messenger-->>L1: receiveArbitrationAcknowledgement()
+    end
+
+    activate L1
+    L1->>Arbitrator: createDispute() $arbitrationCost
+    L1->>L1: Set status = Created
+    Note over L1: emit ArbitrationCreated
+    Note over L1: emit Dispute
+    deactivate L1
+
+    %% Appeal Flow
+    User->>L1: fundAppeal(arbitrationID, answer) $appealCost
+    activate L1
+    alt Fully Funded
+        L1->>L1: Store contribution
+        Note over L1: emit Contribution
+        Note over L1: emit RulingFunded
+        L1->>Arbitrator: appeal() $appealCost
+    else Not Fully Funded
+        L1->>L1: Store partial contribution
+        Note over L1: emit Contribution
+        L1->>User: Return excess funds
+    end
+    deactivate L1
+
+    %% Arbitrator Ruling
+    Arbitrator->>L1: rule(disputeID, ruling)
+    activate L1
+    L1->>L1: Set status = Ruled
+    Note over L1: emit Ruling
+    L1->>Messenger: sendMessage(receiveArbitrationAnswer)
+    deactivate L1
+
+    Messenger->>L2: receiveArbitrationAnswer()
+    activate L2
+    L2->>L2: Set status = Ruled
+    Note over L2: emit ArbitratorAnswered
+    deactivate L2
+
+    %% Report Answer
+    User->>L2: reportArbitrationAnswer()
+    activate L2
+    L2->>Realitio: assignWinnerAndSubmitAnswerByArbitrator()
+    L2->>L2: Set status = Finished
+    Note over L2: emit ArbitrationFinished
+    deactivate L2
+
+    %% Withdraw Fees
+    User->>L1: withdrawFeesAndRewards()
+    activate L1
+    alt Has Rewards
+        L1->>User: Send rewards $
+        Note over L1: emit Withdrawal
+    end
+    deactivate L1
+```
 
 ## Contributing
 

@@ -138,7 +138,7 @@ contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
      * Reasons why the request might be rejected:
      *  - The question does not exist
      *  - The question was not answered yet
-     *  - The quesiton bond value changed while the arbitration was being requested
+     *  - The question bond value changed while the arbitration was being requested
      *  - Another request was already accepted
      * @param _questionID The ID of the question.
      * @param _requester The address of the user that requested arbitration.

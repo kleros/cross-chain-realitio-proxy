@@ -16,7 +16,7 @@ import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger
 
 /**
  * @title Arbitration proxy for Realitio on foreign chain (eg. mainnet).
- * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
+ * @dev https://docs.optimism.io/app-developers/bridging/messaging
  */
 contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResolver {
     /* Constants */

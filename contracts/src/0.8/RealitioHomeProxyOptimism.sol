@@ -15,7 +15,7 @@ import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger
 
 /**
  * @title Arbitration proxy for Realitio on home chain (eg. Optimism, Unichain, Redstone etc).
- * @dev https://docs.optimism.io/builders/app-developers/bridging/messaging
+ * @dev https://docs.optimism.io/app-developers/bridging/messaging
  */
 contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     ICrossDomainMessenger public constant messenger = ICrossDomainMessenger(0x4200000000000000000000000000000000000007); // Precompile for L2 -> L1 communication, identical for all OP L2s

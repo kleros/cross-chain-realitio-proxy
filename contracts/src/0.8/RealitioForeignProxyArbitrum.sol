@@ -681,9 +681,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Gets the required fee to process the message on L2.
-     * @dev Logic that checks if the user have enough funds to create a ticket. This is done by checking if the msg.value provided by the user
-     * is greater than or equal to maxSubmissionCost + l2CallValue + gasLimit * maxFeePerGas.
-     * https://docs.arbitrum.io/how-arbitrum-works/arbos/l1-l2-messaging
+     * @dev Logic to get gas needed to create a new Ticket.
+     * https://docs.arbitrum.io/how-arbitrum-works/l1-to-l2-messaging
      * @param _maxSubmissionCost Cost to calculate a retryable ticket on L1.
      * @return arbitrumFee Total arbitrum fee required to pass a message L1->L2.
      */

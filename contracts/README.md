@@ -7,6 +7,7 @@ Smart contracts for the Reality.eth cross-chain proxies.
   - **[Mainnets](#mainnets)**
     - **[Gnosis](#gnosis)**
     - **[Unichain](#unichain)**
+    - **[Base](#base)**
     - **[Polygon](#polygon)**
   - **[Testnets](#testnets)**
     - **[Chiado](#chiado)**
@@ -48,6 +49,14 @@ Refresh the list of deployed contracts by running `./scripts/populateReadme.sh`.
 |---------|------|------------|---------------|---------|-----------|---------|---------|---------|
 | v1.3.0 | [Default](deployments/unichain/RealitioProxy-v1.3.0.json#L6) | [0xcB4B48..b045a6](https://uniscan.xyz/address/0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6) | [0x122D6B..b7954D](https://etherscan.io/address/0x122D6B4197531bF4e9314fD00259b1dc1Db7954D) | 24 | 15 | [RealityUnverified](https://uniscan.xyz/address/0xB920dBedE88B42aA77eE55ebcE3671132ee856fC) | [default](https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf) |  |
 | v1.3.0 | [Butter](deployments/unichain/RealitioProxy-v1.3.0.json#L29) | [0x8FeAB3..EC44b6](https://uniscan.xyz/address/0x8FeAB350A304140b1593A38a13607d122BEC44b6) | [0x3FB831..48Ac17](https://etherscan.io/address/0x3FB8314C628E9afE7677946D3E23443Ce748Ac17) | 24 | 15 | [RealityUnverified](https://uniscan.xyz/address/0xB920dBedE88B42aA77eE55ebcE3671132ee856fC) | [butter](https://cdn.kleros.link/ipfs/QmSv9ohhChMtyqwqsvfgeJtZQBWkwAboBc1n3UGvprfdd7/Conditional_Funding_Markets_-_Question_Resolution_Policy.pdf) |  |
+
+
+#### Base
+
+| Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality | Policy | Comment |
+|---------|------|------------|---------------|---------|-----------|---------|---------|---------|
+| v1.3.0 | [Default](deployments/base/RealitioProxy-v1.3.0.json#L6) | [0xcB4B48..b045a6](https://basescan.org/address/0xcB4B48d2A7a44247A00048963F169d2b4Ab045a6) | [0x87f58F..e2EAf9](https://etherscan.io/address/0x87f58F0dCF3c99BA2F3eB0604e5c335893e2EAf9) | 24 | 15 | [RealityETH_v3_0](https://basescan.org/address/0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8) | [default](https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf) |  |
+| v1.3.0 | [Zodiac SafeSnap](deployments/base/RealitioProxy-v1.3.0.json#L29) | [0xBeeB21..FBe96B](https://basescan.org/address/0xBeeB211CfE6632E75992488A66F65b0477FBe96B) | [0x20E1D4..aAe373](https://etherscan.io/address/0x20E1D44c64Ec03ECe12133743bEc7019f3aAe373) | 24 | 15 | [RealityETH_v3_0](https://basescan.org/address/0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8) | [zodiac](https://cdn.kleros.link/ipfs/QmXyo9M4Z2XY6Nw9UfuuUNzKXXNhvt24q6pejuN9RYWPMr/Reality_Module_Governance_Oracle-Question_Resolution_Policy.pdf) |  |
 
 
 #### Polygon

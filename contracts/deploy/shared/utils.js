@@ -13,6 +13,7 @@ const getMetaEvidenceFilename = (homeNetworkName, termsOfService) => {
 
 const getMetaEvidenceCID = (homeNetworkName) => {
   try {
+    // Run ./scripts/generateMetaevidenceCids.sh to generate this file
     const metaEvidenceData = require("../../metaevidence-cids.json");
     const key = getMetaEvidenceFilename(homeNetworkName, process.env.TOS);
     const cid = metaEvidenceData[key];

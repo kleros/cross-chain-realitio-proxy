@@ -217,6 +217,8 @@ contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.Ruled, "Arbitrator has not ruled yet");
 
+        request.status = Status.Finished;
+        
         realitio.assignWinnerAndSubmitAnswerByArbitrator(
             _questionID,
             request.arbitratorAnswer,
@@ -225,8 +227,6 @@ contract RealitioHomeProxyPolygon is IHomeArbitrationProxy, FxBaseChildTunnel {
             _lastAnswerOrCommitmentID,
             _lastAnswerer
         );
-
-        request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
     }

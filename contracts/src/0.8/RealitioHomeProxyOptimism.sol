@@ -2,7 +2,7 @@
 
 /**
  *  @authors: [@anmol-dhiman, @unknownunknown1]
- *  @reviewers: [@kokialgo]
+ *  @reviewers: [@jaybuidl, @kokialgo]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
@@ -204,6 +204,8 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         Request storage request = requests[_questionID][requester];
         require(request.status == Status.Ruled, "Arbitrator has not ruled yet");
 
+        request.status = Status.Finished;
+
         realitio.assignWinnerAndSubmitAnswerByArbitrator(
             _questionID,
             request.arbitratorAnswer,
@@ -212,8 +214,6 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
             _lastAnswerOrCommitmentID,
             _lastAnswerer
         );
-
-        request.status = Status.Finished;
 
         emit ArbitrationFinished(_questionID);
     }

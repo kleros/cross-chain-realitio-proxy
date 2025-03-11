@@ -2,7 +2,7 @@
 
 /**
  *  @authors: [@anmol-dhiman, @unknownunknown1]
- *  @reviewers: [@kokialgo]
+ *  @reviewers: [@jaybuidl, @kokialgo]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []

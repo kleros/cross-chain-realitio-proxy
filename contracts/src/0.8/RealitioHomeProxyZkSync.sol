@@ -18,7 +18,7 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArb
 /**
  * @title Arbitration proxy for Realitio on L2.
  * @dev This contract is meant to be deployed to L2 where Reality.eth is deployed.
- * https://code.zksync.io/tutorials/how-to-send-l2-l1-message
+ * https://docs.zksync.io/zksync-protocol/rollup/l1_l2_communication
  */
 contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
     // 2^15 offset to avoid collision. Taken from zk system contract https://github.com/matter-labs/v2-testnet-contracts/blob/b8449bf9c819098cc8bfee0549ff5094456be51d/l2/system-contracts/Constants.sol#L18
@@ -26,7 +26,7 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
 
     /// @dev The address of the Realitio contract (v3.0 required). TRUSTED.
     IRealitio public immutable realitio;
-    address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://era.zksync.io/docs/api/go/utils.html#applyl1tol2alias
+    address public immutable foreignProxyAlias; // Address of the proxy on L1 converted to L2. See https://docs.zksync.io/zksync-era/sdk/go/api/utilities#applyl1tol2alias
     /// @dev Address of the proxy on L1. Note that it needs to be precomputed before deployment by using deployer's address and tx nonce.
     address public immutable foreignProxy;
     /// @dev ID of the foreign chain, required for Realitio.

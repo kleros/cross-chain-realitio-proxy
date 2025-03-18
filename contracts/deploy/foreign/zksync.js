@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-const { encodeExtraData, eth, getMetaEvidenceCID } = require("../shared");
+const { encodeExtraData, eth, getMetaEvidenceCID, wNative } = require("../shared");
 
 // Bridge addresses:
 // https://docs.zksync.io/zk-stack/zk-chain-addresses
@@ -23,9 +23,11 @@ async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, h
   const surplus = eth("0.03"); // The surplus will be automatically reimbursed when the dispute is created.
   const l2GasLimit = 1500000; // Gas limit for a tx on L2.
   const l2GasPerPubdataByteLimit = 800;
+  const chainId = await getChainId();
   const deployed = await deploy("RealitioForeignProxyZkSync", {
     from,
     args: [
+      wNative[chainId],
       arbitrator,
       arbitratorExtraData,
       metaEvidence,

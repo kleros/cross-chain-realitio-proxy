@@ -13,6 +13,7 @@ pragma solidity 0.8.25;
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import "@matterlabs/zksync-contracts/l1/contracts/zksync/interfaces/IZkSync.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
@@ -20,6 +21,8 @@ import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArb
  * https://docs.zksync.io/zksync-protocol/rollup/l1_l2_communication
  */
 contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolver {
+    using SafeSend for address payable;
+    
     /* Constants */
     // The number of choices for the arbitrator.
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max;
@@ -61,6 +64,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
+    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     address public deployer = msg.sender; // Deployer address. It will be set to 0 after setting HomeProxy.
     address public homeProxy; // Proxy on L2.
 
@@ -98,6 +102,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -110,6 +115,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _surplusAmount The surplus amount to cover zk fees.
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -121,6 +127,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 _l2GasPerPubdataByteLimit,
         uint256 _surplusAmount
     ) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -250,7 +257,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder); // It is the user's responsibility to accept ETH.
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -277,7 +284,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit); // It is the user's responsibility to accept ETH.
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -299,9 +306,8 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         // multiple times to avoid intentional blocking.
         arbitration.deposit = 0;
         uint256 surplusValue = msg.value - zkGasFee;
-        // It is the user's responsibility to accept ETH.
-        payable(msg.sender).send(surplusValue);
-        payable(_requester).send(deposit);
+        payable(msg.sender).safeSend(surplusValue, wNative);
+        payable(_requester).safeSend(deposit, wNative);
 
         bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
@@ -384,7 +390,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -425,7 +431,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }
@@ -520,7 +526,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         );
         emit RulingRelayed(_questionID, bytes32(realitioRuling));
 
-        if (msg.value - zkGasFee > 0) payable(msg.sender).send(msg.value - zkGasFee); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - zkGasFee > 0) payable(msg.sender).safeSend(msg.value - zkGasFee, wNative); // Sending extra value back to contributor.
     }
 
     /* External Views */

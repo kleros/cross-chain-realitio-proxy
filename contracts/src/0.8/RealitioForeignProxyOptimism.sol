@@ -13,12 +13,15 @@ pragma solidity 0.8.25;
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on foreign chain (eg. mainnet).
  * @dev https://docs.optimism.io/app-developers/bridging/messaging
  */
 contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResolver {
+    using SafeSend for address payable;
+    
     /* Constants */
 
     // Gas limit of the transaction call on L2. Note that setting value too high results in high gas estimation fee (tested on Sepolia).
@@ -62,6 +65,8 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
+    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
+    
     // contract for L1 -> L2 communication
     ICrossDomainMessenger public immutable messenger;
     address public immutable homeProxy; // Proxy on L2.
@@ -89,6 +94,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -99,6 +105,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _messenger contract for L1 -> L2 tx
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -108,6 +115,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         address _homeProxy,
         address _messenger
     ) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -182,7 +190,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder); // It is the user's responsibility to accept ETH.
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -209,7 +217,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit); // It is the user's responsibility to accept ETH.
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -231,7 +239,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         delete arbitrationRequests[arbitrationID][_requester];
 
-        payable(_requester).send(deposit); // It is the user's responsibility to accept ETH.
+        payable(_requester).safeSend(deposit, wNative);
 
         messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
         emit ArbitrationCanceled(_questionID, _requester);
@@ -303,7 +311,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -344,7 +352,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }

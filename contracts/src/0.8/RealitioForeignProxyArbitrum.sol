@@ -14,6 +14,7 @@ import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 import "./interfaces/arbitrum/IInbox.sol";
 import "./interfaces/arbitrum/IOutbox.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
@@ -21,6 +22,8 @@ import "./interfaces/arbitrum/IOutbox.sol";
  * Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/ethereum/GreeterL1.sol
  */
 contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResolver {
+    using SafeSend for address payable;
+    
     /* Constants */
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
@@ -61,7 +64,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256 feeRewards; // Sum of reimbursable appeal fees available to the parties that made contributions to the answer that ultimately wins a dispute.
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
-
+    
+    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     address public immutable homeProxy; // Proxy on L2.
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
@@ -107,6 +111,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -116,10 +121,10 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _homeProxy Proxy on L2.
      * @param _inbox L2 inbox.
      * @param _surplusAmount The surplus amount to cover Arbitrum fees.
-     * @param _l2GasLimit L2 gas limit
-     * @param _gasPriceBid Max gas price L2.
+     * @param _l2Parameters Array that contains L2 gas limit and max gas price on L2 respectively, to avoid `stack too deep` error.
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -129,9 +134,9 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         address _homeProxy,
         address _inbox,
         uint256 _surplusAmount,
-        uint256 _l2GasLimit,
-        uint256 _gasPriceBid
+        uint256[2] memory _l2Parameters
     ) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -140,8 +145,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         homeProxy = _homeProxy;
         inbox = IInbox(_inbox);
         surplusAmount = _surplusAmount;
-        l2GasLimit = _l2GasLimit;
-        gasPriceBid = _gasPriceBid;
+        l2GasLimit = _l2Parameters[0];
+        gasPriceBid = _l2Parameters[1];
 
         emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
@@ -224,7 +229,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder); // It is the user's responsibility to accept ETH.
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -251,7 +256,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit); // It is the user's responsibility to accept ETH.
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -278,9 +283,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         // multiple times to avoid intentional blocking.
         arbitration.deposit = 0;
         uint256 surplusValue = msg.value - arbitrumFee;
-        // It is the user's responsibility to accept ETH.
-        payable(msg.sender).send(surplusValue);
-        payable(_requester).send(deposit);
+        payable(msg.sender).safeSend(surplusValue, wNative);
+        payable(_requester).safeSend(deposit, wNative);
 
         uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
             homeProxy,
@@ -364,7 +368,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -405,7 +409,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }
@@ -504,7 +508,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         emit RetryableTicketCreated(ticketID);
         emit RulingRelayed(_questionID, bytes32(realitioRuling));
 
-        if (msg.value - arbitrumFee > 0) payable(msg.sender).send(msg.value - arbitrumFee); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - arbitrumFee > 0) payable(msg.sender).safeSend(msg.value - arbitrumFee, wNative); // Sending extra value back to contributor.
     }
 
     /* External Views */

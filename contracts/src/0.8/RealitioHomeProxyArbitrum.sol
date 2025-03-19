@@ -2,7 +2,7 @@
 
 /**
  *  @authors: [@unknownunknown1]
- *  @reviewers: [@jaybuidl]
+ *  @reviewers: [@jaybuidl, @kokialgo]
  *  @auditors: []
  *  @bounties: []
  *  @deployments: []
@@ -18,7 +18,7 @@ import "@arbitrum/nitro-contracts/src/libraries/AddressAliasHelper.sol";
 /**
  * @title Arbitration proxy for Realitio on Arbitrum.
  * @dev This contract is meant to be deployed to L2 where Reality.eth is deployed.
- * https://docs.arbitrum.io/arbos/l2-to-l1-messaging
+ * https://docs.arbitrum.io/how-arbitrum-works/l1-to-l2-messaging
  * Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/arbitrum/GreeterL2.sol
  */
 contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {

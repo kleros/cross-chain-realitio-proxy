@@ -1,4 +1,4 @@
-const { encodeExtraData, getMetaEvidenceCID, wNative } = require("../shared");
+const { encodeExtraData, getMetaEvidenceCID } = require("../shared");
 
 // The parameters are keyed by home network name rather than by chainId because several home proxies point to the same foreign proxy.
 const foreignParameters = {
@@ -40,15 +40,24 @@ const foreignParameters = {
   },
 };
 
-async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, homeProxy, arbitrator, courts, multipliers }) {
+async function deployForeignProxy({
+  deploy,
+  from,
+  parameters,
+  homeNetworkName,
+  homeProxy,
+  wNative,
+  arbitrator,
+  courts,
+  multipliers,
+}) {
   const { numberOfJurors, foreignBridge, variant } = parameters;
   const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
-  const chainId = await getChainId();
   return await deploy(`RealitioForeignProxy${variant}`, {
     contract: "RealitioForeignProxyOptimism",
     from,
-    args: [wNative[chainId], arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, foreignBridge],
+    args: [wNative, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, foreignBridge],
     log: true,
   });
 }

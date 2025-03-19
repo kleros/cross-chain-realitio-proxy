@@ -1,4 +1,4 @@
-const { FOREIGN_CHAIN_IDS, arbitrators, courts } = require("./shared");
+const { FOREIGN_CHAIN_IDS, arbitrators, courts, wNatives } = require("./shared");
 const arbitrumProxy = require("./foreign/arbitrum.js");
 const gnosisProxy = require("./foreign/gnosis.js");
 const optimismProxy = require("./foreign/optimism.js");
@@ -47,6 +47,7 @@ async function deployForeignProxy({ deployments, getChainId, ethers, companionNe
     homeNetworkName,
     homeChainId,
     homeProxy,
+    wNative: wNatives[chainId],
     arbitrator: arbitrators[chainId],
     courts: courts[chainId],
     multipliers: [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier],

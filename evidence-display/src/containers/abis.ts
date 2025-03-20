@@ -1,3 +1,5 @@
+import { Abi } from 'viem'
+
 export const homeProxyAbi = [
   {
     inputs: [],
@@ -12,7 +14,7 @@ export const homeProxyAbi = [
     stateMutability: "view",
     type: "function",
   },
-];
+] as const satisfies Abi
 
 export const foreignProxyAbi = [
   {
@@ -72,7 +74,7 @@ export const foreignProxyAbi = [
     name: "ArbitrationCreated",
     type: "event",
   },
-];
+] as const satisfies Abi
 
 export const realitioAbi = [
   {
@@ -249,45 +251,9 @@ export const realitioAbi = [
         type: "address",
       },
     ],
-    name: "assignWinnerAndSubmitAnswerByArbitrator",
+    name: "submitAnswerByArbitrator",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "question_id",
-        type: "bytes32",
-      },
-    ],
-    name: "cancelArbitration",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "question_id",
-        type: "bytes32",
-      },
-      {
-        internalType: "address",
-        name: "requester",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "max_previous",
-        type: "uint256",
-      },
-    ],
-    name: "notifyOfArbitrationRequest",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-];
+] as const satisfies Abi 

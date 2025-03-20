@@ -5,7 +5,7 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  
+
   return {
     build: {
       lib: {
@@ -16,7 +16,6 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         external: [
-          '@kleros/cross-chain-realitio-contracts',
           '@reality.eth/reality-eth-lib',
           'web3'
         ],
@@ -36,4 +35,4 @@ export default defineConfig(({ mode }) => {
       'process.env.VERSION': JSON.stringify(env.npm_package_version),
     }
   };
-}); 
+});

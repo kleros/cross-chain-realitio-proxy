@@ -9,10 +9,10 @@
   "private": true,
   "packageManager": "yarn@3.8.7",
   "scripts": {
-    "lint": "run-p -s lint:*",
+    "lint": "lint:js && lint:sol",
     "lint:js": "eslint .",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "fix": "run-p -s fix:*",
+    "fix": "fix:js && fix:sol",
     "fix:js": "eslint --fix '**/*.js'",
     "fix:sol": "prettier --write 'contracts/**/*.sol'",
     "prepare": "husky install"
@@ -26,12 +26,10 @@
   "devDependencies": {
     "eslint": "5.12.0",
     "eslint-config-prettier": "^6.14.0",
-    "eslint-import-resolver-parcel": "^1.10.5",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-prettier": "^3.1.4",
     "husky": "^7.0.1",
     "lint-staged": "^11.0.0",
-    "npm-run-all": "^4.1.5",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.4.2",
     "solhint": "^3.6.2",

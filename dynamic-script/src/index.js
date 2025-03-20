@@ -1,6 +1,6 @@
-const Web3 = require("web3");
-const RealitioQuestion = require("@realitio/realitio-lib/formatters/question.js");
-const { homeProxyAbi, foreignProxyAbi, realitioAbi } = require("./abis");
+import Web3 from "web3";
+import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
+import { homeProxyAbi, foreignProxyAbi, realitioAbi } from "./abis.js";
 
 const isNil = (value) => value === undefined || value === null;
 
@@ -26,7 +26,7 @@ const REALITY_STARTS_AT = {
   "0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8": 26260675, // Reality 3.0 Base
 };
 
-module.exports = async function getMetaEvidence() {
+export default async function getMetaEvidence() {
   const { disputeID, arbitrableContractAddress, arbitrableJsonRpcUrl, arbitratorJsonRpcUrl, jsonRpcUrl } =
     scriptParameters;
   if (isNil(disputeID) || isNil(arbitrableContractAddress)) {
@@ -148,4 +148,4 @@ module.exports = async function getMetaEvidence() {
     default:
       return resolveScript({ ...erc1497OverridesMixin });
   }
-};
+}

@@ -3006,6 +3006,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@kleros/cross-chain-realitio-dynamic-script@workspace:dynamic-script":
+  version: 0.0.0-use.local
+  resolution: "@kleros/cross-chain-realitio-dynamic-script@workspace:dynamic-script"
+  dependencies:
+    "@reality.eth/reality-eth-lib": ^3.3.2
+    "@types/node": ^20.11.24
+    "@typescript-eslint/eslint-plugin": ^7.1.0
+    "@typescript-eslint/parser": ^7.1.0
+    eslint: ^8.57.0
+    typescript: ^5.3.3
+    viem: ^2.7.8
+    vite: ^5.1.4
+  languageName: unknown
+  linkType: soft
+
 "@kleros/cross-chain-realitio-evidence-display@workspace:evidence-display":
   version: 0.0.0-use.local
   resolution: "@kleros/cross-chain-realitio-evidence-display@workspace:evidence-display"
@@ -3047,17 +3062,6 @@ __metadata:
     prettier-plugin-solidity: ^1.4.2
     solhint: ^3.6.2
     solhint-plugin-prettier: ^0.1.0
-  languageName: unknown
-  linkType: soft
-
-"@kleros/cross-chain-realitio-script@workspace:dynamic-script":
-  version: 0.0.0-use.local
-  resolution: "@kleros/cross-chain-realitio-script@workspace:dynamic-script"
-  dependencies:
-    "@reality.eth/reality-eth-lib": ^3.3.2
-    vite: ^5.1.0
-    vite-plugin-node-polyfills: ^0.21.0
-    web3: 1.10.4
   languageName: unknown
   linkType: soft
 
@@ -4907,6 +4911,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.11.24":
+  version: 20.17.24
+  resolution: "@types/node@npm:20.17.24"
+  dependencies:
+    undici-types: ~6.19.2
+  checksum: 05d3ca5d8741d10368edeff01318e4e615a7654b0c6bd05415f8cd0a2f851ac8e04c2cac319442c20fe372d1bdba9dd1f40dda014e97902516f82058b68ef6c4
+  languageName: node
+  linkType: hard
+
 "@types/parse-json@npm:^4.0.0":
   version: 4.0.2
   resolution: "@types/parse-json@npm:4.0.2"
@@ -5043,7 +5056,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:^7.0.2":
+"@typescript-eslint/eslint-plugin@npm:^7.0.2, @typescript-eslint/eslint-plugin@npm:^7.1.0":
   version: 7.18.0
   resolution: "@typescript-eslint/eslint-plugin@npm:7.18.0"
   dependencies:
@@ -5066,7 +5079,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:^7.0.2":
+"@typescript-eslint/parser@npm:^7.0.2, @typescript-eslint/parser@npm:^7.1.0":
   version: 7.18.0
   resolution: "@typescript-eslint/parser@npm:7.18.0"
   dependencies:
@@ -9849,7 +9862,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^8.56.0":
+"eslint@npm:^8.56.0, eslint@npm:^8.57.0":
   version: 8.57.1
   resolution: "eslint@npm:8.57.1"
   dependencies:
@@ -20368,7 +20381,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.2.2":
+"typescript@npm:^5.2.2, typescript@npm:^5.3.3":
   version: 5.8.2
   resolution: "typescript@npm:5.8.2"
   bin:
@@ -20378,7 +20391,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>":
+"typescript@patch:typescript@^5.2.2#~builtin<compat/typescript>, typescript@patch:typescript@^5.3.3#~builtin<compat/typescript>":
   version: 5.8.2
   resolution: "typescript@patch:typescript@npm%3A5.8.2#~builtin<compat/typescript>::version=5.8.2&hash=5786d5"
   bin:
@@ -20890,7 +20903,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"viem@npm:^2.7.15":
+"viem@npm:^2.7.15, viem@npm:^2.7.8":
   version: 2.23.12
   resolution: "viem@npm:2.23.12"
   dependencies:
@@ -20923,7 +20936,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^5.1.0, vite@npm:^5.1.4":
+"vite@npm:^5.1.4":
   version: 5.4.14
   resolution: "vite@npm:5.4.14"
   dependencies:
@@ -21276,7 +21289,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"web3@npm:1.10.4, web3@npm:^1.10.4":
+"web3@npm:^1.10.4":
   version: 1.10.4
   resolution: "web3@npm:1.10.4"
   dependencies:

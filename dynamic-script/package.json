@@ -1,21 +1,26 @@
 {
-  "name": "@kleros/cross-chain-realitio-script",
+  "name": "@kleros/cross-chain-realitio-dynamic-script",
   "version": "0.5.0",
-  "main": "dist/realitio-dynamic-script.js",
   "type": "module",
   "author": "Kleros",
   "license": "MIT",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
     "@reality.eth/reality-eth-lib": "^3.3.2",
-    "web3": "1.10.4"
+    "viem": "^2.7.8"
   },
   "devDependencies": {
-    "vite": "^5.1.0",
-    "vite-plugin-node-polyfills": "^0.21.0"
+    "@types/node": "^20.11.24",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.4"
   },
   "volta": {
     "node": "20.19.0"

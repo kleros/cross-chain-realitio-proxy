@@ -1,26 +1,55 @@
 {
   "name": "@kleros/cross-chain-realitio-dynamic-script",
   "version": "0.5.0",
-  "type": "module",
+  "description": "Dynamic script for cross-chain Reality.eth integration",
   "author": "Kleros",
   "license": "MIT",
+  "type": "module",
+  "main": "./dist/realitio-dynamic-script.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/realitio-dynamic-script.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./lib": {
+      "import": "./dist/lib.js",
+      "types": "./dist/lib.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "lib": [
+        "./dist/lib.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "clean": "rm -rf dist",
+    "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
+    "build": "yarn clean && vite build && yarn build:types",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@reality.eth/reality-eth-lib": "^3.3.2",
-    "viem": "^2.7.8"
+    "viem": "^2.23.13"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
-    "@typescript-eslint/eslint-plugin": "^7.1.0",
-    "@typescript-eslint/parser": "^7.1.0",
-    "eslint": "^8.57.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.1.4"
+    "@typescript-eslint/eslint-plugin": "^8.27.0",
+    "@typescript-eslint/parser": "^8.27.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-import-resolver-typescript": "^4.2.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "typescript": "^5.8.2",
+    "vite": "^5.4.14"
   },
   "volta": {
     "node": "20.19.0"

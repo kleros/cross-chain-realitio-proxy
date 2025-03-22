@@ -6,24 +6,21 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 export default defineConfig({
   plugins: [
     react(),
-    nodePolyfills({
-      include: ['path', 'fs', 'os'],
-      globals: {
-        Buffer: true,
-        global: true,
-        process: true,
-      },
-    }),
+    nodePolyfills(),
   ],
   build: {
     outDir: 'dist',
     sourcemap: true,
     target: 'esnext', // Optimized for modern browsers and Node 20
+    rollupOptions: {
+      external: ['@kleros/cross-chain-realitio-dynamic-script/lib'],
+    },
   },
   resolve: {
     alias: {
       '@': '/src',
     },
+    preserveSymlinks: true,
   },
   esbuild: {
     target: 'esnext', // Use latest ECMAScript features

@@ -5,10 +5,7 @@ import {
   foreignProxyAbi,
   realitioAbi,
   REALITY_STARTS_AT,
-  foreignProxyEvents,
-  realitioEvents,
 } from "./contracts";
-import type { ArbitrationCreatedLog, LogNewQuestionLog, LogNewTemplateLog } from "./contracts";
 
 const isNil = (value: unknown): value is undefined | null => value === undefined || value === null;
 
@@ -73,37 +70,43 @@ export async function fetchRealityQuestionData({
   });
 
   const arbitrationCreatedBlock = await foreignProxy.read.arbitrationCreatedBlock([BigInt(disputeID)]);
-  const arbitrationCreatedLogs = await foreignClient.getLogs({
-    address: arbitrableContractAddress,
-    event: foreignProxyEvents.ArbitrationCreated,
-    args: {
+  const arbitrationCreatedLogs = await foreignProxy.getEvents.ArbitrationCreated(
+    {
       _disputeID: BigInt(disputeID),
     },
-    fromBlock: arbitrationCreatedBlock,
-    toBlock: arbitrationCreatedBlock,
-  });
+    { fromBlock: arbitrationCreatedBlock, toBlock: arbitrationCreatedBlock }
+  );
 
   if (arbitrationCreatedLogs.length !== 1) {
     throw new Error("Could not find the dispute");
   }
 
-  const { _questionID: questionID } = arbitrationCreatedLogs[0].args as ArbitrationCreatedLog;
+  const { _questionID: questionID } = arbitrationCreatedLogs[0].args;
+  if (!questionID) {
+    throw new Error("Missing question ID from arbitration event");
+  }
 
-  const questionEventLog = await homeClient.getLogs({
-    address: realitioAddress,
-    event: realitioEvents.LogNewQuestion,
-    args: {
+  const questionEventLog = await realitio.getEvents.LogNewQuestion(
+    {
       question_id: questionID,
     },
-    fromBlock: BigInt(
-      Object.keys(REALITY_STARTS_AT).includes(realitioAddress.toLowerCase())
-        ? REALITY_STARTS_AT[realitioAddress.toLowerCase() as keyof typeof REALITY_STARTS_AT]
-        : 0
-    ),
-    toBlock: "latest",
-  });
+    {
+      fromBlock: BigInt(
+        Object.keys(REALITY_STARTS_AT).includes(realitioAddress.toLowerCase())
+          ? REALITY_STARTS_AT[realitioAddress.toLowerCase() as keyof typeof REALITY_STARTS_AT]
+          : 0
+      ),
+      toBlock: "latest",
+    }
+  );
+  if (questionEventLog.length === 0) {
+    throw new Error("Could not find the question event");
+  }
 
-  const { template_id: templateID, question } = questionEventLog[0].args as LogNewQuestionLog;
+  const { template_id: templateID, question } = questionEventLog[0].args;
+  if (!templateID || !question) {
+    throw new Error("Missing template ID or question from event");
+  }
 
   let templateText: string;
   if (templateID < 5n) {
@@ -117,17 +120,21 @@ export async function fetchRealityQuestionData({
     ][Number(templateID)];
   } else {
     const templateCreationBlock = await realitio.read.templates([templateID]);
-    const templateEventLog = await homeClient.getLogs({
-      address: realitioAddress,
-      event: realitioEvents.LogNewTemplate,
-      args: {
+    const templateEventLog = await realitio.getEvents.LogNewTemplate(
+      {
         template_id: templateID,
       },
-      fromBlock: templateCreationBlock,
-      toBlock: templateCreationBlock,
-    });
+      { fromBlock: templateCreationBlock, toBlock: templateCreationBlock }
+    );
 
-    const { question_text } = templateEventLog[0].args as LogNewTemplateLog;
+    if (templateEventLog.length === 0) {
+      throw new Error("Could not find the template event");
+    }
+
+    const { question_text } = templateEventLog[0].args;
+    if (!question_text) {
+      throw new Error("Missing question text from template event");
+    }
     templateText = question_text;
   }
 

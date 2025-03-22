@@ -1,5 +1,4 @@
-import { Abi, AbiEvent } from "viem";
-import { ExtractAbiEventNames } from "abitype";
+import { Abi } from "viem";
 
 export const REALITY_STARTS_AT = {
   "0x325a2e0f3cca2ddbaebb4dfc38df8d19ca165b47": 6531265, // Reality 2.0 Mainnet
@@ -108,48 +107,3 @@ export const realitioAbi = [
     type: "function",
   },
 ] as const satisfies Abi;
-
-export const foreignProxyEvents = createEventMap(foreignProxyAbi);
-
-export const realitioEvents = createEventMap(realitioAbi);
-
-export type ArbitrationCreatedLog = {
-  _questionID: `0x${string}`;
-  _requester: `0x${string}`;
-  _disputeID: bigint;
-};
-
-export type LogNewQuestionLog = {
-  question_id: `0x${string}`;
-  user: `0x${string}`;
-  template_id: bigint;
-  question: string;
-  content_hash: `0x${string}`;
-  arbitrator: `0x${string}`;
-  timeout: number;
-  opening_ts: number;
-  nonce: bigint;
-  created: bigint;
-};
-
-export type LogNewTemplateLog = {
-  template_id: bigint;
-  user: `0x${string}`;
-  question_text: string;
-};
-
-/**
- * Creates a mapping of event names to their corresponding AbiEvent objects
- * @param abi - The contract ABI to extract events from
- * @returns An object with event names as keys and AbiEvent objects as values
- */
-function createEventMap<T extends Abi>(abi: T): Record<Extract<T[number], { type: "event" }>["name"], AbiEvent> {
-  return Object.freeze(
-    abi.reduce((acc, item) => {
-      if (item.type === "event") {
-        acc[item.name] = item;
-      }
-      return acc;
-    }, {} as Record<string, AbiEvent>)
-  ) as Record<ExtractAbiEventNames<T>, AbiEvent>;
-}

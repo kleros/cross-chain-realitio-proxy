@@ -1,25 +1,57 @@
 {
-  "name": "@kleros/cross-chain-realitio-script",
-  "version": "0.4.0",
-  "main": "index.js",
+  "name": "@kleros/cross-chain-realitio-dynamic-script",
+  "version": "0.5.0",
+  "description": "Dynamic script for cross-chain Reality.eth integration",
   "author": "Kleros",
   "license": "MIT",
+  "type": "module",
+  "main": "./dist/realitio-dynamic-script.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/realitio-dynamic-script.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./lib": {
+      "import": "./dist/lib.js",
+      "types": "./dist/lib.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "lib": [
+        "./dist/lib.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
-    "build": "webpack --mode production --progress"
+    "clean": "rm -rf dist",
+    "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
+    "build": "yarn clean && vite build && yarn build:types",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@kleros/cross-chain-realitio-contracts": "^1.0.0",
-    "@realitio/realitio-lib": "^1.0.2",
-    "web3": "1.10.4",
-    "webpack": "^4.47.0"
+    "@reality.eth/reality-eth-lib": "^3.3.2",
+    "viem": "^2.23.13"
   },
   "devDependencies": {
-    "clean-webpack-plugin": "^3.0.0",
-    "dotenv-webpack": "^4.0.0",
-    "webpack-cli": "^3.3.12",
-    "webpack-node-externals": "^2.5.2"
+    "@types/node": "^20.11.24",
+    "@typescript-eslint/eslint-plugin": "^8.27.0",
+    "@typescript-eslint/parser": "^8.27.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-import-resolver-typescript": "^4.2.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "typescript": "^5.8.2",
+    "vite": "^5.4.14"
   },
   "volta": {
-    "node": "16.20.2"
+    "node": "20.19.0"
   }
 }

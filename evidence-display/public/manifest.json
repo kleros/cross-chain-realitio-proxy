@@ -1,6 +1,6 @@
 {
-  "short_name": "Dapp Front Boilerplate",
-  "name": "Dapp Front Boilerplate",
+  "short_name": "Reality.eth Evidence",
+  "name": "Reality.eth Evidence Display",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,6 +10,6 @@
   ],
   "start_url": "./index.html",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#2093ff",
+  "background_color": "#f0f4f8"
 }

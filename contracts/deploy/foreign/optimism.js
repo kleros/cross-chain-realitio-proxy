@@ -40,14 +40,24 @@ const foreignParameters = {
   },
 };
 
-async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, homeProxy, arbitrator, courts, multipliers }) {
+async function deployForeignProxy({
+  deploy,
+  from,
+  parameters,
+  homeNetworkName,
+  homeProxy,
+  wNative,
+  arbitrator,
+  courts,
+  multipliers,
+}) {
   const { numberOfJurors, foreignBridge, variant } = parameters;
   const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   return await deploy(`RealitioForeignProxy${variant}`, {
     contract: "RealitioForeignProxyOptimism",
     from,
-    args: [arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, foreignBridge],
+    args: [wNative, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, foreignBridge],
     log: true,
   });
 }

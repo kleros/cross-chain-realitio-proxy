@@ -7,6 +7,11 @@ const arbitrators = {
   [sepolia.chainId]: "0x90992fb4E15ce0C59aEFfb376460Fda4Ee19C879", // KlerosLiquid
 };
 
+const wNatives = {
+  [mainnet.chainId]: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH address
+  [sepolia.chainId]: "0x7b79995e5f793a07bc00c21412e50ecae098e7f9", // WETH address
+};
+
 const courts = {
   [mainnet.chainId]: {
     general: 1,
@@ -49,6 +54,7 @@ const metadataButter = generateMetadata("butter");
 
 module.exports = {
   arbitrators,
+  wNatives,
   courts,
   policies,
   generatePolicyUri,

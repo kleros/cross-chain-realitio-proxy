@@ -13,13 +13,21 @@ pragma solidity 0.8.25;
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 import {ICrossDomainMessenger} from "./interfaces/optimism/ICrossDomainMessenger.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on foreign chain (eg. mainnet).
  * @dev https://docs.optimism.io/app-developers/bridging/messaging
  */
 contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResolver {
+    using SafeSend for address payable;
+    
     /* Constants */
+
+    // Gas limit of the transaction call on L2. Note that setting value too high results in high gas estimation fee (tested on Sepolia).
+    // Also note that chosen value is high enough to cover gas spendings.
+    uint32 public constant MIN_GAS_LIMIT = 200000;
+
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
@@ -57,9 +65,10 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
+    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
+    
     // contract for L1 -> L2 communication
     ICrossDomainMessenger public immutable messenger;
-    uint32 public immutable minGasLimit = 200000; // Gas limit of the transaction call on L2. Note that setting value too high results in high gas estimation fee (tested on Sepolia).
     address public immutable homeProxy; // Proxy on L2.
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
@@ -85,6 +94,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -95,6 +105,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _messenger contract for L1 -> L2 tx
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -104,6 +115,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         address _homeProxy,
         address _messenger
     ) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -139,7 +151,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         arbitration.status = Status.Requested;
         arbitration.deposit = uint248(msg.value);
 
-        messenger.sendMessage(homeProxy, data, minGasLimit);
+        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
     }
 
@@ -178,7 +190,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder);
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -205,7 +217,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -227,9 +239,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         delete arbitrationRequests[arbitrationID][_requester];
 
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
-        messenger.sendMessage(homeProxy, data, minGasLimit);
+        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
         emit ArbitrationCanceled(_questionID, _requester);
     }
 
@@ -299,7 +311,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -309,6 +321,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _beneficiary The address to send reward to.
      * @param _round The round from which to withdraw.
      * @param _answer The answer to query the reward from.
+     * Note that the `_answer` has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return reward The withdrawn amount.
      */
     function withdrawFeesAndRewards(
@@ -339,7 +352,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }
@@ -351,6 +364,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrationID The ID of the arbitration.
      * @param _beneficiary The address that made contributions.
      * @param _contributedTo Answer that received contributions from contributor.
+     * Note that the `_contributedTo` answer has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      */
     function withdrawFeesAndRewardsForAllRounds(
         uint256 _arbitrationID,
@@ -403,7 +417,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(realitioRuling));
-        messenger.sendMessage(homeProxy, data, minGasLimit);
+        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
 
         emit Ruling(arbitrator, _disputeID, finalRuling);
     }
@@ -462,6 +476,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @return paidFees The amount of fees paid for each fully funded answer.
      * @return feeRewards The amount of fees that will be used as rewards.
      * @return fundedAnswers IDs of fully funded answers.
+     * Note that the `fundedAnswers` have Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      */
     function getRoundInfo(
         uint256 _arbitrationID,
@@ -486,6 +501,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrationID The ID of the arbitration.
      * @param _round The round to query.
      * @param _answer The answer choice to get funding status for.
+     * Note that the `_answer` has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return raised The amount paid for this answer.
      * @return fullyFunded Whether the answer is fully funded or not.
      */
@@ -508,6 +524,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _round The round to query.
      * @param _contributor The address whose contributions to query.
      * @return fundedAnswers IDs of the answers that are fully funded.
+     * Note that the `fundedAnswers` have Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return contributions The amount contributed to each funded answer by the contributor.
      */
     function getContributionsToSuccessfulFundings(
@@ -534,6 +551,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrationID The ID of the arbitration.
      * @param _beneficiary The contributor for which to query.
      * @param _contributedTo Answer that received contributions from contributor.
+     * Note that the `_contributedTo` answer has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return sum The total amount available to withdraw.
      */
     function getTotalWithdrawableAmount(

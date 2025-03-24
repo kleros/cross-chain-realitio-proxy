@@ -22,6 +22,7 @@ async function deployForeignProxy({
   parameters,
   homeNetworkName,
   homeProxy,
+  wNative,
   arbitrator,
   courts,
   multipliers,
@@ -35,6 +36,7 @@ async function deployForeignProxy({
   const deployed = await deploy("RealitioForeignProxyZkSync", {
     from,
     args: [
+      wNative,
       arbitrator,
       arbitratorExtraData,
       metaEvidence,

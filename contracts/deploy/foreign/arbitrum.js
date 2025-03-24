@@ -21,6 +21,7 @@ async function deployForeignProxy({
   parameters,
   homeNetworkName,
   homeProxy,
+  wNative,
   arbitrator,
   courts,
   multipliers,
@@ -31,9 +32,11 @@ async function deployForeignProxy({
   const surplus = eth("0.03"); // The surplus will be automatically reimbursed when the dispute is created.
   const l2GasLimit = 1500000; // Gas limit for a tx on L2.
   const gasPriceBid = 1000000000; // x10000 bid of random arb sepolia tx. Gas price * gasLimit will result in additional 0.0015 eth fee for automatic-redeem on L2. The surplus will be reimbursed.
+
   return await deploy("RealitioForeignProxyArbitrum", {
     from,
     args: [
+      wNative,
       arbitrator,
       arbitratorExtraData,
       metaEvidence,
@@ -41,8 +44,7 @@ async function deployForeignProxy({
       homeProxy,
       inbox,
       surplus,
-      l2GasLimit,
-      gasPriceBid,
+      [l2GasLimit, gasPriceBid],
     ],
     log: true,
   });

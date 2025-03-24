@@ -14,6 +14,7 @@ import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
 import "./interfaces/arbitrum/IInbox.sol";
 import "./interfaces/arbitrum/IOutbox.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
@@ -21,6 +22,8 @@ import "./interfaces/arbitrum/IOutbox.sol";
  * Example https://github.com/OffchainLabs/arbitrum-tutorials/blob/2c1b7d2db8f36efa496e35b561864c0f94123a5f/packages/greeter/contracts/ethereum/GreeterL1.sol
  */
 contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResolver {
+    using SafeSend for address payable;
+    
     /* Constants */
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
@@ -61,7 +64,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256 feeRewards; // Sum of reimbursable appeal fees available to the parties that made contributions to the answer that ultimately wins a dispute.
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
-
+    
+    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     address public immutable homeProxy; // Proxy on L2.
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
@@ -107,19 +111,20 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain (L1).
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
+     * @param _metaEvidence The URI of the meta evidence file.
      * @param _winnerMultiplier Multiplier for calculating the appeal cost of the winning answer.
      * @param _loserMultiplier Multiplier for calculating the appeal cost of the losing answer.
      * @param _loserAppealPeriodMultiplier Multiplier for calculating the appeal period for the losing answer.
      * @param _homeProxy Proxy on L2.
      * @param _inbox L2 inbox.
      * @param _surplusAmount The surplus amount to cover Arbitrum fees.
-     * @param _l2GasLimit L2 gas limit
-     * @param _gasPriceBid Max gas price L2.
-     * @param _metaEvidence The URI of the meta evidence file.
+     * @param _l2Parameters Array that contains L2 gas limit and max gas price on L2 respectively, to avoid `stack too deep` error.
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -129,9 +134,9 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         address _homeProxy,
         address _inbox,
         uint256 _surplusAmount,
-        uint256 _l2GasLimit,
-        uint256 _gasPriceBid
+        uint256[2] memory _l2Parameters
     ) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -140,8 +145,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         homeProxy = _homeProxy;
         inbox = IInbox(_inbox);
         surplusAmount = _surplusAmount;
-        l2GasLimit = _l2GasLimit;
-        gasPriceBid = _gasPriceBid;
+        l2GasLimit = _l2Parameters[0];
+        gasPriceBid = _l2Parameters[1];
 
         emit MetaEvidence(META_EVIDENCE_ID, _metaEvidence);
     }
@@ -196,7 +201,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) public override onlyL2Bridge {
+    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester) external override onlyL2Bridge {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -224,7 +229,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder);
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -244,14 +249,14 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) public override onlyL2Bridge {
+    function receiveArbitrationCancelation(bytes32 _questionID, address _requester) external override onlyL2Bridge {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -274,10 +279,12 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
         uint256 deposit = arbitration.deposit;
 
-        delete arbitrationRequests[arbitrationID][_requester];
+        // Note that we don't nullify the status to allow the function to be called
+        // multiple times to avoid intentional blocking.
+        arbitration.deposit = 0;
         uint256 surplusValue = msg.value - arbitrumFee;
-        payable(msg.sender).send(surplusValue);
-        payable(_requester).send(deposit);
+        payable(msg.sender).safeSend(surplusValue, wNative);
+        payable(_requester).safeSend(deposit, wNative);
 
         uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
             homeProxy,
@@ -361,7 +368,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -371,6 +378,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _beneficiary The address to send reward to.
      * @param _round The round from which to withdraw.
      * @param _answer The answer to query the reward from.
+     * Note that the answer has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return reward The withdrawn amount.
      */
     function withdrawFeesAndRewards(
@@ -401,7 +409,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }
@@ -413,6 +421,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrationID The ID of the arbitration.
      * @param _beneficiary The address that made contributions.
      * @param _contributedTo Answer that received contributions from contributor.
+     * Note that the `_contributedTo` answer has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      */
     function withdrawFeesAndRewardsForAllRounds(
         uint256 _arbitrationID,
@@ -470,7 +479,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
     function relayRule(bytes32 _questionID, address _requester) external payable {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
-        require(arbitration.status == Status.Ruled, "Dispute not resolved");
+        // Note that we allow to relay multiple times to prevent intentional blocking.
+        require(arbitration.status == Status.Ruled || arbitration.status ==  Status.Relayed, "Dispute not resolved");
 
         // Realitio ruling is shifted by 1 compared to Kleros.
         uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
@@ -498,7 +508,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         emit RetryableTicketCreated(ticketID);
         emit RulingRelayed(_questionID, bytes32(realitioRuling));
 
-        if (msg.value - arbitrumFee > 0) payable(msg.sender).send(msg.value - arbitrumFee); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - arbitrumFee > 0) payable(msg.sender).safeSend(msg.value - arbitrumFee, wNative); // Sending extra value back to contributor.
     }
 
     /* External Views */
@@ -553,6 +563,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @return paidFees The amount of fees paid for each fully funded answer.
      * @return feeRewards The amount of fees that will be used as rewards.
      * @return fundedAnswers IDs of fully funded answers.
+     * Note that the `fundedAnswers` have Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      */
     function getRoundInfo(
         uint256 _arbitrationID,
@@ -577,6 +588,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrationID The ID of the arbitration.
      * @param _round The round to query.
      * @param _answer The answer choice to get funding status for.
+     * Note that the `_answer` has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return raised The amount paid for this answer.
      * @return fullyFunded Whether the answer is fully funded or not.
      */
@@ -599,6 +611,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _round The round to query.
      * @param _contributor The address whose contributions to query.
      * @return fundedAnswers IDs of the answers that are fully funded.
+     * Note that the `fundedAnswers` have Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return contributions The amount contributed to each funded answer by the contributor.
      */
     function getContributionsToSuccessfulFundings(
@@ -625,6 +638,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _arbitrationID The ID of the arbitration.
      * @param _beneficiary The contributor for which to query.
      * @param _contributedTo Answer that received contributions from contributor.
+     * Note that the answer has Kleros denomination, meaning that it has '+1' offset compared to Realitio format.
      * @return sum The total amount available to withdraw.
      */
     function getTotalWithdrawableAmount(
@@ -681,7 +695,9 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Gets the required fee to process the message on L2.
-     * @dev Logic to get gas needed to create a new Ticket.
+     * @dev The function ensures that the user has enough funds to create a ticket.
+     * This is done by checking if the msg.value provided by the user
+     * is greater than or equal to maxSubmissionCost + l2CallValue + gasLimit * maxFeePerGas.
      * https://docs.arbitrum.io/how-arbitrum-works/l1-to-l2-messaging
      * @param _maxSubmissionCost Cost to calculate a retryable ticket on L1.
      * @return arbitrumFee Total arbitrum fee required to pass a message L1->L2.

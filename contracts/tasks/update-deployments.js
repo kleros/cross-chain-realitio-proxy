@@ -1,8 +1,8 @@
 const { task } = require("hardhat/config");
 const axios = require("axios");
 const { version } = require("../package.json");
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 async function fetchContractABI({ apiURL, apiKey }, address) {
   const params = {
@@ -99,9 +99,7 @@ task("add-deployment", "Add a deployment to the deployments JSON")
         network.verify.etherscan,
         realitioAddress
       );
-      let realitioContractName =
-        (realitioContractInfo.ContractName && realitioContractInfo.ContractName.trim()) ||
-        "RealityUnverified";
+      let realitioContractName = realitioContractInfo.ContractName?.trim() || "RealityUnverified";
       realitioContractName = realitioContractName.includes(":") // Example: contracts/RealityETH-3.0.sol:RealityETH_zksync_v3_0
         ? realitioContractName.split(":").pop()
         : realitioContractName;
@@ -114,7 +112,7 @@ task("add-deployment", "Add a deployment to the deployments JSON")
           realitioAddress
         );
         tokenAddress = await realitioContract.token();
-      } catch (e) {
+      } catch (_e) {
         // If the call fails, keep the empty string as default
       }
 
@@ -280,9 +278,9 @@ task(
     const foreignArtifact = JSON.parse(fs.readFileSync(foreignProxy, "utf8"));
 
     if (!homeArtifact.address || !homeArtifact.transactionHash)
-      throw new Error(`Invalid home proxy artifact: missing address or transactionHash`);
+      throw new Error("Invalid home proxy artifact: missing address or transactionHash");
     if (!foreignArtifact.transactionHash)
-      throw new Error(`Invalid foreign proxy artifact: missing transactionHash`);
+      throw new Error("Invalid foreign proxy artifact: missing transactionHash");
 
     await run("add-deployment", {
       name,

@@ -45,4 +45,4 @@ contract MockAMB is IAMB {
     function messageId() external view override returns (bytes32) {
         return bytes32(currentMessageId);
     }
-} 
+}

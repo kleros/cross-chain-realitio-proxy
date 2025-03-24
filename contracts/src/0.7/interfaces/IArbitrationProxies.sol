@@ -70,11 +70,7 @@ interface IHomeArbitrationProxy {
      * @param _requester The address of the arbitration requester.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
-    function receiveArbitrationRequest(
-        bytes32 _questionID,
-        address _requester,
-        uint256 _maxPrevious
-    ) external;
+    function receiveArbitrationRequest(bytes32 _questionID, address _requester, uint256 _maxPrevious) external;
 
     /**
      * @notice Handles arbitration request after it has been notified to Realitio for a given question.

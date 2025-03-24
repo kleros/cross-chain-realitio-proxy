@@ -17,7 +17,7 @@ const homeParameters = {
 
 async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio } = parameters;
-  return await deploy(`RealitioHomeProxyArbitrum`, {
+  return await deploy("RealitioHomeProxyArbitrum", {
     from,
     args: [realitio, metadata, foreignProxy, foreignChainId],
     log: true,

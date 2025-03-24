@@ -21,13 +21,15 @@ const maxPrevious = 2001;
 
 const metaEvidence = "ipfs/X";
 const metadata = "ipfs/Y";
-const foreignChainId = 5;
+const homeChainId = zeroPadValue(toBeHex(0), 32);
+const foreignChainId = zeroPadValue(toBeHex(0), 32);
 const oneETH = ethers.parseEther("1");
 const ZERO_HASH = zeroPadValue(toBeHex(0), 32);
 
 let arbitrator;
 let homeProxy;
 let foreignProxy;
+let amb;
 let realitio;
 
 let governor;
@@ -40,7 +42,7 @@ let other;
 describe("Cross-chain arbitration with appeals", () => {
   beforeEach("initialize the contract", async function () {
     [governor, requester, crowdfunder1, crowdfunder2, answerer, other] = await ethers.getSigners();
-    ({ arbitrator, realitio, foreignProxy, homeProxy } = await deployContracts(governor));
+    ({ amb, arbitrator, realitio, foreignProxy, homeProxy } = await deployContracts(governor));
 
     // Create disputes so the index in tests will not be a default value.
     await arbitrator.connect(other).createDispute(42, arbitratorExtraData, { value: arbitrationCost });
@@ -52,13 +54,12 @@ describe("Cross-chain arbitration with appeals", () => {
   });
 
   it("Should correctly set the initial values", async () => {
+    expect(await foreignProxy.amb()).to.equal(amb.target);
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.target);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
-    expect(await foreignProxy.fxChildTunnel()).to.equal(homeProxy.target);
+    expect(await foreignProxy.homeProxy()).to.equal(homeProxy.target);
+    expect(await foreignProxy.homeChainId()).to.equal(homeChainId);
     expect(await homeProxy.metadata()).to.equal(metadata);
-    expect(await homeProxy.foreignChainId()).to.equal(zeroPadValue(toBeHex(5), 32));
-    expect(await homeProxy.foreignProxy()).to.equal(foreignProxy.target);
-    expect(await homeProxy.fxRootTunnel()).to.equal(foreignProxy.target);
 
     // 0 - winner, 1 - loser, 2 - loserAppealPeriod.
     const multipliers = await foreignProxy.getMultipliers();
@@ -97,7 +98,7 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await expect(
       foreignProxy.connect(other).receiveArbitrationAcknowledgement(questionID, await requester.getAddress())
-    ).to.be.revertedWith("Can only be called via bridge");
+    ).to.be.revertedWith("Only AMB allowed");
 
     await expect(homeProxy.handleNotifiedRequest(questionID, await requester.getAddress()))
       .to.emit(arbitrator, "DisputeCreation")
@@ -139,7 +140,10 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(dispute[2]).to.equal(1000, "Incorrect fees value stored");
 
     const newBalance = await getBalance(requester);
-    expect(newBalance).to.equal(oldBalance + oneETH - toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
+    expect(newBalance).to.equal(
+      oldBalance + oneETH - toBigInt(arbitrationCost),
+      "Requester was not reimbursed correctly"
+    );
   });
 
   it("Should cancel arbitration correctly", async () => {
@@ -153,7 +157,7 @@ describe("Cross-chain arbitration with appeals", () => {
     const oldBalance = await getBalance(requester);
     await expect(
       foreignProxy.connect(other).receiveArbitrationCancelation(questionID, await requester.getAddress())
-    ).to.be.revertedWith("Can only be called via bridge");
+    ).to.be.revertedWith("Only AMB allowed");
 
     await expect(homeProxy.handleRejectedRequest(questionID, await requester.getAddress()))
       .to.emit(foreignProxy, "ArbitrationCanceled")
@@ -540,7 +544,10 @@ describe("Cross-chain arbitration with appeals", () => {
 
     newBalance = await getBalance(requester);
     newBalance2 = await getBalance(crowdfunder2);
-    expect(newBalance).to.equal(oldBalance + toBigInt(8499), "The balance of the requester is incorrect (withdraw 2 round)");
+    expect(newBalance).to.equal(
+      oldBalance + toBigInt(8499),
+      "The balance of the requester is incorrect (withdraw 2 round)"
+    );
     expect(newBalance2).to.equal(
       oldBalance2 + toBigInt(6500),
       "The balance of the crowdfunder2 is incorrect (withdraw 2 round)"
@@ -680,14 +687,22 @@ describe("Cross-chain arbitration with appeals", () => {
     const Arbitrator = await ethers.getContractFactory("AutoAppealableArbitrator", signer);
     const arbitrator = await Arbitrator.deploy(String(arbitrationCost));
 
-    const FxRoot = await ethers.getContractFactory("MockFxRoot", signer);
-    const fxRoot = await FxRoot.deploy();
+    const AMB = await ethers.getContractFactory("MockAMB", signer);
+    const amb = await AMB.deploy();
 
     const Realitio = await ethers.getContractFactory("MockRealitio", signer);
     const realitio = await Realitio.deploy();
 
-    const ForeignProxy = await ethers.getContractFactory("MockRealitioForeignProxyPolygon", signer);
-    const HomeProxy = await ethers.getContractFactory("MockRealitioHomeProxyPolygon", signer);
+    const ForeignProxy = await ethers.getContractFactory("RealitioForeignProxyGnosis", signer);
+    const HomeProxy = await ethers.getContractFactory("RealitioHomeProxyGnosis", signer);
+
+    const address = await signer.getAddress();
+    const nonce = await signer.getNonce();
+
+    const homeProxyAddress = ethers.getCreateAddress({
+      from: address,
+      nonce: nonce + 1, // Add 1 since homeProxy deployment will be after foreignProxy
+    });
 
     const foreignProxy = await ForeignProxy.deploy(
       arbitrator.target,
@@ -696,21 +711,21 @@ describe("Cross-chain arbitration with appeals", () => {
       winnerMultiplier,
       loserMultiplier,
       loserAppealPeriodMultiplier,
-      ZeroAddress,
-      fxRoot.target
+      homeProxyAddress,
+      homeChainId,
+      amb.target
     );
 
     const homeProxy = await HomeProxy.deploy(
       realitio.target,
       metadata,
+      foreignProxy.target,
       foreignChainId,
-      fxRoot.target // Here our mock FxRoot directly calls the FxChildTunnel
+      amb.target
     );
 
-    await foreignProxy.setFxChildTunnel(homeProxy.target);
-    await homeProxy.setFxRootTunnel(foreignProxy.target);
-
     return {
+      amb,
       arbitrator,
       realitio,
       foreignProxy,

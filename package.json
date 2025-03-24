@@ -9,12 +9,6 @@
   "private": true,
   "packageManager": "yarn@3.8.7",
   "scripts": {
-    "lint": "lint:js && lint:sol",
-    "lint:js": "eslint .",
-    "lint:sol": "solhint 'contracts/**/*.sol'",
-    "fix": "fix:js && fix:sol",
-    "fix:js": "eslint --fix '**/*.js'",
-    "fix:sol": "prettier --write 'contracts/**/*.sol'",
     "prepare": "husky install"
   },
   "workspaces": [
@@ -24,12 +18,7 @@
     "evidence-display"
   ],
   "devDependencies": {
-    "eslint": "^8.57.1",
     "husky": "^7.0.1",
-    "lint-staged": "^11.0.0",
-    "prettier": "^2.3.2",
-    "prettier-plugin-solidity": "^1.4.2",
-    "solhint": "^3.6.2",
-    "solhint-plugin-prettier": "^0.1.0"
+    "lint-staged": "^11.0.0"
   }
 }

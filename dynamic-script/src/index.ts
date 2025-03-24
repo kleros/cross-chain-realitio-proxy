@@ -1,6 +1,6 @@
-import { fetchRealityMetaEvidence } from "./lib";
+import { fetchRealityMetaEvidence } from './lib';
 
-console.log("dynamic-script version", process.env.VERSION);
+console.log('dynamic-script version', process.env.VERSION);
 
 interface ScriptParameters {
   disputeID: string;
@@ -19,6 +19,6 @@ export default async function getMetaEvidence() {
     const metaEvidence = await fetchRealityMetaEvidence(scriptParameters);
     return resolveScript(metaEvidence);
   } catch (error) {
-    return rejectScript(error instanceof Error ? error.message : "Unknown error");
+    return rejectScript(error instanceof Error ? error.message : 'Unknown error');
   }
 }

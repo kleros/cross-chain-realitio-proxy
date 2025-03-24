@@ -40,7 +40,16 @@ const foreignParameters = {
   },
 };
 
-async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, homeProxy, arbitrator, courts, multipliers }) {
+async function deployForeignProxy({
+  deploy,
+  from,
+  parameters,
+  homeNetworkName,
+  homeProxy,
+  arbitrator,
+  courts,
+  multipliers,
+}) {
   const { numberOfJurors, foreignBridge, variant } = parameters;
   const metaEvidence = getMetaEvidenceCID(homeNetworkName);
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
@@ -52,7 +61,8 @@ async function deployForeignProxy({ deploy, from, parameters, homeNetworkName, h
   });
 }
 
-const getHomeProxyName = (homeNetworkName) => `RealitioHomeProxy${foreignParameters[homeNetworkName].variant}`;
+const getHomeProxyName = (homeNetworkName) =>
+  `RealitioHomeProxy${foreignParameters[homeNetworkName].variant}`;
 
 const supportedHomeChains = Object.keys(foreignParameters).map(String);
 

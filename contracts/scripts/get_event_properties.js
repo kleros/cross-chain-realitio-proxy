@@ -33,7 +33,7 @@ function getFunctionSelector(functionSignature) {
 }
 
 function encodeWithSelector(selector, ...params) {
-  const encodedParams = params.map(param => {
+  const encodedParams = params.map((param) => {
     if (param.type === "address") {
       // If the parameter type is address, directly append the value
       return param.value.slice(2);
@@ -78,7 +78,7 @@ async function getCalldata(txHash, provider) {
     const calldata = encodeWithSelector(
       selector,
       { type: "bytes32", value: eventLogs[0].topics[1] }, // questionId
-      { type: "address", value: eventLogs[0].topics[2] }  // requester
+      { type: "address", value: eventLogs[0].topics[2] } // requester
     );
     console.log(`Calldata: ${calldata}`);
     return calldata;
@@ -89,5 +89,6 @@ async function getCalldata(txHash, provider) {
 }
 
 module.exports = {
-  getL1MessageSentEvent, getCalldata
+  getL1MessageSentEvent,
+  getCalldata,
 };

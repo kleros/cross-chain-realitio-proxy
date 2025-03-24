@@ -32,22 +32,17 @@
     "clean": "rm -rf dist",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
     "build": "yarn clean && vite build && yarn build:types",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "format": "biome format --write ./src",
+    "lint": "biome lint ./src",
+    "check": "biome check --apply ./src"
   },
   "dependencies": {
     "@reality.eth/reality-eth-lib": "^3.3.2",
     "viem": "^2.23.13"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.6.1",
     "@types/node": "^20.11.24",
-    "@typescript-eslint/eslint-plugin": "^8.27.0",
-    "@typescript-eslint/parser": "^8.27.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^6.15.0",
-    "eslint-import-resolver-typescript": "^4.2.2",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-prettier": "^3.4.1",
     "typescript": "^5.8.2",
     "vite": "^5.4.14"
   },

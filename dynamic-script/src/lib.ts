@@ -1,11 +1,6 @@
-import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
-import { createPublicClient, getContract, http } from "viem";
-import {
-  homeProxyAbi,
-  foreignProxyAbi,
-  realitioAbi,
-  REALITY_STARTS_AT,
-} from "./contracts";
+import RealitioQuestion from '@reality.eth/reality-eth-lib/formatters/question.js';
+import { http, createPublicClient, getContract } from 'viem';
+import { REALITY_STARTS_AT, foreignProxyAbi, homeProxyAbi, realitioAbi } from './contracts';
 
 const isNil = (value: unknown): value is undefined | null => value === undefined || value === null;
 
@@ -22,7 +17,7 @@ export interface RealityQuestionData {
   realitioAddress: `0x${string}`;
   questionData: {
     title?: string;
-    type: "bool" | "uint" | "single-select" | "multiple-select" | "datetime";
+    type: 'bool' | 'uint' | 'single-select' | 'multiple-select' | 'datetime';
     decimals?: number;
     outcomes?: string[];
   };
@@ -38,7 +33,7 @@ export async function fetchRealityQuestionData({
   jsonRpcUrl,
 }: RealityQuestionParams): Promise<RealityQuestionData> {
   if (isNil(disputeID) || isNil(arbitrableContractAddress)) {
-    throw new Error("Both `disputeID` and `arbitrableContractAddress` parameters are required");
+    throw new Error('Both `disputeID` and `arbitrableContractAddress` parameters are required');
   }
 
   const foreignClient = createPublicClient({
@@ -69,7 +64,9 @@ export async function fetchRealityQuestionData({
     client: homeClient,
   });
 
-  const arbitrationCreatedBlock = await foreignProxy.read.arbitrationCreatedBlock([BigInt(disputeID)]);
+  const arbitrationCreatedBlock = await foreignProxy.read.arbitrationCreatedBlock([
+    BigInt(disputeID),
+  ]);
   const arbitrationCreatedLogs = await foreignProxy.getEvents.ArbitrationCreated(
     {
       _disputeID: BigInt(disputeID),
@@ -78,12 +75,12 @@ export async function fetchRealityQuestionData({
   );
 
   if (arbitrationCreatedLogs.length !== 1) {
-    throw new Error("Could not find the dispute");
+    throw new Error('Could not find the dispute');
   }
 
   const { _questionID: questionID } = arbitrationCreatedLogs[0].args;
   if (!questionID) {
-    throw new Error("Missing question ID from arbitration event");
+    throw new Error('Missing question ID from arbitration event');
   }
 
   const questionEventLog = await realitio.getEvents.LogNewQuestion(
@@ -96,16 +93,16 @@ export async function fetchRealityQuestionData({
           ? REALITY_STARTS_AT[realitioAddress.toLowerCase() as keyof typeof REALITY_STARTS_AT]
           : 0
       ),
-      toBlock: "latest",
+      toBlock: 'latest',
     }
   );
   if (questionEventLog.length === 0) {
-    throw new Error("Could not find the question event");
+    throw new Error('Could not find the question event');
   }
 
   const { template_id: templateID, question } = questionEventLog[0].args;
   if (!templateID || !question) {
-    throw new Error("Missing template ID or question from event");
+    throw new Error('Missing template ID or question from event');
   }
 
   let templateText: string;
@@ -128,19 +125,19 @@ export async function fetchRealityQuestionData({
     );
 
     if (templateEventLog.length === 0) {
-      throw new Error("Could not find the template event");
+      throw new Error('Could not find the template event');
     }
 
     const { question_text } = templateEventLog[0].args;
     if (!question_text) {
-      throw new Error("Missing question text from template event");
+      throw new Error('Missing question text from template event');
     }
     templateText = question_text;
   }
 
   const questionData = JSON.parse(
     RealitioQuestion.populatedJSONForTemplate(templateText, question)
-  ) as RealityQuestionData["questionData"];
+  ) as RealityQuestionData['questionData'];
 
   return {
     questionID,
@@ -154,53 +151,55 @@ export async function fetchRealityQuestionData({
 export interface RealityMetaEvidence {
   question?: string;
   rulingOptions?: {
-    type: "single-select" | "uint" | "datetime" | "multiple-select";
+    type: 'single-select' | 'uint' | 'datetime' | 'multiple-select';
     titles?: string[];
     precision?: number;
     reserved: Record<string, string>;
   };
 }
 
-type RulingOptionsType = NonNullable<RealityMetaEvidence["rulingOptions"]>;
+type RulingOptionsType = NonNullable<RealityMetaEvidence['rulingOptions']>;
 
-export async function fetchRealityMetaEvidence(params: RealityQuestionParams): Promise<RealityMetaEvidence> {
+export async function fetchRealityMetaEvidence(
+  params: RealityQuestionParams
+): Promise<RealityMetaEvidence> {
   const { questionData } = await fetchRealityQuestionData(params);
 
   const erc1497OverridesMixin = questionData.title ? { question: questionData.title } : {};
 
   const reservedAnswers: Record<string, string> = {
-    "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
+    '0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF': 'Answered Too Soon',
   };
 
   const rulingOptions = (() => {
     switch (questionData.type) {
-      case "bool":
+      case 'bool':
         return {
-          type: "single-select" as const,
-          titles: ["No", "Yes"],
+          type: 'single-select' as const,
+          titles: ['No', 'Yes'],
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
-      case "uint":
+      case 'uint':
         return {
-          type: "uint" as const,
+          type: 'uint' as const,
           precision: questionData.decimals ?? 0,
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
-      case "single-select":
+      case 'single-select':
         return {
-          type: "single-select" as const,
+          type: 'single-select' as const,
           titles: questionData.outcomes ?? [],
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
-      case "multiple-select":
+      case 'multiple-select':
         return {
-          type: "multiple-select" as const,
+          type: 'multiple-select' as const,
           titles: questionData.outcomes ?? [],
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
-      case "datetime":
+      case 'datetime':
         return {
-          type: "datetime" as const,
+          type: 'datetime' as const,
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
       default:

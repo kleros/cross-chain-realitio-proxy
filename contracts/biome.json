@@ -1,0 +1,16 @@
+{
+    "extends": [
+        "../biome/biome.base.json"
+    ],
+    "files": {
+        "ignore": [
+            "src/**/*",
+            "test/**",
+            "typechain/**/*",
+            "node_modules/**",
+            "artifacts/**",
+            "cache/**",
+            "coverage/**"
+        ]
+    }
+}

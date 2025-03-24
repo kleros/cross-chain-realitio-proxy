@@ -221,7 +221,7 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
         require(request.status == Status.Ruled, "Arbitrator has not ruled yet");
 
         request.status = Status.Finished;
-        
+
         realitio.assignWinnerAndSubmitAnswerByArbitrator(
             _questionID,
             request.arbitratorAnswer,

@@ -14,7 +14,7 @@ contract MockInbox {
     }
 
     mapping(uint256 => Ticket) public tickets;
-    
+
     event TicketSent(
         address to,
         uint256 l2CallValue,
@@ -35,7 +35,10 @@ contract MockInbox {
         return arbBridge;
     }
 
-    function calculateRetryableSubmissionFee(uint256 /*dataLength*/, uint256 /*baseFee*/) external view returns (uint256) {
+    function calculateRetryableSubmissionFee(
+        uint256 /*dataLength*/,
+        uint256 /*baseFee*/
+    ) external view returns (uint256) {
         return submissionFee;
     }
 
@@ -52,7 +55,15 @@ contract MockInbox {
         Ticket storage ticket = tickets[ticketID];
         ticket.target = _to;
         ticket.data = _data;
-        emit TicketSent(_to, _l2CallValue, _maxSubmissionCost, _excessFeeRefundAddress, _callValueRefundAddress, _gasLimit, _maxFeePerGas);
+        emit TicketSent(
+            _to,
+            _l2CallValue,
+            _maxSubmissionCost,
+            _excessFeeRefundAddress,
+            _callValueRefundAddress,
+            _gasLimit,
+            _maxFeePerGas
+        );
         return ticketID++;
     }
 

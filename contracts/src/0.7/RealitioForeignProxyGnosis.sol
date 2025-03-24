@@ -141,11 +141,10 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IEvidence, IArb
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
-        external
-        override
-        onlyHomeProxy
-    {
+    function receiveArbitrationAcknowledgement(
+        bytes32 _questionID,
+        address _requester
+    ) external override onlyHomeProxy {
         ArbitrationRequest storage arbitration = arbitrationRequests[_questionID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
@@ -256,9 +255,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IEvidence, IArb
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(
-        bytes32 /* _questionID */
-    ) external view override returns (uint256) {
+    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 }

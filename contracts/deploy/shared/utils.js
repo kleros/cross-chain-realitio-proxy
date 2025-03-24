@@ -7,8 +7,8 @@ const encodeExtraData = (courtId, minJurors) =>
   ethers.AbiCoder.defaultAbiCoder().encode(["uint96", "uint96"], [courtId, minJurors]);
 
 const getMetaEvidenceFilename = (homeNetworkName, termsOfService) => {
-  termsOfService = termsOfService ? termsOfService.toLowerCase() : "default";
-  return `metaevidence-${homeNetworkName}-${termsOfService}.json`;
+  const termsOfServiceValidated = termsOfService ? termsOfService.toLowerCase() : "default";
+  return `metaevidence-${homeNetworkName}-${termsOfServiceValidated}.json`;
 };
 
 const getMetaEvidenceCID = (homeNetworkName) => {

@@ -6,7 +6,7 @@ import "../../RealitioHomeProxyArbitrum.sol";
 import "./MockBridge.sol";
 
 /// @dev MockHomeProxy to bypass the modifier and usage of precompile.
-contract MockRealitioHomeProxy is RealitioHomeProxyArbitrum {
+contract MockRealitioHomeProxyArbitrum is RealitioHomeProxyArbitrum {
     address public mockInbox;
     MockBridge public mockBridge;
 

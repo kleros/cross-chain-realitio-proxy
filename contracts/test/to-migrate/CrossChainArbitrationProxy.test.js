@@ -1,14 +1,8 @@
 const { ethers } = require("hardhat");
-const { solidity } = require("ethereum-waffle");
-const { use, expect } = require("chai");
-const getContractAddress = require("../deploy-helpers/getContractAddress");
+const { expect } = require("chai");
+const { toBigInt, ZeroAddress, zeroPadValue, toBeHex } = ethers;
 
-use(solidity);
-
-const { BigNumber } = ethers;
-const { hexZeroPad } = ethers.utils;
-const ADDRESS_ZERO = ethers.constants.AddressZero;
-const HASH_ZERO = ethers.constants.HashZero;
+const HASH_ZERO = zeroPadValue(toBeHex(0), 32);
 
 let arbitrator;
 let homeProxy;
@@ -21,18 +15,22 @@ let answerer;
 let requester;
 let other;
 
-const homeChainId = hexZeroPad(0, 32);
-const foreignChainId = hexZeroPad(0, 32);
+const homeChainId = zeroPadValue(toBeHex(0), 32);
+const foreignChainId = zeroPadValue(toBeHex(0), 32);
 
-const arbitrationFee = BigNumber.from(BigInt(1e18));
+const winnerMultiplier = 3000;
+const loserMultiplier = 7000;
+const loserAppealPeriodMultiplier = 5000;
+
+const arbitrationFee = ethers.parseEther("1");
 const arbitratorExtraData = "0x00";
 const metaEvidence = "ipfs/X";
-const termsOfService = "ipfs/Y";
+const metadata = "ipfs/Y";
 
 let questionId;
 const question = "Whats the answer for everything in the universe?";
-const currentAnswer = hexZeroPad(1, 32);
-const otherAnswer = hexZeroPad(42, 32);
+const currentAnswer = zeroPadValue(toBeHex(1), 32);
+const otherAnswer = zeroPadValue(toBeHex(42), 32);
 
 let requesterAddress;
 
@@ -47,7 +45,7 @@ describe("Cross-Chain Arbitration", () => {
     beforeEach("Create question and submit answer", async () => {
       const askTx = await realitio.connect(asker).askQuestion(question);
       const askTxReceipt = await askTx.wait();
-      questionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
+      questionId = getEventArgs("MockNewQuestion", askTxReceipt)._questionId;
 
       await submitAnswer(questionId, currentAnswer, { maxPrevious: 0, value: 1 });
     });
@@ -72,7 +70,7 @@ describe("Cross-Chain Arbitration", () => {
         const { txPromise } = await handleNotifiedRequest(questionId, requesterAddress);
 
         await expect(txPromise).to.emit(foreignProxy, "ArbitrationCreated");
-        await expect(txPromise).to.emit(foreignProxy, "Dispute").withArgs(arbitrator.address, "0", "0", questionId);
+        await expect(txPromise).to.emit(foreignProxy, "Dispute").withArgs(arbitrator.target, "0", "0", questionId);
         await expect(txPromise).to.emit(arbitrator, "DisputeCreation");
       });
     });
@@ -108,9 +106,10 @@ describe("Cross-Chain Arbitration", () => {
       it("should reimbuser the requester", async () => {
         await requestArbitration(questionId, { maxPrevious });
 
-        const { tx } = await handleRejectedRequest(questionId, requesterAddress);
-
-        await expect(tx).to.changeBalance(requester, arbitrationFee, "Requester was not properly reimbursed");
+        const oldBalance = await getBalance(requester);
+        await handleRejectedRequest(questionId, requesterAddress);
+        const newBalance = await getBalance(requester);
+        expect(newBalance).to.equal(oldBalance + arbitrationFee, "Requester was not reimbursed correctly");
       });
     });
 
@@ -121,7 +120,7 @@ describe("Cross-Chain Arbitration", () => {
       beforeEach("Create question and do not submit an answer", async () => {
         const askTx = await realitio.connect(asker).askQuestion(question);
         const askTxReceipt = await askTx.wait();
-        unansweredQuestionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
+        unansweredQuestionId = getEventArgs("MockNewQuestion", askTxReceipt)._questionId;
       });
 
       it("should reject the arbitration request and not notify Realitio", async () => {
@@ -164,9 +163,10 @@ describe("Cross-Chain Arbitration", () => {
       it("should reimbuser the requester", async () => {
         await requestArbitration(questionId, { maxPrevious });
 
-        const { tx } = await handleRejectedRequest(questionId, requesterAddress);
-
-        await expect(tx).to.changeBalance(requester, arbitrationFee, "Requester was not properly reimbursed");
+        const oldBalance = await getBalance(requester);
+        await handleRejectedRequest(questionId, requesterAddress);
+        const newBalance = await getBalance(requester);
+        expect(newBalance).to.equal(oldBalance + arbitrationFee, "Requester was not reimbursed correctly");
       });
     });
 
@@ -182,7 +182,7 @@ describe("Cross-Chain Arbitration", () => {
 
       describe("When arbitration cost decreases", () => {
         beforeEach("Change arbitration cost", async () => {
-          newArbitrationFee = arbitrationFee.div(2);
+          newArbitrationFee = arbitrationFee / toBigInt(2);
           await setArbitrationCost(newArbitrationFee);
         });
 
@@ -195,17 +195,18 @@ describe("Cross-Chain Arbitration", () => {
         });
 
         it("Should send the remaining arbitration fee to the requester", async () => {
-          const { tx } = await handleNotifiedRequest(questionId, requesterAddress);
+          const oldBalance = await getBalance(requester);
+          await handleNotifiedRequest(questionId, requesterAddress);
 
-          const expectedBalanceChange = oldArbitrationFee.sub(newArbitrationFee);
-
-          await expect(tx).to.changeBalance(requester, expectedBalanceChange, "Requester was not properly reimbursed");
+          const expectedBalanceChange = oldArbitrationFee - newArbitrationFee;
+          const newBalance = await getBalance(requester);
+          expect(newBalance).to.equal(oldBalance + expectedBalanceChange, "Requester was not reimbursed correctly");
         });
       });
 
       describe("When arbitration cost increases", () => {
         beforeEach("Change arbitration cost", async () => {
-          newArbitrationFee = arbitrationFee.mul(2);
+          newArbitrationFee = arbitrationFee * toBigInt(2);
           await setArbitrationCost(newArbitrationFee);
         });
 
@@ -226,11 +227,12 @@ describe("Cross-Chain Arbitration", () => {
         });
 
         it("Should reimburse the requester of the paid amount", async () => {
-          await handleNotifiedRequest(questionId, requesterAddress);
+          await handleNotifiedRequest(questionId, requesterAddress);          
 
-          const { tx } = await handleFailedDisputeCreation(questionId, requesterAddress);
-
-          await expect(tx).to.changeBalance(requester, arbitrationFee, "Requester was not properly reimbursed");
+          const oldBalance = await getBalance(requester);
+          await handleFailedDisputeCreation(questionId, requesterAddress);
+          const newBalance = await getBalance(requester);
+          expect(newBalance).to.equal(oldBalance + arbitrationFee, "Requester was not reimbursed correctly");
         });
       });
     });
@@ -239,20 +241,18 @@ describe("Cross-Chain Arbitration", () => {
   describe("Arbitrator provide ruling", () => {
     const maxPrevious = 1;
     let disputeId;
+    
 
     beforeEach("Create question, submit answer and request arbitration", async () => {
       const askTx = await realitio.connect(asker).askQuestion(question);
       const askTxReceipt = await askTx.wait();
-      questionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
+      questionId = getEventArgs("MockNewQuestion", askTxReceipt)._questionId;
 
       await submitAnswer(questionId, currentAnswer, { maxPrevious: 0, value: 1 });
       await requestArbitration(questionId, { maxPrevious });
       await handleNotifiedRequest(questionId, requesterAddress);
 
-      disputeId = getEventArgs(
-        "ArbitrationCreated",
-        await foreignProxy.queryFilter(foreignProxy.filters.ArbitrationCreated(questionId))
-      )._disputeID;
+      disputeId = (await foreignProxy.queryFilter(foreignProxy.filters.ArbitrationCreated(questionId)))[0]?.args._disputeID;
     });
 
     it("Should pass the message with the ruling when the arbitrator rules", async () => {
@@ -280,7 +280,7 @@ describe("Cross-Chain Arbitration", () => {
 
       const askTx = await realitio.connect(asker).askQuestion(question);
       const askTxReceipt = await askTx.wait();
-      questionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
+      questionId = getEventArgs("MockNewQuestion", askTxReceipt)._questionId;
 
       await submitAnswer(questionId, currentAnswer, { maxPrevious: 0, value: 1 });
     });
@@ -325,7 +325,7 @@ describe("Cross-Chain Arbitration", () => {
     beforeEach("Create question, submit answer, request arbitration and acknowlege it", async () => {
       const askTx = await realitio.connect(asker).askQuestion(question);
       const askTxReceipt = await askTx.wait();
-      questionId = getEventArgs("MockNewQuestion", askTxReceipt.events)._questionId;
+      questionId = getEventArgs("MockNewQuestion", askTxReceipt)._questionId;
 
       await submitAnswer(questionId, currentAnswer, { maxPrevious: 0, value: 1 });
       await requestArbitration(questionId, requesterAddress);
@@ -335,7 +335,7 @@ describe("Cross-Chain Arbitration", () => {
     it("Should not allow other arbitration requests for the same question", async () => {
       const { txPromise } = await requestArbitration(questionId, requesterAddress);
 
-      await expect(txPromise).to.be.revertedWith("Dispute already exists");
+      await expect(txPromise).to.be.revertedWith("Dispute already created");
     });
   });
 
@@ -353,22 +353,26 @@ describe("Cross-Chain Arbitration", () => {
     const HomeProxy = await ethers.getContractFactory("RealitioHomeProxyGnosis", signer);
 
     const address = await signer.getAddress();
-    const nonce = await signer.getTransactionCount();
+    const nonce = await signer.getNonce();
 
-    const foreignProxyAddress = getContractAddress(address, nonce);
-    const homeProxyAddress = getContractAddress(address, nonce + 1);
+    const homeProxyAddress = ethers.getCreateAddress({
+      from: address,
+      nonce: nonce + 1, // Add 1 since homeProxy deployment will be after foreignProxy
+    });
 
     const foreignProxy = await ForeignProxy.deploy(
-      amb.address,
-      homeProxyAddress,
-      homeChainId,
-      arbitrator.address,
+      arbitrator.target,
       arbitratorExtraData,
       metaEvidence,
-      termsOfService
+      winnerMultiplier,
+      loserMultiplier,
+      loserAppealPeriodMultiplier,
+      homeProxyAddress,
+      homeChainId,
+      amb.target
     );
 
-    const homeProxy = await HomeProxy.deploy(amb.address, foreignProxyAddress, foreignChainId, realitio.address, termsOfService);
+    const homeProxy = await HomeProxy.deploy(realitio.target, metadata, foreignProxy.target, foreignChainId, amb.target);
 
     return {
       amb,
@@ -415,7 +419,7 @@ describe("Cross-Chain Arbitration", () => {
 
   async function reportArbitrationAnswer(questionId, { signer = governor } = {}) {
     return await submitTransaction(
-      homeProxy.connect(signer).reportArbitrationAnswer(questionId, HASH_ZERO, HASH_ZERO, ADDRESS_ZERO)
+      homeProxy.connect(signer).reportArbitrationAnswer(questionId, HASH_ZERO, HASH_ZERO, ZeroAddress)
     );
   }
 
@@ -430,19 +434,20 @@ describe("Cross-Chain Arbitration", () => {
     }
   }
 
-  function getEventArgs(eventName, events) {
-    const event = events.find(({ event }) => event === eventName);
-    if (!event) {
+  async function getBalance(account) {
+    return account.provider.getBalance(await account.getAddress());
+  }
+
+  function getEventArgs(eventName, receipt) {
+    const eventLog = receipt.logs.find(log => log.fragment?.name === eventName);
+    if (!eventLog) {
       throw new Error(`Event ${eventName} not emitted in the transaction`);
     }
-
-    const omitIntegerKeysReducer = (acc, [key, value]) =>
-      Number.isNaN(parseInt(key, 10)) ? Object.assign(acc, { [key]: value }) : acc;
-
-    return Object.entries(event.args).reduce(omitIntegerKeysReducer, {});
+  
+    return eventLog.args;
   }
 
   function normalizeRuling(answer) {
-    return BigNumber.from(answer).add(BigNumber.from(1));
+    return toBigInt(answer) + 1n;
   }
 });

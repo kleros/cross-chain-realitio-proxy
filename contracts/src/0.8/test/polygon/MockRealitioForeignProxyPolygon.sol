@@ -7,7 +7,7 @@ import {RealitioForeignProxyPolygon} from "../../RealitioForeignProxyPolygon.sol
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
-contract MockForeignArbitrationProxyWithAppeals is RealitioForeignProxyPolygon {
+contract MockRealitioForeignProxyPolygon is RealitioForeignProxyPolygon {
     constructor(
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,

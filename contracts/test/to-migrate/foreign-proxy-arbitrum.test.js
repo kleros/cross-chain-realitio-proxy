@@ -1,20 +1,14 @@
 const { ethers } = require("hardhat");
-const { solidity } = require("ethereum-waffle");
-const { time } = require("@openzeppelin/test-helpers");
-const { use, expect } = require("chai");
-
-use(solidity);
-
-const { BigNumber } = ethers;
-const { hexZeroPad } = ethers.utils;
-const ADDRESS_ZERO = ethers.constants.AddressZero;
+const { time } = require("@nomicfoundation/hardhat-network-helpers");
+const { expect } = require("chai");
+const { toBigInt, ZeroAddress, zeroPadValue, toBeHex } = ethers;
 
 const arbitratorExtraData = "0x85";
 const arbitrationCost = 1000;
 const initialBond = 2000;
 const appealCost = 5000;
-const questionID = hexZeroPad(0, 32);
-const answer = hexZeroPad(11, 32);
+const questionID = zeroPadValue(toBeHex(0), 32);
+const answer = zeroPadValue(toBeHex(11), 32);
 const arbitrationID = 0;
 const surplusAmount = 20000; // Covers the gas price (gas limit * priceBid + ticketCost) and has some extra amount. Gas = 12500
 const totalCost = 21000; // Arbitration cost + surplus
@@ -29,20 +23,23 @@ const appealTimeOut = 180;
 const winnerMultiplier = 3000;
 const loserMultiplier = 7000;
 const loserAppealPeriodMultiplier = 5000;
-const gasPrice = 80000000;
+const gasPrice = toBigInt(80000000);
 const MAX_ANSWER = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 const maxPrevious = 2001;
 
 const metaEvidence = "ipfs/X";
 const metadata = "ipfs/Y";
 const foreignChainId = 5;
-const oneETH = BigNumber.from(BigInt(1e18));
-const ZERO_HASH = hexZeroPad(0, 32);
+const oneETH = ethers.parseEther("1");
+const ZERO_HASH = zeroPadValue(toBeHex(0), 32);
 
 let arbitrator;
 let homeProxy;
 let foreignProxy;
 let realitio;
+let mockInbox;
+let mockBridge;
+let mockOutbox;
 
 let governor;
 let requester;
@@ -62,26 +59,27 @@ describe("Cross-chain arbitration with appeals", () => {
     await arbitrator.connect(other).createDispute(42, arbitratorExtraData, { value: arbitrationCost });
     await arbitrator.connect(other).createDispute(4, arbitratorExtraData, { value: arbitrationCost });
 
-    await realitio.setArbitrator(arbitrator.address);
+    await realitio.setArbitrator(arbitrator.target);
     await realitio.connect(requester).askQuestion("text");
     await realitio.connect(answerer).submitAnswer(questionID, answer, initialBond, { value: initialBond });
   });
 
   it("Should correctly set the initial values", async () => {
-    expect(await foreignProxy.arbitrator()).to.equal(arbitrator.address);
+    expect(await foreignProxy.arbitrator()).to.equal(arbitrator.target);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
-    expect(await foreignProxy.inbox()).to.equal(mockInbox.address);
+    expect(await foreignProxy.inbox()).to.equal(mockInbox.target);
     expect(await foreignProxy.l2GasLimit()).to.equal(500);
     expect(await foreignProxy.gasPriceBid()).to.equal(5);
     expect(await foreignProxy.surplusAmount()).to.equal(20000);
-    expect(await foreignProxy.homeProxy()).to.equal(homeProxy.address);
+    expect(await foreignProxy.homeProxy()).to.equal(homeProxy.target);
+    expect(await foreignProxy.wNative()).to.equal(other);
 
     expect(await homeProxy.metadata()).to.equal(metadata);
-    expect(await homeProxy.foreignChainId()).to.equal(hexZeroPad(5, 32));
-    expect(await homeProxy.foreignProxy()).to.equal(foreignProxy.address);
-    expect(await homeProxy.mockInbox()).to.equal(mockInbox.address);
-    expect(await homeProxy.mockBridge()).to.equal(mockBridge.address);
-    expect(await homeProxy.realitio()).to.equal(realitio.address);
+    expect(await homeProxy.foreignChainId()).to.equal(zeroPadValue(toBeHex(5), 32));
+    expect(await homeProxy.foreignProxy()).to.equal(foreignProxy.target);
+    expect(await homeProxy.mockInbox()).to.equal(mockInbox.target);
+    expect(await homeProxy.mockBridge()).to.equal(mockBridge.target);
+    expect(await homeProxy.realitio()).to.equal(realitio.target);
 
     // 0 - winner, 1 - loser, 2 - loserAppealPeriod.
     const multipliers = await foreignProxy.getMultipliers();
@@ -89,10 +87,10 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(multipliers[1]).to.equal(7000);
     expect(multipliers[2]).to.equal(5000);
 
-    expect(await mockOutbox.sender()).to.equal(homeProxy.address);
-    expect(await mockBridge.outbox()).to.equal(mockOutbox.address);
+    expect(await mockOutbox.sender()).to.equal(homeProxy.target);
+    expect(await mockBridge.outbox()).to.equal(mockOutbox.target);
 
-    expect(await mockInbox.bridge()).to.equal(mockBridge.address);
+    expect(await mockInbox.bridge()).to.equal(mockBridge.target);
     expect(await mockInbox.submissionFee()).to.equal(10000);
   });
 
@@ -105,7 +103,7 @@ describe("Cross-chain arbitration with appeals", () => {
     await expect(foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost }))
       .to.emit(mockInbox, "TicketSent")
       .withArgs(
-        homeProxy.address,
+        homeProxy.target,
         0,
         ticketSubmissionCost,
         requesterAddress,
@@ -148,16 +146,16 @@ describe("Cross-chain arbitration with appeals", () => {
   });
 
   it("Should have correct balance after paying arbitration cost and arbitrum fee", async () => {
-    const oldBalance = await requester.getBalance();
+    const oldBalance = await getBalance(requester);
 
     const tx = await foreignProxy
       .connect(requester)
       .requestArbitration(questionID, maxPrevious, { gasPrice: gasPrice, value: totalCost });
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    const txFee = (await tx.wait()).gasUsed * gasPrice;
 
-    newBalance = await requester.getBalance();
+    const newBalance = await getBalance(requester);
     expect(newBalance).to.equal(
-      oldBalance.sub(1000).sub(txFee).sub(20000), // Subtract tx fee, arbitration cost and surplus. The leftover surplus will be reimbursed later
+      oldBalance - toBigInt(1000) - txFee - toBigInt(20000), // Subtract tx fee, arbitration cost and surplus. The leftover surplus will be reimbursed later
       "Requester was not reimbursed correctly"
     );
   });
@@ -191,7 +189,7 @@ describe("Cross-chain arbitration with appeals", () => {
     await mockInbox.connect(other).redeemTicket(0);
 
     const badMessage = "0xfa";
-    await expect(mockBridge.connect(other).sendAsBridge(homeProxy.address, badMessage)).to.be.revertedWith(
+    await expect(mockBridge.connect(other).sendAsBridge(homeProxy.target, badMessage)).to.be.revertedWith(
       "Failed TxToL1"
     );
 
@@ -199,11 +197,11 @@ describe("Cross-chain arbitration with appeals", () => {
       .to.emit(homeProxy, "RequestAcknowledged")
       .withArgs(questionID, await requester.getAddress())
       .to.emit(arbitrator, "DisputeCreation")
-      .withArgs(2, foreignProxy.address)
+      .withArgs(2, foreignProxy.target)
       .to.emit(foreignProxy, "ArbitrationCreated")
       .withArgs(questionID, await requester.getAddress(), 2)
       .to.emit(foreignProxy, "Dispute")
-      .withArgs(arbitrator.address, 2, 0, 0);
+      .withArgs(arbitrator.target, 2, 0, 0);
 
     const request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(3, "Incorrect status of the request in HomeProxy");
@@ -233,7 +231,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(await foreignProxy.externalIDtoLocalID(2)).to.equal(arbitrationID, "Incorrect externalIDtoLocalID value");
 
     const dispute = await arbitrator.disputes(2);
-    expect(dispute[0]).to.equal(foreignProxy.address, "Incorrect arbitrable address");
+    expect(dispute[0]).to.equal(foreignProxy.target, "Incorrect arbitrable address");
     expect(dispute[1]).to.equal(MAX_ANSWER, "Incorrect number of choices");
     expect(dispute[2]).to.equal(1000, "Incorrect fees value stored");
   });
@@ -275,14 +273,14 @@ describe("Cross-chain arbitration with appeals", () => {
 
     const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
     const requesterDeposit = arbitration[1];
-    expect(requesterDeposit).to.equal(oneETH.sub(12500), "Incorrect deposit value"); //Ticket submission fee + gas limit * price bid = 10000 * 2500
+    expect(requesterDeposit).to.equal(oneETH - toBigInt(12500), "Incorrect deposit value"); //Ticket submission fee + gas limit * price bid = 10000 * 2500
 
-    const oldBalance = await requester.getBalance();
+    const oldBalance = await getBalance(requester);
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
 
-    const newBalance = await requester.getBalance();
+    const newBalance = await getBalance(requester);
     expect(newBalance).to.equal(
-      oldBalance.add(requesterDeposit).sub(arbitrationCost),
+      oldBalance + requesterDeposit - toBigInt(arbitrationCost),
       "Requester was not reimbursed correctly"
     );
   });
@@ -302,11 +300,11 @@ describe("Cross-chain arbitration with appeals", () => {
     let request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(1, "Incorrect status of the request in HomeProxy after rejection");
     expect(await homeProxy.questionIDToRequester(questionID)).to.equal(
-      ADDRESS_ZERO,
+      ZeroAddress,
       "Requester address should be empty after rejection"
     );
 
-    const oldBalance = await requester.getBalance();
+    const oldBalance = await getBalance(requester);
     await expect(homeProxy.handleRejectedRequest(questionID, await requester.getAddress()))
       .to.emit(homeProxy, "RequestCanceled")
       .withArgs(questionID, await requester.getAddress())
@@ -316,9 +314,9 @@ describe("Cross-chain arbitration with appeals", () => {
     request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
 
-    const newBalance = await requester.getBalance();
+    const newBalance = await getBalance(requester);
     expect(newBalance).to.equal(
-      oldBalance.add(arbitrationCost + surplusAmount - 12500), // 12500 is Arbitrum fee
+      oldBalance + toBigInt(arbitrationCost + surplusAmount - 12500), // 12500 is Arbitrum fee
       "Requester was not reimbursed correctly"
     );
 
@@ -347,7 +345,7 @@ describe("Cross-chain arbitration with appeals", () => {
     let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
     expect(arbitration[0]).to.equal(5, "Status should be Failed");
 
-    const oldBalance = await requester.getBalance();
+    const oldBalance = await getBalance(requester);
 
     await expect(
       foreignProxy
@@ -366,14 +364,14 @@ describe("Cross-chain arbitration with appeals", () => {
       .to.emit(homeProxy, "ArbitrationFailed")
       .withArgs(questionID, await requester.getAddress());
 
-    const newBalance = await requester.getBalance();
+    const newBalance = await getBalance(requester);
     expect(newBalance).to.equal(
-      oldBalance.add(arbitrationCost + surplusAmount - l2GasPrice),
+      oldBalance + toBigInt(arbitrationCost + surplusAmount - l2GasPrice),
       "Requester was not reimbursed correctly"
     ); // 8500
 
     arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(0, "Status should be empty");
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
     expect(arbitration[1]).to.equal(0, "Deposit should be empty");
     expect(arbitration[2]).to.equal(0, "Dispute id should be empty");
 
@@ -393,15 +391,15 @@ describe("Cross-chain arbitration with appeals", () => {
         .handleFailedDisputeCreation(questionID, await requester.getAddress(), { value: l2GasPrice - 1 })
     ).to.be.revertedWith("Should cover arbitrum fee");
 
-    const oldBalance = await other.getBalance();
+    const oldBalance = await getBalance(other);
     const tx = await foreignProxy
       .connect(other)
       .handleFailedDisputeCreation(questionID, await requester.getAddress(), { gasPrice: gasPrice, value: oneETH });
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    const txFee = (await tx.wait()).gasUsed * gasPrice;
 
-    newBalance = await other.getBalance();
+    const newBalance = await getBalance(other);
     expect(newBalance).to.equal(
-      oldBalance.sub(l2GasPrice).sub(txFee), // Take only gas price for L2 and txfee
+      oldBalance - toBigInt(l2GasPrice) - txFee, // Take only gas price for L2 and txfee
       "Caller was not reimbursed correctly"
     );
   });
@@ -412,19 +410,19 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
 
-    const arbAnswer = hexZeroPad(7, 32);
+    const arbAnswer = zeroPadValue(toBeHex(7), 32);
 
     await expect(
       foreignProxy.connect(other).relayRule(questionID, await requester.getAddress(), { value: l2GasPrice })
     ).to.be.revertedWith("Dispute not resolved");
 
-    await expect(arbitrator.giveRuling(2, 8)).to.emit(foreignProxy, "Ruling").withArgs(arbitrator.address, 2, 8);
+    await expect(arbitrator.giveRuling(2, 8)).to.emit(foreignProxy, "Ruling").withArgs(arbitrator.target, 2, 8);
 
     let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
     expect(arbitration[0]).to.equal(3, "Status should be Ruled");
     expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
 
-    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ADDRESS_ZERO)).to.be.revertedWith(
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress)).to.be.revertedWith(
       "Arbitrator has not ruled yet"
     );
 
@@ -446,7 +444,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(request[0]).to.equal(4, "Status should be Ruled");
     expect(request[1]).to.equal(arbAnswer, "Incorrect answer stored");
 
-    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ADDRESS_ZERO))
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
       .to.emit(realitio, "MockFinalize")
       .withArgs(questionID, arbAnswer)
       .to.emit(homeProxy, "ArbitrationFinished")
@@ -467,15 +465,15 @@ describe("Cross-chain arbitration with appeals", () => {
       foreignProxy.connect(other).relayRule(questionID, await requester.getAddress(), { value: l2GasPrice - 1 })
     ).to.be.revertedWith("Should cover arbitrum fee");
 
-    const oldBalance = await other.getBalance();
+    const oldBalance = await getBalance(other);
     const tx = await foreignProxy
       .connect(other)
       .relayRule(questionID, await requester.getAddress(), { gasPrice: gasPrice, value: oneETH });
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    const txFee = (await tx.wait()).gasUsed * gasPrice;
 
-    newBalance = await other.getBalance();
+    const newBalance = await getBalance(other);
     expect(newBalance).to.equal(
-      oldBalance.sub(l2GasPrice).sub(txFee), // Take only gas price for L2 and txfee
+      oldBalance - toBigInt(l2GasPrice) - txFee, // Take only gas price for L2 and txfee
       "Caller was not reimbursed correctly"
     );
   });
@@ -506,16 +504,16 @@ describe("Cross-chain arbitration with appeals", () => {
 
     // loserFee = appealCost + (appealCost * loserMultiplier / 10000) // 5000 + 5000 * 7/10 = 8500
     // 1st Funding ////////////////////////////////////
-    oldBalance = await crowdfunder1.getBalance();
+    oldBalance = await getBalance(crowdfunder1);
     txFundAppeal = foreignProxy
       .connect(crowdfunder1)
       .fundAppeal(arbitrationID, 533, { gasPrice: gasPrice, value: appealCost }); // This value doesn't fund fully.
     tx = await txFundAppeal;
     txFee = (await tx.wait()).gasUsed * gasPrice;
 
-    newBalance = await crowdfunder1.getBalance();
+    newBalance = await getBalance(crowdfunder1);
     expect(newBalance).to.equal(
-      oldBalance.sub(5000).sub(txFee),
+      oldBalance - toBigInt(5000) - txFee,
       "The crowdfunder has incorrect balance after the first funding"
     );
 
@@ -537,9 +535,9 @@ describe("Cross-chain arbitration with appeals", () => {
       .fundAppeal(arbitrationID, 533, { gasPrice: gasPrice, value: oneETH }); // Overpay to check that it's handled correctly.
     tx = await txFundAppeal;
     txFee = (await tx.wait()).gasUsed * gasPrice;
-    newBalance = await crowdfunder1.getBalance();
+    newBalance = await getBalance(crowdfunder1);
     expect(newBalance).to.equal(
-      oldBalance.sub(3500).sub(txFee),
+      oldBalance - toBigInt(3500) - txFee,
       "The crowdfunder has incorrect balance after the second funding"
     );
 
@@ -696,19 +694,19 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(arbitration[0]).to.equal(3, "Status should be Ruled");
     expect(arbitration[3]).to.equal(ruling, "Stored answer is incorrect");
 
-    const oldBalance = await requester.getBalance();
-    oldBalance1 = await crowdfunder1.getBalance();
-    oldBalance2 = await crowdfunder2.getBalance();
+    const oldBalance = await getBalance(requester);
+    oldBalance1 = await getBalance(crowdfunder1);
+    oldBalance2 = await getBalance(crowdfunder2);
 
     // Withdraw 0 round.
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, requesterAddress, 0, 50);
 
-    newBalance = await requester.getBalance();
+    newBalance = await getBalance(requester);
     expect(newBalance).to.equal(oldBalance, "The balance of the requester should stay the same (withdraw 0 round)");
 
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, requesterAddress, 0, 5);
 
-    newBalance = await requester.getBalance();
+    newBalance = await getBalance(requester);
     expect(newBalance).to.equal(
       oldBalance,
       "The balance of the requester should stay the same (withdraw 0 round from winning ruling)"
@@ -716,7 +714,7 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, crowdfunder1Address, 0, 50);
 
-    newBalance1 = await crowdfunder1.getBalance();
+    newBalance1 = await getBalance(crowdfunder1);
     expect(newBalance1).to.equal(
       oldBalance1,
       "The balance of the crowdfunder1 should stay the same (withdraw 0 round)"
@@ -726,9 +724,9 @@ describe("Cross-chain arbitration with appeals", () => {
       .to.emit(foreignProxy, "Withdrawal")
       .withArgs(arbitrationID, 0, 5, crowdfunder1Address, 769); // The reward is 769 = (500/6500 * 10000)
 
-    newBalance1 = await crowdfunder1.getBalance();
+    newBalance1 = await getBalance(crowdfunder1);
     expect(newBalance1).to.equal(
-      oldBalance1.add(769),
+      oldBalance1 + toBigInt(769),
       "The balance of the crowdfunder1 is incorrect after withdrawing from winning ruling 0 round"
     );
 
@@ -736,7 +734,7 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, crowdfunder1Address, 0, 5);
 
-    newBalance1 = await crowdfunder1.getBalance();
+    newBalance1 = await getBalance(crowdfunder1);
     expect(newBalance1).to.equal(
       oldBalance1,
       "The balance of the crowdfunder1 should stay the same after withdrawing the 2nd time"
@@ -744,10 +742,10 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, crowdfunder2Address, 0, 5);
 
-    newBalance2 = await crowdfunder2.getBalance();
+    newBalance2 = await getBalance(crowdfunder2);
     // 12 / 13 * 10000 = 9230
     expect(newBalance2).to.equal(
-      oldBalance2.add(9230),
+      oldBalance2 + toBigInt(9230),
       "The balance of the crowdfunder2 is incorrect (withdraw 0 round)"
     );
 
@@ -771,16 +769,16 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, crowdfunder2Address, 1, 5);
 
-    newBalance = await requester.getBalance();
-    newBalance1 = await crowdfunder1.getBalance();
-    newBalance2 = await crowdfunder2.getBalance();
+    newBalance = await getBalance(requester);
+    newBalance1 = await getBalance(crowdfunder1);
+    newBalance2 = await getBalance(crowdfunder2);
     expect(newBalance).to.equal(oldBalance, "The balance of the requester should stay the same (withdraw 1 round)");
     expect(newBalance1).to.equal(
       oldBalance1,
       "The balance of the crowdfunder1 should stay the same (withdraw 1 round)"
     );
     expect(newBalance2).to.equal(
-      oldBalance2.add(10000),
+      oldBalance2 + toBigInt(10000),
       "The balance of the crowdfunder2 is incorrect (withdraw 1 round)"
     );
 
@@ -792,11 +790,11 @@ describe("Cross-chain arbitration with appeals", () => {
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, requesterAddress, 2, 41);
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, crowdfunder2Address, 2, 5);
 
-    newBalance = await requester.getBalance();
-    newBalance2 = await crowdfunder2.getBalance();
-    expect(newBalance).to.equal(oldBalance.add(8499), "The balance of the requester is incorrect (withdraw 2 round)");
+    newBalance =await getBalance(requester);
+    newBalance2 = await getBalance(crowdfunder2);
+    expect(newBalance).to.equal(oldBalance + toBigInt(8499), "The balance of the requester is incorrect (withdraw 2 round)");
     expect(newBalance2).to.equal(
-      oldBalance2.add(6500),
+      oldBalance2 + toBigInt(6500),
       "The balance of the crowdfunder2 is incorrect (withdraw 2 round)"
     );
 
@@ -827,25 +825,25 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await arbitrator.executeRuling(2);
 
-    oldBalance = await requester.getBalance();
+    oldBalance = await getBalance(requester);
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, await requester.getAddress(), 0, 1);
-    newBalance = await requester.getBalance();
-    expect(newBalance).to.equal(oldBalance.add(3529), "The balance of the requester is incorrect"); // 5000 * 12000 / 17000.
+    newBalance = await getBalance(requester);
+    expect(newBalance).to.equal(oldBalance + toBigInt(3529), "The balance of the requester is incorrect"); // 5000 * 12000 / 17000.
 
-    oldBalance = await crowdfunder1.getBalance();
+    oldBalance = await getBalance(crowdfunder1);
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, await crowdfunder1.getAddress(), 0, 1);
-    newBalance = await crowdfunder1.getBalance();
-    expect(newBalance).to.equal(oldBalance.add(2470), "The balance of the crowdfunder1 is incorrect (1 ruling)"); // 3500 * 12000 / 17000.
+    newBalance = await getBalance(crowdfunder1);
+    expect(newBalance).to.equal(oldBalance + toBigInt(2470), "The balance of the crowdfunder1 is incorrect (1 ruling)"); // 3500 * 12000 / 17000.
 
     oldBalance = newBalance;
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, await crowdfunder1.getAddress(), 0, 4);
-    newBalance = await crowdfunder1.getBalance();
-    expect(newBalance).to.equal(oldBalance.add(5294), "The balance of the crowdfunder1 is incorrect (4 ruling)"); // 7500 * 12000 / 17000.
+    newBalance = await getBalance(crowdfunder1);
+    expect(newBalance).to.equal(oldBalance + toBigInt(5294), "The balance of the crowdfunder1 is incorrect (4 ruling)"); // 7500 * 12000 / 17000.
 
-    oldBalance = await crowdfunder2.getBalance();
+    oldBalance = await getBalance(crowdfunder2);
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, await crowdfunder2.getAddress(), 0, 4);
-    newBalance = await crowdfunder2.getBalance();
-    expect(newBalance).to.equal(oldBalance.add(705), "The balance of the crowdfunder2 is incorrect"); // 1000 * 12000 / 17000.
+    newBalance = await getBalance(crowdfunder2);
+    expect(newBalance).to.equal(oldBalance + toBigInt(705), "The balance of the crowdfunder2 is incorrect"); // 1000 * 12000 / 17000.
   });
 
   it("Should correctly withdraw appeal fees for multiple rounds", async () => {
@@ -875,24 +873,24 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await arbitrator.executeRuling(2);
 
-    oldBalance = await requester.getBalance();
+    oldBalance = await getBalance(requester);
 
     await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), 1);
     await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), 3);
     await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await requester.getAddress(), 41);
 
-    newBalance = await requester.getBalance();
+    newBalance = await getBalance(requester);
     // 1000 * 10000 / 6500 + 17 = 1538 + 17
-    expect(newBalance).to.equal(oldBalance.add(1555), "The balance of the requester is incorrect");
+    expect(newBalance).to.equal(oldBalance + toBigInt(1555), "The balance of the requester is incorrect");
 
-    oldBalance = await crowdfunder1.getBalance();
+    oldBalance = await getBalance(crowdfunder1);
     await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), 1);
     await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), 3);
     await foreignProxy.withdrawFeesAndRewardsForAllRounds(arbitrationID, await crowdfunder1.getAddress(), 45);
 
-    newBalance = await crowdfunder1.getBalance();
+    newBalance = await getBalance(crowdfunder1);
     // 5500 * 10000 / 6500 + 22 = 8461 + 22
-    expect(newBalance).to.equal(oldBalance.add(8483), "The balance of the crowdfunder1 is incorrect");
+    expect(newBalance).to.equal(oldBalance + toBigInt(8483), "The balance of the crowdfunder1 is incorrect");
   });
 
   it("Should switch the ruling if the loser paid appeal fees while winner did not", async () => {
@@ -918,7 +916,7 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await expect(foreignProxy.connect(other).submitEvidence(arbitrationID, "text"))
       .to.emit(foreignProxy, "Evidence")
-      .withArgs(arbitrator.address, arbitrationID, await other.getAddress(), "text");
+      .withArgs(arbitrator.target, arbitrationID, await other.getAddress(), "text");
   });
 
   async function deployContracts(signer) {
@@ -929,49 +927,49 @@ describe("Cross-chain arbitration with appeals", () => {
     const mockOutbox = await MockOutbox.deploy();
 
     const MockBridge = await ethers.getContractFactory("MockBridge", signer);
-    const mockBridge = await MockBridge.deploy(mockOutbox.address);
+    const mockBridge = await MockBridge.deploy(mockOutbox.target);
 
     const MockInbox = await ethers.getContractFactory("MockInbox", signer);
-    const mockInbox = await MockInbox.deploy(mockBridge.address, ticketSubmissionCost);
+    const mockInbox = await MockInbox.deploy(mockBridge.target, ticketSubmissionCost);
 
     const Realitio = await ethers.getContractFactory("MockRealitio", signer);
     const realitio = await Realitio.deploy();
 
     const ForeignProxy = await ethers.getContractFactory("RealitioForeignProxyArbitrum", signer);
-    const HomeProxy = await ethers.getContractFactory("MockRealitioHomeProxy", signer);
+    const HomeProxy = await ethers.getContractFactory("MockRealitioHomeProxyArbitrum", signer);
 
     const address = await signer.getAddress();
-    const nonce = await signer.getTransactionCount();
+    const nonce = await signer.getNonce();
 
-    const transaction = {
+    const homeProxyAddress = ethers.getCreateAddress({
       from: address,
       nonce: nonce + 1, // Add 1 since homeProxy deployment will be after foreignProxy
-    };
-
-    const homeProxyAddress = ethers.utils.getContractAddress(transaction);
+    });
 
     const foreignProxy = await ForeignProxy.deploy(
-      homeProxyAddress,
-      arbitrator.address,
+      other, // Use other address as placeholder for wNative
+      arbitrator.target,
       arbitratorExtraData,
-      mockInbox.address,
-      surplusAmount,
-      L2_GAS_LIMIT,
-      gasPriceBid,
       metaEvidence,
-      [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier]
+      winnerMultiplier,
+      loserMultiplier,
+      loserAppealPeriodMultiplier,
+      homeProxyAddress,
+      mockInbox.target,
+      surplusAmount,
+      [L2_GAS_LIMIT, gasPriceBid]      
     );
 
     const homeProxy = await HomeProxy.deploy(
-      realitio.address,
+      realitio.target,
       metadata,
-      foreignProxy.address,
+      foreignProxy.target,
       foreignChainId,
-      mockInbox.address,
-      mockBridge.address
+      mockInbox.target,
+      mockBridge.target
     );
 
-    await mockOutbox.setSender(homeProxy.address);
+    await mockOutbox.setSender(homeProxy.target);
 
     return {
       arbitrator,
@@ -982,5 +980,9 @@ describe("Cross-chain arbitration with appeals", () => {
       mockBridge,
       mockOutbox,
     };
+  }
+
+  async function getBalance(account) {
+    return account.provider.getBalance(await account.getAddress());
   }
 });

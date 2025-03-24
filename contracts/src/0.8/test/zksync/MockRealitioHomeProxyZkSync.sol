@@ -7,7 +7,7 @@ import "../../RealitioHomeProxyZkSync.sol";
 /**
  * @dev The purpose of this contract is to override the precompiled L1Messenger.
  */
-contract MockZkHomeProxy is RealitioHomeProxyZkSync {
+contract MockRealitioHomeProxyZkSync is RealitioHomeProxyZkSync {
     event L1MessageSent(bytes _data);
 
     constructor(

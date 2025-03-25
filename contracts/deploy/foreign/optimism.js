@@ -57,12 +57,21 @@ async function deployForeignProxy({
   return await deploy(`RealitioForeignProxy${variant}`, {
     contract: "RealitioForeignProxyOptimism",
     from,
-    args: [wNative, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, foreignBridge],
+    args: [
+      wNative,
+      arbitrator,
+      arbitratorExtraData,
+      metaEvidence,
+      ...multipliers,
+      homeProxy,
+      foreignBridge,
+    ],
     log: true,
   });
 }
 
-const getHomeProxyName = (homeNetworkName) => `RealitioHomeProxy${foreignParameters[homeNetworkName].variant}`;
+const getHomeProxyName = (homeNetworkName) =>
+  `RealitioHomeProxy${foreignParameters[homeNetworkName].variant}`;
 
 const supportedHomeChains = Object.keys(foreignParameters).map(String);
 

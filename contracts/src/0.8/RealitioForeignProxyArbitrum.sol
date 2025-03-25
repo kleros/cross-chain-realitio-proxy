@@ -23,7 +23,7 @@ import {SafeSend} from "./libraries/SafeSend.sol";
  */
 contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResolver {
     using SafeSend for address payable;
-    
+
     /* Constants */
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
@@ -64,7 +64,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256 feeRewards; // Sum of reimbursable appeal fees available to the parties that made contributions to the answer that ultimately wins a dispute.
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
-    
+
     address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     address public immutable homeProxy; // Proxy on L2.
 
@@ -480,7 +480,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         // Note that we allow to relay multiple times to prevent intentional blocking.
-        require(arbitration.status == Status.Ruled || arbitration.status ==  Status.Relayed, "Dispute not resolved");
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
         // Realitio ruling is shifted by 1 compared to Kleros.
         uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;

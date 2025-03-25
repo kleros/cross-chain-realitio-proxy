@@ -21,7 +21,7 @@ import {SafeSend} from "./libraries/SafeSend.sol";
  */
 contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResolver {
     using SafeSend for address payable;
-    
+
     /* Constants */
 
     // Gas limit of the transaction call on L2. Note that setting value too high results in high gas estimation fee (tested on Sepolia).
@@ -66,7 +66,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
     }
 
     address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
-    
+
     // contract for L1 -> L2 communication
     ICrossDomainMessenger public immutable messenger;
     address public immutable homeProxy; // Proxy on L2.

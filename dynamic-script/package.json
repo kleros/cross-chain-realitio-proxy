@@ -19,29 +19,24 @@
   },
   "typesVersions": {
     "*": {
-      "lib": [
-        "./dist/lib.d.ts"
-      ]
+      "lib": ["./dist/lib.d.ts"]
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "scripts": {
     "clean": "rm -rf dist",
     "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
     "build": "yarn clean && vite build && yarn build:types",
     "format": "biome format --write ./src",
     "lint": "biome lint ./src",
-    "check": "biome check --apply ./src"
+    "check": "biome check --write ./src"
   },
   "dependencies": {
     "@reality.eth/reality-eth-lib": "^3.3.2",
     "viem": "^2.23.13"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.6.1",
+    "@biomejs/biome": "1.9.4",
     "@types/node": "^20.11.24",
     "typescript": "^5.8.2",
     "vite": "^5.4.14"

@@ -14,7 +14,7 @@
     "clean": "rm -rf dist evidence-display-v${npm_package_version}",
     "format": "biome format --write ./src",
     "lint": "biome lint ./src",
-    "check": "biome check --apply ./src"
+    "check": "biome check --write ./src"
   },
   "dependencies": {
     "@kleros/cross-chain-realitio-dynamic-script": "workspace:*",
@@ -22,7 +22,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.6.1",
+    "@biomejs/biome": "1.9.4",
     "@tailwindcss/postcss7-compat": "^2.2.17",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",

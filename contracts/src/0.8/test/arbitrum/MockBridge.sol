@@ -14,10 +14,7 @@ contract MockBridge {
         return outbox;
     }
 
-    function sendAsBridge(
-        address destination,
-        bytes calldata calldataForL1
-    ) external {
+    function sendAsBridge(address destination, bytes calldata calldataForL1) external {
         (bool success, ) = destination.call(calldataForL1);
         require(success, "Failed TxToL1");
     }

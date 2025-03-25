@@ -34,7 +34,7 @@ task("exec", "Execute msg on L1")
       throw new Error(
         "Provide a transaction hash of an L2 transaction that sends an L2 to L1 message"
       );
-    if (!txhash.startsWith("0x") || txhash.trim().length != 66)
+    if (!txhash.startsWith("0x") || txhash.trim().length !== 66)
       throw new Error(`Hmm, ${txhash} doesn't look like a txn hash...`);
 
     /**
@@ -53,8 +53,8 @@ task("exec", "Execute msg on L1")
     /**
      * Check if already executed
      */
-    if ((await l2ToL1Msg.status(l2Provider)) == L2ToL1MessageStatus.EXECUTED) {
-      console.log(`Message already executed! Nothing else to do here`);
+    if ((await l2ToL1Msg.status(l2Provider)) === L2ToL1MessageStatus.EXECUTED) {
+      console.log("Message already executed! Nothing else to do here");
       process.exit(1);
     }
 
@@ -85,7 +85,7 @@ const arbLog = async (text) => {
   let str = "🔵";
   for (let i = 0; i < 25; i++) {
     await wait(40);
-    if (i == 12) {
+    if (i === 12) {
       str = `🔵${"🔵".repeat(i)}🔵`;
     } else {
       str = `🔵${" ".repeat(i * 2)}🔵`;

@@ -162,11 +162,10 @@ contract RealitioForeignProxyWithAppealsGnosis is IForeignArbitrationProxy, IDis
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
-    function receiveArbitrationAcknowledgement(bytes32 _questionID, address _requester)
-        external
-        override
-        onlyHomeProxy
-    {
+    function receiveArbitrationAcknowledgement(
+        bytes32 _questionID,
+        address _requester
+    ) external override onlyHomeProxy {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
@@ -434,12 +433,7 @@ contract RealitioForeignProxyWithAppealsGnosis is IForeignArbitrationProxy, IDis
         external
         view
         override
-        returns (
-            uint256 winner,
-            uint256 loser,
-            uint256 loserAppealPeriod,
-            uint256 divisor
-        )
+        returns (uint256 winner, uint256 loser, uint256 loserAppealPeriod, uint256 divisor)
     {
         return (winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier, MULTIPLIER_DIVISOR);
     }
@@ -448,9 +442,7 @@ contract RealitioForeignProxyWithAppealsGnosis is IForeignArbitrationProxy, IDis
      * @notice Returns number of possible ruling options. Valid rulings are [0, return value].
      * @return count The number of ruling options.
      */
-    function numberOfRulingOptions(
-        uint256 /* _arbitrationID */
-    ) external pure override returns (uint256) {
+    function numberOfRulingOptions(uint256 /* _arbitrationID */) external pure override returns (uint256) {
         return NUMBER_OF_CHOICES_FOR_ARBITRATOR;
     }
 
@@ -458,9 +450,7 @@ contract RealitioForeignProxyWithAppealsGnosis is IForeignArbitrationProxy, IDis
      * @notice Gets the fee to create a dispute.
      * @return The fee to create a dispute.
      */
-    function getDisputeFee(
-        bytes32 /* _questionID */
-    ) external view override returns (uint256) {
+    function getDisputeFee(bytes32 /* _questionID */) external view override returns (uint256) {
         return arbitrator.arbitrationCost(arbitratorExtraData);
     }
 
@@ -483,15 +473,10 @@ contract RealitioForeignProxyWithAppealsGnosis is IForeignArbitrationProxy, IDis
      * @return feeRewards The amount of fees that will be used as rewards.
      * @return fundedAnswers IDs of fully funded answers.
      */
-    function getRoundInfo(uint256 _arbitrationID, uint256 _round)
-        external
-        view
-        returns (
-            uint256[] memory paidFees,
-            uint256 feeRewards,
-            uint256[] memory fundedAnswers
-        )
-    {
+    function getRoundInfo(
+        uint256 _arbitrationID,
+        uint256 _round
+    ) external view returns (uint256[] memory paidFees, uint256 feeRewards, uint256[] memory fundedAnswers) {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];

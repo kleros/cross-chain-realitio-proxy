@@ -16,10 +16,7 @@ interface IInbox {
      * @param dataLength The length of the retryable's calldata, in bytes
      * @param baseFee The block basefee when the retryable is included in the chain, if 0 current block.basefee will be used
      */
-    function calculateRetryableSubmissionFee(uint256 dataLength, uint256 baseFee)
-        external
-        view
-        returns (uint256);
+    function calculateRetryableSubmissionFee(uint256 dataLength, uint256 baseFee) external view returns (uint256);
 
     /**
      * @notice Put a message in the L2 inbox that can be reexecuted for some fixed amount of time if it reverts

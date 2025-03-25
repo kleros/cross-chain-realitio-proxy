@@ -1,7 +1,7 @@
 /* solhint-disable var-name-mixedcase */
 // SPDX-License-Identifier: MIT
 
-/** 
+/**
  *  Interface of https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/flat/RealityETH-3.0.sol.
  *  @reviewers: [@hbarcelos, @fnanni-0, @nix1g, @unknownunknown1, @ferittuncer, @jaybuidl]
  *  @auditors: []

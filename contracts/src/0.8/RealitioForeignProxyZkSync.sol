@@ -22,7 +22,7 @@ import {SafeSend} from "./libraries/SafeSend.sol";
  */
 contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolver {
     using SafeSend for address payable;
-    
+
     /* Constants */
     // The number of choices for the arbitrator.
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max;
@@ -502,7 +502,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         // Note that we allow to relay multiple times to prevent intentional blocking.
-        require(arbitration.status == Status.Ruled || arbitration.status ==  Status.Relayed, "Dispute not resolved");
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
         uint256 zkGasFee = getZkGasFee();
         require(msg.value >= zkGasFee, "Should cover the zk fee");

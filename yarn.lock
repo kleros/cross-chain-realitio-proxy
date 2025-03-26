@@ -3365,6 +3365,7 @@ __metadata:
   resolution: "@kleros/cross-chain-realitio-sdk@workspace:sdk"
   dependencies:
     "@biomejs/biome": 1.5.3
+    "@reality.eth/contracts": ^3.2.1
     "@reality.eth/reality-eth-lib": ^3.4.2
     tsup: ^8.0.0
     typescript: ^5.0.0

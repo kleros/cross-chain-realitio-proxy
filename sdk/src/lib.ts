@@ -7,6 +7,23 @@ import {
   realitioAbi,
 } from "./contracts";
 
+const DEFAULT_TEMPLATES_V3_0 = [
+  '{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}',
+];
+
+const DEFAULT_TEMPLATES_V3_2 = [
+  '{"title": "%s", "type": "bool", "description": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "uint", "decimals": 18, "description": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "single-select", "outcomes": [%s], "description": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "description": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "datetime", "description": "%s", "lang": "%s"}',
+  '{"title": "%s", "type": "hash", "description": "%s", "lang": "%s"}',
+];
+
 const isNil = (value: unknown): value is undefined | null =>
   value === undefined || value === null;
 
@@ -20,12 +37,20 @@ export interface RealityQuestionParams {
   jsonRpcUrl?: string;
 }
 
+export type QuestionType =
+  | "bool"
+  | "uint"
+  | "single-select"
+  | "multiple-select"
+  | "datetime"
+  | "hash";
+
 export interface RealityQuestionData {
   questionID: `0x${string}`;
   realitioAddress: `0x${string}`;
   questionData: {
     title?: string;
-    type: "bool" | "uint" | "single-select" | "multiple-select" | "datetime";
+    type: QuestionType;
     decimals?: number;
     outcomes?: string[];
   };
@@ -159,14 +184,7 @@ export async function fetchRealityQuestionData({
 
   let templateText: string;
   if (template_id < 5n) {
-    // first 5 templates are part of reality.eth spec, hardcode for faster loading
-    templateText = [
-      '{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}',
-    ][Number(template_id)];
+    templateText = DEFAULT_TEMPLATES_V3_0[Number(template_id)];
   } else {
     const templateCreationBlock = await realitio.read.templates([template_id]);
     const templateEventLog = await realitio.getEvents.LogNewTemplate(
@@ -215,7 +233,7 @@ export async function fetchRealityQuestionData({
 export interface RealityMetaEvidence {
   question?: string;
   rulingOptions?: {
-    type: "single-select" | "uint" | "datetime" | "multiple-select";
+    type: QuestionType;
     titles?: string[];
     precision?: number;
     reserved: Record<string, string>;
@@ -267,6 +285,11 @@ export async function fetchRealityMetaEvidence(
       case "datetime":
         return {
           type: "datetime" as const,
+          reserved: reservedAnswers,
+        } satisfies RulingOptionsType;
+      case "hash":
+        return {
+          type: "hash" as const,
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
       default:

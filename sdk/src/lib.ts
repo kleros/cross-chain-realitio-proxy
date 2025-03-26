@@ -1,4 +1,6 @@
 import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
+import { content as templates3_0 } from "@reality.eth/contracts/config/templates.json";
+import { content as templates3_2 } from "@reality.eth/contracts/config/templates_3.2.json";
 import { http, createPublicClient, getContract } from "viem";
 import {
   REALITY_STARTS_AT,
@@ -8,22 +10,8 @@ import {
   realitioAbi,
 } from "./contracts";
 
-const DEFAULT_TEMPLATES_V3_0 = [
-  '{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}',
-];
-
-const DEFAULT_TEMPLATES_V3_2 = [
-  '{"title": "%s", "type": "bool", "description": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "uint", "decimals": 18, "description": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "single-select", "outcomes": [%s], "description": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "description": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "datetime", "description": "%s", "lang": "%s"}',
-  '{"title": "%s", "type": "hash", "description": "%s", "lang": "%s"}',
-];
+const DEFAULT_TEMPLATES_V3_0 = Object.values(templates3_0);
+const DEFAULT_TEMPLATES_V3_2 = Object.values(templates3_2);
 
 async function isRealityV3_2(realitio: RealitioContract) {
   const hashTemplateId = 5n;

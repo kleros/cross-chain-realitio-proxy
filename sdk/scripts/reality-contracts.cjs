@@ -54,7 +54,7 @@ console.log("Version support for reopening questions?", has_reopen_question);
 
 // You can get an instance of the contract with
 const contract = realityeth_contracts.realityETHInstance(config);
-// console.log('Contract is', contract);
+console.log("Contract is", contract);
 
 const contractClient = getContract({
   address: contract.address,
@@ -70,3 +70,15 @@ console.log("Querying the default RPC node", chain_info.hostedRPC);
 contractClient.read.resultFor([question_id]).then((result) => {
   console.log("The result for question", question_id, "is", result);
 });
+
+const config2 = realityeth_contracts.configForAddress(
+  "0xeb51d9d9717906c981c57af09c4a3449ef30705b",
+  100,
+);
+console.log("Config for address", config2);
+
+const contract2 = realityeth_contracts.realityETHInstance(config2);
+console.log("Contract for address", contract2);
+
+const templates = require("@reality.eth/contracts/config/templates.json");
+console.log("Templates", templates.content);

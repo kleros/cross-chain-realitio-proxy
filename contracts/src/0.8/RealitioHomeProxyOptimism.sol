@@ -52,7 +52,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
     /// @dev Associates a question ID with the requester who succeeded in requesting arbitration. questionIDToRequester[questionID]
     mapping(bytes32 => address) public questionIDToRequester;
 
-    modifier onlyForeignProxy() {
+    modifier onlyForeignProxy() virtual {
         require(msg.sender == address(messenger), "NOT_MESSENGER");
         require(messenger.xDomainMessageSender() == foreignProxy, "Can only be called by Foreign Proxy");
         _;
@@ -123,7 +123,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationAcknowledgement.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
+        sendToL1(data);
         emit RequestAcknowledged(_questionID, _requester);
     }
 
@@ -146,7 +146,7 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
 
         bytes4 selector = IForeignArbitrationProxy.receiveArbitrationCancelation.selector;
         bytes memory data = abi.encodeWithSelector(selector, _questionID, _requester);
-        messenger.sendMessage(foreignProxy, data, MIN_GAS_LIMIT);
+        sendToL1(data);
         emit RequestCanceled(_questionID, _requester);
     }
 
@@ -216,5 +216,13 @@ contract RealitioHomeProxyOptimism is IHomeArbitrationProxy {
         );
 
         emit ArbitrationFinished(_questionID);
+    }
+
+    /**
+     * @notice Sends a message to L1.
+     * @param _data The data sent.
+     */
+    function sendToL1(bytes memory _data) internal virtual {
+        messenger.sendMessage(foreignProxy, _data, MIN_GAS_LIMIT);
     }
 }

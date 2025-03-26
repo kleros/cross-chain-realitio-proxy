@@ -18,6 +18,7 @@ const loserAppealPeriodMultiplier = 5000;
 const gasPrice = toBigInt(80000000);
 const MAX_ANSWER = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 const maxPrevious = 2001;
+const messenger = "0x4200000000000000000000000000000000000007";
 
 const metaEvidence = "ipfs/X";
 const metadata = "ipfs/Y";
@@ -54,6 +55,7 @@ describe("Cross-chain arbitration with appeals", () => {
   it("Should correctly set the initial values", async () => {
     // ForeignProxy
     expect(await foreignProxy.messenger()).to.equal(mockMessenger.target);
+    expect(await foreignProxy.wNative()).to.equal(other);
     expect(await foreignProxy.homeProxy()).to.equal(homeProxy.target);
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.target);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
@@ -65,7 +67,8 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(multipliers[2]).to.equal(5000);
 
     // HomeProxy
-    expect(await homeProxy.messenger()).to.equal(mockMessenger.target);
+    expect(await homeProxy.messenger()).to.equal(messenger);
+    expect(await homeProxy.mockMessenger()).to.equal(mockMessenger.target);
     expect(await homeProxy.realitio()).to.equal(realitio.target);
     expect(await homeProxy.foreignProxy()).to.equal(foreignProxy.target);
     expect(await homeProxy.foreignChainId()).to.equal(zeroPadValue(toBeHex(5), 32));
@@ -272,7 +275,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress());
 
     let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+    expect(arbitration[0]).to.equal(4, "Status should be Failed");
 
     const oldBalance = await getBalance(requester);
     await expect(foreignProxy.connect(other).handleFailedDisputeCreation(questionID, await requester.getAddress()))
@@ -301,29 +304,20 @@ describe("Cross-chain arbitration with appeals", () => {
     await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
 
     const arbAnswer = zeroPadValue(toBeHex(7), 32);
-
-    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
-      "Dispute not resolved"
-    );
-
-    await expect(arbitrator.giveRuling(2, 8)).to.emit(foreignProxy, "Ruling").withArgs(arbitrator.target, 2, 8);
-
-    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
-    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
-
+    
     await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress)).to.be.revertedWith(
       "Arbitrator has not ruled yet"
     );
 
-    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress()))
-      .to.emit(foreignProxy, "RulingRelayed")
-      .withArgs(questionID, arbAnswer)
+    await expect(arbitrator.giveRuling(2, 8))
+      .to.emit(foreignProxy, "Ruling")
+      .withArgs(arbitrator.target, 2, 8)
       .to.emit(homeProxy, "ArbitratorAnswered")
       .withArgs(questionID, arbAnswer);
 
-    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
+    const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
 
     let request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(4, "Status should be Ruled");
@@ -828,26 +822,28 @@ describe("Cross-chain arbitration with appeals", () => {
     });
 
     const MockMessenger = await ethers.getContractFactory("MockCrossDomainMessenger", signer);
-
     const mockMessenger = await MockMessenger.deploy(homeProxyAddress, foreignProxyAddress);
 
     const ForeignProxy = await ethers.getContractFactory("RealitioForeignProxyOptimism", signer);
-    const HomeProxy = await ethers.getContractFactory("RealitioHomeProxyOptimism", signer);
+    const HomeProxy = await ethers.getContractFactory("MockRealitioHomeProxyOptimism", signer);
 
     const foreignProxy = await ForeignProxy.deploy(
-      mockMessenger.target,
-      homeProxyAddress,
+      other, // Use other address as placeholder for wNative
       arbitrator.target,
       arbitratorExtraData,
       metaEvidence,
-      [winnerMultiplier, loserMultiplier, loserAppealPeriodMultiplier]
+      winnerMultiplier,
+      loserMultiplier,
+      loserAppealPeriodMultiplier,
+      homeProxyAddress,
+      mockMessenger.target
     );
 
     const homeProxy = await HomeProxy.deploy(
       realitio.target,
-      foreignChainId,
-      foreignProxy.target,
       metadata,
+      foreignProxy.target,
+      foreignChainId,
       mockMessenger.target
     );
 

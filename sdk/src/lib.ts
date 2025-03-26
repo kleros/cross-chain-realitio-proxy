@@ -2,6 +2,7 @@ import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.j
 import { http, createPublicClient, getContract } from "viem";
 import {
   REALITY_STARTS_AT,
+  RealitioContract,
   foreignProxyAbi,
   homeProxyAbi,
   realitioAbi,
@@ -23,6 +24,33 @@ const DEFAULT_TEMPLATES_V3_2 = [
   '{"title": "%s", "type": "datetime", "description": "%s", "lang": "%s"}',
   '{"title": "%s", "type": "hash", "description": "%s", "lang": "%s"}',
 ];
+
+async function isRealityV3_2(realitio: RealitioContract) {
+  const hashTemplateId = 5n;
+  const hashTemplateV3_2Hash =
+    "0xaad366a2c6e72605b1c005a0483e409347c66c57c82f3f5d7349b7709c9c4dcd";
+  try {
+    const hashTemplateHash = await realitio.read.template_hashes([
+      hashTemplateId,
+    ]);
+    return hashTemplateHash === hashTemplateV3_2Hash;
+  } catch {
+    return false;
+  }
+}
+
+async function getDefaultTemplates(
+  realitio: RealitioContract,
+): Promise<string[]> {
+  const isV3_2 = await isRealityV3_2(realitio);
+  if (isV3_2) {
+    console.log("Using Reality default template v3.2");
+    return DEFAULT_TEMPLATES_V3_2;
+  } else {
+    console.log("Using Reality default template v3.0");
+    return DEFAULT_TEMPLATES_V3_0;
+  }
+}
 
 const isNil = (value: unknown): value is undefined | null =>
   value === undefined || value === null;
@@ -183,9 +211,11 @@ export async function fetchRealityQuestionData({
   }
 
   let templateText: string;
-  if (template_id < 5n) {
-    templateText = DEFAULT_TEMPLATES_V3_0[Number(template_id)];
+  const defaultTemplates = await getDefaultTemplates(realitio);
+  if (template_id < defaultTemplates.length) {
+    templateText = defaultTemplates[Number(template_id)];
   } else {
+    console.log("Using custom template ID:", template_id);
     const templateCreationBlock = await realitio.read.templates([template_id]);
     const templateEventLog = await realitio.getEvents.LogNewTemplate(
       {

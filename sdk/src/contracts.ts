@@ -1,4 +1,4 @@
-import type { Abi } from "viem";
+import type { Abi, GetContractReturnType, PublicClient } from "viem";
 
 export const REALITY_STARTS_AT = {
   "0x325a2e0f3cca2ddbaebb4dfc38df8d19ca165b47": 6531265, // Reality 2.0 Mainnet
@@ -208,4 +208,26 @@ export const realitioAbi = [
     stateMutability: "view",
     type: "function",
   },
+  {
+    inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+    name: "template_hashes",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const satisfies Abi;
+
+export type HomeProxyContract = GetContractReturnType<
+  typeof homeProxyAbi,
+  PublicClient
+>;
+
+export type ForeignProxyContract = GetContractReturnType<
+  typeof foreignProxyAbi,
+  PublicClient
+>;
+
+export type RealitioContract = GetContractReturnType<
+  typeof realitioAbi,
+  PublicClient
+>;

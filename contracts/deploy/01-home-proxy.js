@@ -11,7 +11,9 @@ async function deployHomeProxy({ deployments, getChainId, ethers, config, networ
   const { deploy } = deployments;
   const chainId = await getChainId();
   const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy, zksyncProxy];
-  const proxyConfig = proxyConfigs.find((config) => config.supportedChainIds.includes(Number(chainId)));
+  const proxyConfig = proxyConfigs.find((config) =>
+    config.supportedChainIds.includes(Number(chainId))
+  );
   if (!proxyConfig) {
     throw new Error(`No home proxy configuration supports chain ID ${chainId}`);
   }
@@ -44,6 +46,7 @@ async function deployHomeProxy({ deployments, getChainId, ethers, config, networ
 }
 
 deployHomeProxy.tags = ["HomeChain"];
-deployHomeProxy.skip = async ({ getChainId }) => !HOME_CHAIN_IDS.includes(Number(await getChainId()));
+deployHomeProxy.skip = async ({ getChainId }) =>
+  !HOME_CHAIN_IDS.includes(Number(await getChainId()));
 
 module.exports = deployHomeProxy;

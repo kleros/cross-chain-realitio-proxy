@@ -13,16 +13,26 @@ const loserAppealPeriodMultiplier = 5000;
 async function getHomeDeployments({ companionNetworks, homeNetworkName, homeChainId }) {
   let homeNetwork;
   for await (const [key, network] of Object.entries(companionNetworks))
-    if (key.startsWith("home") && String(await network.getChainId()) === String(homeChainId)) homeNetwork = network;
+    if (key.startsWith("home") && String(await network.getChainId()) === String(homeChainId))
+      homeNetwork = network;
   if (!homeNetwork) throw new Error(`Home network ${homeNetworkName} not configured correctly`);
   return homeNetwork.deployments;
 }
 
-async function deployForeignProxy({ deployments, getChainId, ethers, companionNetworks, config, network }) {
+async function deployForeignProxy({
+  deployments,
+  getChainId,
+  ethers,
+  companionNetworks,
+  config,
+  network,
+}) {
   const homeNetworkName = process.env.HOME_NETWORK;
   if (!homeNetworkName) throw new Error("HOME_NETWORK environment variable must be set");
   const proxyConfigs = [arbitrumProxy, gnosisProxy, optimismProxy, polygonProxy, zksyncProxy];
-  const proxyConfig = proxyConfigs.find((config) => config.supportedHomeChains.includes(homeNetworkName));
+  const proxyConfig = proxyConfigs.find((config) =>
+    config.supportedHomeChains.includes(homeNetworkName)
+  );
   if (!proxyConfig) {
     throw new Error(`No foreign proxy configuration supports home network ${homeNetworkName}`);
   }
@@ -37,7 +47,11 @@ async function deployForeignProxy({ deployments, getChainId, ethers, companionNe
   const parameters = proxyConfig.foreignParameters[homeNetworkName];
   const homeProxyName = proxyConfig.getHomeProxyName(homeNetworkName);
   const homeChainId = config.networks[homeNetworkName].chainId;
-  const homeDeployments = await getHomeDeployments({ companionNetworks, homeNetworkName, homeChainId });
+  const homeDeployments = await getHomeDeployments({
+    companionNetworks,
+    homeNetworkName,
+    homeChainId,
+  });
   const homeProxy = await homeDeployments.get(homeProxyName).then((homeProxy) => homeProxy.address);
 
   const foreignProxy = await proxyConfig.deployForeignProxy({
@@ -57,6 +71,7 @@ async function deployForeignProxy({ deployments, getChainId, ethers, companionNe
 }
 
 deployForeignProxy.tags = ["ForeignChain"];
-deployForeignProxy.skip = async ({ getChainId }) => !FOREIGN_CHAIN_IDS.includes(Number(await getChainId()));
+deployForeignProxy.skip = async ({ getChainId }) =>
+  !FOREIGN_CHAIN_IDS.includes(Number(await getChainId()));
 
 module.exports = deployForeignProxy;

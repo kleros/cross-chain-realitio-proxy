@@ -1,0 +1,30 @@
+{
+    "name": "@kleros/cross-chain-realitio-sdk",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "./dist/index.js",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "lint": "biome check .",
+        "format": "biome format . --write",
+        "test": "vitest --run",
+        "test:integration": "vitest --run integration",
+        "test:watch": "vitest"
+    },
+    "dependencies": {
+        "@reality.eth/reality-eth-lib": "^3.0.1",
+        "viem": "^2.0.0"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "1.5.3",
+        "tsup": "^8.0.0",
+        "typescript": "^5.0.0",
+        "vitest": "^1.4.0"
+    }
+}

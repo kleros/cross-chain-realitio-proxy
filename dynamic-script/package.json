@@ -5,35 +5,20 @@
   "author": "Kleros",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/realitio-dynamic-script.js",
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/realitio-dynamic-script.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./lib": {
-      "import": "./dist/lib.js",
-      "types": "./dist/lib.d.ts"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "lib": ["./dist/lib.d.ts"]
-    }
-  },
-  "files": ["dist", "src"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
-    "build": "yarn clean && vite build && yarn build:types",
+    "build": "vite build",
     "format": "biome format --write ./src",
     "lint": "biome lint ./src",
     "check": "biome check --write ./src"
   },
   "dependencies": {
-    "@reality.eth/reality-eth-lib": "^3.3.2",
-    "viem": "^2.23.13"
+    "@kleros/cross-chain-realitio-sdk": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

@@ -15,7 +15,8 @@
     "bots",
     "contracts",
     "dynamic-script",
-    "evidence-display"
+    "evidence-display",
+    "sdk"
   ],
   "devDependencies": {
     "husky": "^9.1.7",

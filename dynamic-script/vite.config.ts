@@ -6,17 +6,18 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      name: "realitio-dynamic-script",
-      fileName: "realitio-dynamic-script",
+      formats: ["es"],
+      fileName: "index",
     },
     rollupOptions: {
+      external: [],
       output: {
-        format: "es",
+        manualChunks: undefined,
         inlineDynamicImports: true,
       },
     },
     target: "esnext",
-    sourcemap: true,
+    sourcemap: false,
   },
   define: {
     "process.env.VERSION": JSON.stringify(process.env.npm_package_version),

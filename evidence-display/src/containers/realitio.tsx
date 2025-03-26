@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchRealityQuestionData } from '@kleros/cross-chain-realitio-dynamic-script/lib';
-import type { RealityQuestionData } from '@kleros/cross-chain-realitio-dynamic-script/lib';
+import { fetchRealityQuestionData } from '@kleros/cross-chain-realitio-sdk';
+import type { RealityQuestionData } from '@kleros/cross-chain-realitio-sdk';
 import RealityLogo from '../assets/images/reality_eth_logo.png';
 
 console.log('evidence-display version', process.env.VERSION);

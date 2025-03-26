@@ -48,7 +48,7 @@ describe("fetchRealityQuestionData", () => {
     const mockHomeProxyAddress =
       "0x9876543210fedcba9876543210fedcba98765432" as const;
     const mockRealitioAddress =
-      "0xabcdef1234567890abcdef1234567890abcdef12" as const;
+      "0xaf33DcB6E8c5c4D9dDF579f53031b514d19449CA" as const;
     const mockTemplateID = 2n; // Using template 2 (single-select)
     const mockQuestion = "Title␟Option 1|Option 2|Option 3␟category␟en_US";
 
@@ -94,7 +94,20 @@ describe("fetchRealityQuestionData", () => {
     };
 
     // Setup mocks
-    const mockClient = {} as PublicClient;
+    const mockClient = {
+      account: undefined,
+      batch: undefined,
+      cacheTime: 0,
+      chain: null,
+      key: "mock",
+      name: "Mock Client",
+      pollingInterval: 4000,
+      request: vi.fn(),
+      transport: { type: "mock" },
+      type: "publicClient",
+      uid: "mock",
+      getChainId: vi.fn().mockResolvedValue(11155111n), // Sepolia chain ID
+    } as unknown as PublicClient;
     (createPublicClient as any).mockReturnValue(mockClient);
     (getContract as any).mockImplementation(
       ({ address, abi }: { address: `0x${string}`; abi: any }) => {

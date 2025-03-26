@@ -72,7 +72,7 @@ contractClient.read.resultFor([question_id]).then((result) => {
 });
 
 const config2 = realityeth_contracts.configForAddress(
-  "0xeb51d9d9717906c981c57af09c4a3449ef30705b",
+  "0x95b2b2b4b66A5a47Df79bF07BEBe72E9870fceb2",
   100,
 );
 console.log("Config for address", config2);

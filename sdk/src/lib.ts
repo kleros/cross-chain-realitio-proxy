@@ -1,37 +1,17 @@
 import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
+import { configForAddress, RealityConfig } from "@reality.eth/contracts";
 import { content as templates3_0 } from "@reality.eth/contracts/config/templates.json";
 import { content as templates3_2 } from "@reality.eth/contracts/config/templates_3.2.json";
 import { http, createPublicClient, getContract } from "viem";
-import {
-  REALITY_STARTS_AT,
-  RealitioContract,
-  foreignProxyAbi,
-  homeProxyAbi,
-  realitioAbi,
-} from "./contracts";
+import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "./contracts";
 
 const DEFAULT_TEMPLATES_V3_0 = Object.values(templates3_0);
 const DEFAULT_TEMPLATES_V3_2 = Object.values(templates3_2);
 
-async function isRealityV3_2(realitio: RealitioContract) {
-  const hashTemplateId = 5n;
-  const hashTemplateV3_2Hash =
-    "0xaad366a2c6e72605b1c005a0483e409347c66c57c82f3f5d7349b7709c9c4dcd";
-  try {
-    const hashTemplateHash = await realitio.read.template_hashes([
-      hashTemplateId,
-    ]);
-    return hashTemplateHash === hashTemplateV3_2Hash;
-  } catch {
-    return false;
-  }
-}
-
 async function getDefaultTemplates(
-  realitio: RealitioContract,
+  realitioConfig: RealityConfig,
 ): Promise<string[]> {
-  const isV3_2 = await isRealityV3_2(realitio);
-  if (isV3_2) {
+  if (realitioConfig.contract_version === "3.2") {
     console.log("Using Reality default template v3.2");
     return DEFAULT_TEMPLATES_V3_2;
   } else {
@@ -123,6 +103,10 @@ export async function fetchRealityQuestionData({
   const realitioAddress = await homeProxy.read.realitio();
   console.log("Realitio address:", realitioAddress);
 
+  const realitioChainId = await homeClient.getChainId();
+  const realitioConfig = configForAddress(realitioAddress, realitioChainId);
+  console.log("Realitio config:", realitioConfig);
+
   console.log("Getting realitio contract...");
   const realitio = getContract({
     address: realitioAddress,
@@ -168,13 +152,7 @@ export async function fetchRealityQuestionData({
       question_id: questionID,
     },
     {
-      fromBlock: BigInt(
-        Object.keys(REALITY_STARTS_AT).includes(realitioAddress.toLowerCase())
-          ? REALITY_STARTS_AT[
-              realitioAddress.toLowerCase() as keyof typeof REALITY_STARTS_AT
-            ]
-          : 0,
-      ),
+      fromBlock: BigInt(realitioConfig.block),
       toBlock: "latest",
     },
   );
@@ -199,7 +177,7 @@ export async function fetchRealityQuestionData({
   }
 
   let templateText: string;
-  const defaultTemplates = await getDefaultTemplates(realitio);
+  const defaultTemplates = await getDefaultTemplates(realitioConfig);
   if (template_id < defaultTemplates.length) {
     templateText = defaultTemplates[Number(template_id)];
   } else {

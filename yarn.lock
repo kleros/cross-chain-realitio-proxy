@@ -3365,7 +3365,7 @@ __metadata:
   resolution: "@kleros/cross-chain-realitio-sdk@workspace:sdk"
   dependencies:
     "@biomejs/biome": 1.5.3
-    "@reality.eth/contracts": ^3.2.1
+    "@reality.eth/contracts": ^3.2.2
     "@reality.eth/reality-eth-lib": ^3.4.2
     tsup: ^8.0.0
     typescript: ^5.0.0
@@ -4127,6 +4127,15 @@ __metadata:
   dependencies:
     ethers: ^5.8.0
   checksum: 68224de8c7c282c05a81493544375cbbdfe4af6323457a5fe7db1933f037597e044fe5343dce8b3892ce4affa715b49a3613d44b16864d0f39fda48260e6a675
+  languageName: node
+  linkType: hard
+
+"@reality.eth/contracts@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "@reality.eth/contracts@npm:3.2.2"
+  dependencies:
+    ethers: ^5.8.0
+  checksum: 38a54119af1f019143f7a43d2b348949370bfed20f940924ca725eb416ec45f85b691cf4bf245e4a1ea0c07ad1fcd2914da23ff6f7c03155e9eaa433f2c4a737
   languageName: node
   linkType: hard
 

@@ -15,6 +15,11 @@
     "zksync:proof:staging": "yarn hardhat-zksync run ./scripts/execute_proof.js --network zkSyncSepolia",
     "zksync:proof:production": "yarn hardhat-zksync run ./scripts/execute_proof.js --network zkSyncMainnet",
     "etherscan-verify": "hardhat etherscan-verify",
+    "format:js": "biome format --write scripts deploy tasks",
+    "check:js": "biome check --write scripts deploy tasks",
+    "lint:js": "biome lint scripts deploy tasks",
+    "lint:sol": "solhint 'src/**/*.sol'",
+    "fix:sol": "prettier --write 'src/**/*.sol'",
     "metaevidence:chiado": "hardhat generate-metaevidence --deployment chiado",
     "metaevidence:unichainSepolia": "hardhat generate-metaevidence --deployment unichainSepolia",
     "metaevidence:optimismSepolia": "hardhat generate-metaevidence --deployment optimismSepolia",
@@ -65,6 +70,7 @@
     "deploy:polygon": "yarn deploy:polygon:home && yarn deploy:polygon:foreign"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@matterlabs/hardhat-zksync-deploy": "^1.6.0",
     "@matterlabs/hardhat-zksync-solc": "^1.2.5",
     "@matterlabs/hardhat-zksync-verify": "^1.7.1",
@@ -86,6 +92,10 @@
     "hardhat-deploy": "^0.14.0",
     "hardhat-deploy-ethers": "^0.4.2",
     "hardhat-gas-reporter": "^2.2.2",
+    "prettier": "^3.5.3",
+    "prettier-plugin-solidity": "^1.4.2",
+    "solhint-community": "^4.0.1",
+    "solhint-plugin-prettier": "^0.1.0",
     "solidity-coverage": "^0.8.14",
     "zksync-ethers": "^6.15.4"
   },

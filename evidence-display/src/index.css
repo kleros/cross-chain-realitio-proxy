@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+} 

@@ -25,9 +25,7 @@ export const homeProxyAbi = [
   {
     inputs: [],
     name: "realitio",
-    outputs: [
-      { internalType: "contract IRealitio", name: "", type: "address" },
-    ],
+    outputs: [{ internalType: "contract IRealitio", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
   },

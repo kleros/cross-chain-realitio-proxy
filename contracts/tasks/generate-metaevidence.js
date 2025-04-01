@@ -4,12 +4,7 @@ const { task, types } = require("hardhat/config");
 
 task("generate-metaevidence", "Generates metaevidence.json with populated chain IDs")
   .addParam("deployment", "Name of the home network to deploy to", undefined, types.string)
-  .addOptionalParam(
-    "termsOfService",
-    "Key for the terms of service to use",
-    "default",
-    types.string
-  )
+  .addOptionalParam("termsOfService", "Key for the terms of service to use", "default", types.string)
   .setAction(async (taskArgs, hre) => {
     // Get the network configuration for the deployment
     const homeNetwork = hre.config.networks[taskArgs.deployment];
@@ -42,8 +37,7 @@ task("generate-metaevidence", "Generates metaevidence.json with populated chain 
       title: "A reality.eth question",
       description: "A reality.eth question has been raised to arbitration.",
       question: "Give an answer to the question.",
-      evidenceDisplayInterfaceURI:
-        "/ipfs/Qmc6ptmVbihmBXiYzryME9HNEezJf6ndw8ZrYo2qz72gto/index.html",
+      evidenceDisplayInterfaceURI: "/ipfs/Qmc6ptmVbihmBXiYzryME9HNEezJf6ndw8ZrYo2qz72gto/index.html",
       dynamicScriptURI: "/ipfs/QmcRGGmzzxSvXaajMCFYErZb5knuexoaDCZhJ5rSHRbcvw",
       fileURI: fileURI,
       arbitrableChainID: homeNetwork.chainId.toString(),

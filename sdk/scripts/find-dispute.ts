@@ -1,11 +1,9 @@
-import { createPublicClient, http, getContract } from "viem";
+import { http, createPublicClient, getContract } from "viem";
 import { foreignProxyAbi } from "../src/contracts";
 
 async function findDispute() {
   const foreignClient = createPublicClient({
-    transport: http(
-      `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
-    ),
+    transport: http(`https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`),
   });
 
   const foreignProxy = getContract({
@@ -23,18 +21,11 @@ async function findDispute() {
   const toBlock = 7746523n + BigInt(1000);
   console.log("Searching from block:", fromBlock, "to block:", toBlock);
 
-  const events = await foreignProxy.getEvents.ArbitrationCreated(
-    {},
-    { fromBlock, toBlock },
-  );
+  const events = await foreignProxy.getEvents.ArbitrationCreated({}, { fromBlock, toBlock });
 
   console.log(
     "Found events:",
-    JSON.stringify(
-      events,
-      (_, value) => (typeof value === "bigint" ? value.toString() : value),
-      2,
-    ),
+    JSON.stringify(events, (_, value) => (typeof value === "bigint" ? value.toString() : value), 2)
   );
 
   if (events.length > 0) {

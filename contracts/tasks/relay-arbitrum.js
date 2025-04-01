@@ -30,10 +30,7 @@ task("exec", "Execute msg on L1")
     /**
    / * We start with a txn hash; we assume this is transaction that triggered an L2 to L1 Message on L2 (i.e., ArbSys.sendTxToL1)
   */
-    if (!txhash)
-      throw new Error(
-        "Provide a transaction hash of an L2 transaction that sends an L2 to L1 message"
-      );
+    if (!txhash) throw new Error("Provide a transaction hash of an L2 transaction that sends an L2 to L1 message");
     if (!txhash.startsWith("0x") || txhash.trim().length !== 66)
       throw new Error(`Hmm, ${txhash} doesn't look like a txn hash...`);
 

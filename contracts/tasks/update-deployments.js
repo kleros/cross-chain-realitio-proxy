@@ -87,18 +87,13 @@ task("add-deployment", "Add a deployment to the deployments JSON")
       let tos = "";
       try {
         const parsedMetadata = JSON.parse(metadata || "{}");
-        tos = parsedMetadata.tos
-          ? parsedMetadata.tos.replace("ipfs://", "https://cdn.kleros.link/ipfs/")
-          : "";
+        tos = parsedMetadata.tos ? parsedMetadata.tos.replace("ipfs://", "https://cdn.kleros.link/ipfs/") : "";
       } catch (e) {
         console.warn("Failed to parse metadata or access tos field:", e.message);
       }
 
       // Get Realitio contract name from Etherscan
-      const realitioContractInfo = await fetchContractInfo(
-        network.verify.etherscan,
-        realitioAddress
-      );
+      const realitioContractInfo = await fetchContractInfo(network.verify.etherscan, realitioAddress);
       let realitioContractName = realitioContractInfo.ContractName?.trim() || "RealityUnverified";
       realitioContractName = realitioContractName.includes(":") // Example: contracts/RealityETH-3.0.sol:RealityETH_zksync_v3_0
         ? realitioContractName.split(":").pop()
@@ -124,16 +119,14 @@ task("add-deployment", "Add a deployment to the deployments JSON")
       if (!foreignNetworkName) throw new Error("No foreign network configured");
 
       const foreignNetworkUrl = config.networks[foreignNetworkName].url;
-      if (!foreignNetworkUrl)
-        throw new Error(`No RPC URL configured for network: ${foreignNetworkName}`);
+      if (!foreignNetworkUrl) throw new Error(`No RPC URL configured for network: ${foreignNetworkName}`);
 
       const foreignProvider = new ethers.JsonRpcProvider(foreignNetworkUrl);
 
       // Get foreign proxy deployment details
       if (!foreignProxyBlockNumber) {
         const foreignReceipt = await foreignProvider.getTransactionReceipt(foreignProxyTxHash);
-        if (!foreignReceipt)
-          throw new Error(`No transaction receipt found for ${foreignProxyTxHash}`);
+        if (!foreignReceipt) throw new Error(`No transaction receipt found for ${foreignProxyTxHash}`);
         foreignProxyBlockNumber = foreignReceipt.blockNumber;
       }
 
@@ -147,21 +140,13 @@ task("add-deployment", "Add a deployment to the deployments JSON")
       const foreignProxyAbi = await fetchContractABI(foreignEtherscan, foreignProxyAddress);
 
       // Verify that the foreign proxy points back to our home proxy
-      const foreignProxyContract = new ethers.Contract(
-        foreignProxyAddress,
-        foreignProxyAbi,
-        foreignProvider
-      );
+      const foreignProxyContract = new ethers.Contract(foreignProxyAddress, foreignProxyAbi, foreignProvider);
       try {
         const foreignHomeProxy = await foreignProxyContract.homeProxy();
         if (foreignHomeProxy.toLowerCase() !== homeProxy.toLowerCase())
-          throw new Error(
-            `Foreign proxy home address mismatch: expected ${homeProxy}, got ${foreignHomeProxy}`
-          );
+          throw new Error(`Foreign proxy home address mismatch: expected ${homeProxy}, got ${foreignHomeProxy}`);
       } catch (e) {
-        console.warn(
-          `Warning: Could not verify foreign proxy's home address - contract may be legacy: ${e.message}`
-        );
+        console.warn(`Warning: Could not verify foreign proxy's home address - contract may be legacy: ${e.message}`);
       }
 
       // Get the MetaEvidence event from foreign proxy contract
@@ -237,9 +222,7 @@ task("add-deployment", "Add a deployment to the deployments JSON")
 
         if (existingDeploymentIndex !== -1) {
           if (!force) {
-            throw new Error(
-              `Deployment with home proxy ${homeProxy} already exists in ${filePath}`
-            );
+            throw new Error(`Deployment with home proxy ${homeProxy} already exists in ${filePath}`);
           }
           // Replace the existing deployment if force is true, but preserve versionNotes
           deploymentInfo.versionNotes = existingContent.versionNotes;
@@ -249,10 +232,7 @@ task("add-deployment", "Add a deployment to the deployments JSON")
         } else {
           // Merge deployments if no existing deployment found
           deploymentInfo.versionNotes = existingContent.versionNotes;
-          deploymentInfo.deployments = [
-            ...existingContent.deployments,
-            deploymentInfo.deployments[0],
-          ];
+          deploymentInfo.deployments = [...existingContent.deployments, deploymentInfo.deployments[0]];
           console.log(
             "Appending new deployment to existing ones:",
             deploymentInfo.deployments.map((d) => d.name).join(", ")
@@ -265,10 +245,7 @@ task("add-deployment", "Add a deployment to the deployments JSON")
     }
   );
 
-task(
-  "add-deployment-from-artifact",
-  "Add a deployment to the deployments JSON using deployment artifacts"
-)
+task("add-deployment-from-artifact", "Add a deployment to the deployments JSON using deployment artifacts")
   .addParam("homeProxy", "Path to the home proxy deployment artifact")
   .addParam("foreignProxy", "Path to the foreign proxy deployment artifact")
   .addParam("name", "Name of the deployment (e.g. Gnosis, Optimism)")
@@ -279,8 +256,7 @@ task(
 
     if (!homeArtifact.address || !homeArtifact.transactionHash)
       throw new Error("Invalid home proxy artifact: missing address or transactionHash");
-    if (!foreignArtifact.transactionHash)
-      throw new Error("Invalid foreign proxy artifact: missing transactionHash");
+    if (!foreignArtifact.transactionHash) throw new Error("Invalid foreign proxy artifact: missing transactionHash");
 
     await run("add-deployment", {
       name,
@@ -304,9 +280,7 @@ task("update-deployments", "Update all deployments from existing deployment file
     }
 
     // Find all RealitioProxy JSON files
-    const files = fs
-      .readdirSync(deploymentsDir)
-      .filter((file) => file.match(/^RealitioProxy-v.*\.json$/));
+    const files = fs.readdirSync(deploymentsDir).filter((file) => file.match(/^RealitioProxy-v.*\.json$/));
 
     if (files.length === 0) {
       console.log(`No RealitioProxy deployment files found in ${deploymentsDir}`);

@@ -22,11 +22,13 @@ module.exports = {
     ],
   },
   zksolc: {
-    version: "1.3.16", // Latest versions aren't supported for verification yet.
-    settings: {},
+    version: "1.5.11",
+    settings: {
+      suppressedErrors: ["sendtransfer"]
+    },
   },
   paths: {
-    sources: "./src",
+    sources: "./src/0.8",
   },
   networks: {
     hardhat: {

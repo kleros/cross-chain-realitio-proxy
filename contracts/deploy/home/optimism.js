@@ -1,3 +1,4 @@
+const { realityETHConfig } = require("@reality.eth/contracts");
 const { homeChains, generateMetadata } = require("../shared");
 const { unichain, optimism, redstone, unichainSepolia, optimismSepolia, base } = homeChains;
 
@@ -9,33 +10,27 @@ const { unichain, optimism, redstone, unichainSepolia, optimismSepolia, base } =
 
 const homeParameters = {
   [unichainSepolia.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/1301/ETH/RealityETH-3.0.json
-    realitio: "0x8bF08aE62cbC9a48aaeB473a82DAE2e6D2628517",
+    realitio: realityETHConfig(unichainSepolia.chainId, "ETH", "3.0").address,
     variant: "Unichain",
   },
   [optimismSepolia.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/11155420/ETH/RealityETH-3.0.json
-    realitio: "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA",
+    realitio: realityETHConfig(optimismSepolia.chainId, "ETH", "3.0").address,
     variant: "Optimism",
   },
   [unichain.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/130/ETH/RealityETH-3.0.json
-    realitio: "0xB920dBedE88B42aA77eE55ebcE3671132ee856fC",
+    realitio: realityETHConfig(unichain.chainId, "ETH", "3.0").address,
     variant: "Unichain",
   },
   [optimism.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10/OETH/RealityETH-3.0.json
-    realitio: "0x0eF940F7f053a2eF5D6578841072488aF0c7d89A",
+    realitio: realityETHConfig(optimism.chainId, "OETH", "3.0").address,
     variant: "Optimism",
   },
   [redstone.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/690/ETH/RealityETH-3.0.json
-    realitio: "0xc716c23D75f523eF0C511456528F2A1980256a87",
+    realitio: realityETHConfig(redstone.chainId, "ETH", "3.0").address,
     variant: "Redstone",
   },
   [base.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/8453/ETH/RealityETH-3.0.json
-    realitio: "0x2F39f464d16402Ca3D8527dA89617b73DE2F60e8",
+    realitio: realityETHConfig(base.chainId, "ETH", "3.0").address,
     variant: "Base",
   },
 };

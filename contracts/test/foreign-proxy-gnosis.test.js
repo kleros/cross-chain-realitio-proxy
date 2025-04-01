@@ -693,8 +693,14 @@ describe("Cross-chain arbitration with appeals", () => {
     const Realitio = await ethers.getContractFactory("MockRealitio", signer);
     const realitio = await Realitio.deploy();
 
-    const ForeignProxy = await ethers.getContractFactory("RealitioForeignProxyGnosis", signer);
-    const HomeProxy = await ethers.getContractFactory("RealitioHomeProxyGnosis", signer);
+    const ForeignProxy = await ethers.getContractFactory(
+      "src/0.8/RealitioForeignProxyGnosis.sol:RealitioForeignProxyGnosis",
+      signer
+    );
+    const HomeProxy = await ethers.getContractFactory(
+      "src/0.8/RealitioHomeProxyGnosis.sol:RealitioHomeProxyGnosis",
+      signer
+    );
 
     const address = await signer.getAddress();
     const nonce = await signer.getNonce();

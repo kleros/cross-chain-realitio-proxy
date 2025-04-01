@@ -25,7 +25,7 @@ task("find-dispute-id", "Finds the disputeID for a given questionID on a foreign
       return;
     }
 
-    const disputeID = iface.parseLog(logs[0]).args.toObject()["_disputeID"];
+    const disputeID = iface.parseLog(logs[0]).args.toObject()._disputeID;
     console.log("Dispute ID:", disputeID.toString());
   });
 

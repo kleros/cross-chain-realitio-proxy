@@ -19,7 +19,7 @@ const homeParameters = {
 
 async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio, fxChild } = parameters;
-  const deployed = await deploy(`RealitioHomeProxyPolygon`, {
+  const deployed = await deploy("RealitioHomeProxyPolygon", {
     from,
     args: [realitio, metadata, foreignChainId, fxChild],
     gas: 8000000,
@@ -27,7 +27,7 @@ async function deployHomeProxy({ deploy, from, parameters, foreignChainId, forei
   });
 
   console.log(`Linking to foreign proxy ${foreignProxy}`);
-  const homeProxy = await ethers.getContract(`RealitioHomeProxyPolygon`);
+  const homeProxy = await ethers.getContract("RealitioHomeProxyPolygon");
   await homeProxy.setFxRootTunnel(foreignProxy);
   return deployed;
 }

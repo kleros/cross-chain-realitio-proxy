@@ -1,14 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import {
-  http,
-  createPublicClient,
-  getContract,
-  type PublicClient,
-  type GetContractReturnType,
-} from "viem";
-import { fetchRealityQuestionData } from "../lib";
-import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "../contracts";
 import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
+import { http, type GetContractReturnType, type PublicClient, createPublicClient, getContract } from "viem";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "../contracts";
+import { fetchRealityQuestionData } from "../lib";
 
 // Mock viem
 vi.mock("viem", () => ({
@@ -20,18 +14,16 @@ vi.mock("viem", () => ({
 // Mock RealitioQuestion
 vi.mock("@reality.eth/reality-eth-lib/formatters/question.js", () => ({
   default: {
-    populatedJSONForTemplate: vi
-      .fn()
-      .mockImplementation((template, question) => {
-        // Mock implementation that returns a valid JSON string
-        return JSON.stringify({
-          title: "Title",
-          type: "single-select",
-          outcomes: ["Option 1", "Option 2", "Option 3"],
-          category: "category",
-          lang: "en_US",
-        });
-      }),
+    populatedJSONForTemplate: vi.fn().mockImplementation((template, question) => {
+      // Mock implementation that returns a valid JSON string
+      return JSON.stringify({
+        title: "Title",
+        type: "single-select",
+        outcomes: ["Option 1", "Option 2", "Option 3"],
+        category: "category",
+        lang: "en_US",
+      });
+    }),
   },
 }));
 
@@ -43,12 +35,9 @@ describe("fetchRealityQuestionData", () => {
 
   it("should fetch reality question data correctly", async () => {
     // Mock data
-    const mockQuestionID =
-      "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" as const;
-    const mockHomeProxyAddress =
-      "0x9876543210fedcba9876543210fedcba98765432" as const;
-    const mockRealitioAddress =
-      "0xaf33DcB6E8c5c4D9dDF579f53031b514d19449CA" as const;
+    const mockQuestionID = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" as const;
+    const mockHomeProxyAddress = "0x9876543210fedcba9876543210fedcba98765432" as const;
+    const mockRealitioAddress = "0xaf33DcB6E8c5c4D9dDF579f53031b514d19449CA" as const;
     const mockTemplateID = 2n; // Using template 2 (single-select)
     const mockQuestion = "Title␟Option 1|Option 2|Option 3␟category␟en_US";
 
@@ -109,14 +98,12 @@ describe("fetchRealityQuestionData", () => {
       getChainId: vi.fn().mockResolvedValue(11155111n), // Sepolia chain ID
     } as unknown as PublicClient;
     (createPublicClient as any).mockReturnValue(mockClient);
-    (getContract as any).mockImplementation(
-      ({ address, abi }: { address: `0x${string}`; abi: any }) => {
-        if (abi === foreignProxyAbi) return mockForeignProxy;
-        if (abi === homeProxyAbi) return mockHomeProxy;
-        if (abi === realitioAbi) return mockRealitio;
-        throw new Error("Unexpected contract ABI");
-      },
-    );
+    (getContract as any).mockImplementation(({ address, abi }: { address: `0x${string}`; abi: any }) => {
+      if (abi === foreignProxyAbi) return mockForeignProxy;
+      if (abi === homeProxyAbi) return mockHomeProxy;
+      if (abi === realitioAbi) return mockRealitio;
+      throw new Error("Unexpected contract ABI");
+    });
 
     // Execute test
     const result = await fetchRealityQuestionData({
@@ -138,8 +125,7 @@ describe("fetchRealityQuestionData", () => {
         lang: "en_US",
       },
       rawQuestion: mockQuestion,
-      rawTemplate:
-        '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
+      rawTemplate: '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
     });
 
     // Verify mock calls
@@ -150,11 +136,11 @@ describe("fetchRealityQuestionData", () => {
       expect.objectContaining({
         address: "0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE",
         abi: foreignProxyAbi,
-      }),
+      })
     );
     expect(RealitioQuestion.populatedJSONForTemplate).toHaveBeenCalledWith(
       '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-      mockQuestion,
+      mockQuestion
     );
   });
 
@@ -163,10 +149,8 @@ describe("fetchRealityQuestionData", () => {
       fetchRealityQuestionData({
         disputeID: "",
         arbitrableContractAddress: "0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE",
-      }),
-    ).rejects.toThrow(
-      "Both `disputeID` and `arbitrableContractAddress` parameters are required",
-    );
+      })
+    ).rejects.toThrow("Both `disputeID` and `arbitrableContractAddress` parameters are required");
 
     // Verify that no contract calls were made
     expect(createPublicClient).not.toHaveBeenCalled();

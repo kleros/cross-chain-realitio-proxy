@@ -26,14 +26,10 @@ async function executeProof() {
   }
 
   const blockNumber = l1MessageSentEvent.blockNumber;
-  const homeProxy = "0x" + BigInt(l1MessageSentEvent.address).toString(16);
+  const homeProxy = `0x${BigInt(l1MessageSentEvent.address).toString(16)}`;
   const msgHash = l1MessageSentEvent.msgHash;
   const eventData = await getCalldata(txHash, l1Provider);
-  const homeProxyContract = new ethers.Contract(
-    homeProxy,
-    RealitioHomeArbitrationProxy.abi,
-    l1Provider
-  );
+  const homeProxyContract = new ethers.Contract(homeProxy, RealitioHomeArbitrationProxy.abi, l1Provider);
   console.log(await homeProxyContract.foreignProxy());
   const foreignProxyContract = new ethers.Contract(
     await homeProxyContract.foreignProxy(),
@@ -48,7 +44,7 @@ async function executeProof() {
   console.log("Message:", eventData);
 
   const proof = await getL1MessageProof(blockNumber, l1Provider, homeProxy, msgHash);
-  console.log(`Proof is: `, proof);
+  console.log("Proof is: ", proof);
   const { l1BatchNumber, l1BatchTxIndex } = await l1Provider.getTransactionReceipt(txHash);
 
   console.log("L1 Index for Tx in block :>> ", l1BatchTxIndex);
@@ -87,15 +83,7 @@ async function getL1MessageProof(blockNumber, l1Provider, homeProxy, msgHash) {
   return await l1Provider.getMessageProof(blockNumber, homeProxy, msgHash);
 }
 
-async function proveL1MessageInclusion(
-  l1BatchNumber,
-  proof,
-  trxIndex,
-  l1Provider,
-  l2Provider,
-  homeProxy,
-  message
-) {
+async function proveL1MessageInclusion(l1BatchNumber, proof, trxIndex, l1Provider, l2Provider, homeProxy, message) {
   const zkAddress = await l1Provider.getMainContractAddress();
 
   const mailboxL1Contract = new ethers.Contract(zkAddress, utils.ZKSYNC_MAIN_ABI, l2Provider);
@@ -105,15 +93,8 @@ async function proveL1MessageInclusion(
     data: message,
   };
 
-  console.log(
-    `Retrieving proof for batch ${l1BatchNumber}, transaction index ${trxIndex} and proof id ${proof.id}`
-  );
-  const res = await mailboxL1Contract.proveL2MessageInclusion(
-    l1BatchNumber,
-    proof.id,
-    messageInfo,
-    proof.proof
-  );
+  console.log(`Retrieving proof for batch ${l1BatchNumber}, transaction index ${trxIndex} and proof id ${proof.id}`);
+  const res = await mailboxL1Contract.proveL2MessageInclusion(l1BatchNumber, proof.id, messageInfo, proof.proof);
 
   return res;
 }

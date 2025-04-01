@@ -17,8 +17,5 @@ declare module "@reality.eth/contracts" {
     token_ticker: string;
   }
 
-  export function configForAddress(
-    address: string,
-    chainId: number,
-  ): RealityConfig;
+  export function configForAddress(address: string, chainId: number): RealityConfig;
 }

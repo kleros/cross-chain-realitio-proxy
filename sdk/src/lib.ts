@@ -1,16 +1,14 @@
-import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
-import { configForAddress, RealityConfig } from "@reality.eth/contracts";
+import { type RealityConfig, configForAddress } from "@reality.eth/contracts";
 import { content as templates3_0 } from "@reality.eth/contracts/config/templates.json";
 import { content as templates3_2 } from "@reality.eth/contracts/config/templates_3.2.json";
+import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
 import { http, createPublicClient, getContract } from "viem";
 import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "./contracts";
 
 const DEFAULT_TEMPLATES_V3_0 = Object.values(templates3_0);
 const DEFAULT_TEMPLATES_V3_2 = Object.values(templates3_2);
 
-async function getDefaultTemplates(
-  realitioConfig: RealityConfig,
-): Promise<string[]> {
+async function getDefaultTemplates(realitioConfig: RealityConfig): Promise<string[]> {
   if (realitioConfig.contract_version === "3.2") {
     console.log("Using Reality default template v3.2");
     return DEFAULT_TEMPLATES_V3_2;
@@ -20,8 +18,7 @@ async function getDefaultTemplates(
   }
 }
 
-const isNil = (value: unknown): value is undefined | null =>
-  value === undefined || value === null;
+const isNil = (value: unknown): value is undefined | null => value === undefined || value === null;
 
 const isEmpty = (value: string): boolean => value.trim() === "";
 
@@ -33,13 +30,7 @@ export interface RealityQuestionParams {
   jsonRpcUrl?: string;
 }
 
-export type QuestionType =
-  | "bool"
-  | "uint"
-  | "single-select"
-  | "multiple-select"
-  | "datetime"
-  | "hash";
+export type QuestionType = "bool" | "uint" | "single-select" | "multiple-select" | "datetime" | "hash";
 
 export interface RealityQuestionData {
   questionID: `0x${string}`;
@@ -61,14 +52,8 @@ export async function fetchRealityQuestionData({
   arbitratorJsonRpcUrl,
   jsonRpcUrl,
 }: RealityQuestionParams): Promise<RealityQuestionData> {
-  if (
-    isNil(disputeID) ||
-    isNil(arbitrableContractAddress) ||
-    isEmpty(disputeID)
-  ) {
-    throw new Error(
-      "Both `disputeID` and `arbitrableContractAddress` parameters are required",
-    );
+  if (isNil(disputeID) || isNil(arbitrableContractAddress) || isEmpty(disputeID)) {
+    throw new Error("Both `disputeID` and `arbitrableContractAddress` parameters are required");
   }
 
   console.log("Creating foreign client...");
@@ -115,25 +100,19 @@ export async function fetchRealityQuestionData({
   });
 
   console.log("Getting arbitration created block...");
-  const arbitrationCreatedBlock =
-    await foreignProxy.read.arbitrationCreatedBlock([BigInt(disputeID)]);
+  const arbitrationCreatedBlock = await foreignProxy.read.arbitrationCreatedBlock([BigInt(disputeID)]);
   console.log("Arbitration created block:", arbitrationCreatedBlock.toString());
 
   console.log("Getting arbitration created logs...");
-  const arbitrationCreatedLogs =
-    await foreignProxy.getEvents.ArbitrationCreated(
-      {
-        _disputeID: BigInt(disputeID),
-      },
-      { fromBlock: arbitrationCreatedBlock, toBlock: arbitrationCreatedBlock },
-    );
+  const arbitrationCreatedLogs = await foreignProxy.getEvents.ArbitrationCreated(
+    {
+      _disputeID: BigInt(disputeID),
+    },
+    { fromBlock: arbitrationCreatedBlock, toBlock: arbitrationCreatedBlock }
+  );
   console.log(
     "Arbitration created logs:",
-    JSON.stringify(
-      arbitrationCreatedLogs,
-      (_, value) => (typeof value === "bigint" ? value.toString() : value),
-      2,
-    ),
+    JSON.stringify(arbitrationCreatedLogs, (_, value) => (typeof value === "bigint" ? value.toString() : value), 2)
   );
 
   if (arbitrationCreatedLogs.length !== 1) {
@@ -154,15 +133,11 @@ export async function fetchRealityQuestionData({
     {
       fromBlock: BigInt(realitioConfig.block),
       toBlock: "latest",
-    },
+    }
   );
   console.log(
     "Question event log:",
-    JSON.stringify(
-      questionEventLog,
-      (_, value) => (typeof value === "bigint" ? value.toString() : value),
-      2,
-    ),
+    JSON.stringify(questionEventLog, (_, value) => (typeof value === "bigint" ? value.toString() : value), 2)
   );
 
   if (questionEventLog.length === 0) {
@@ -187,7 +162,7 @@ export async function fetchRealityQuestionData({
       {
         template_id: template_id,
       },
-      { fromBlock: templateCreationBlock, toBlock: templateCreationBlock },
+      { fromBlock: templateCreationBlock, toBlock: templateCreationBlock }
     );
 
     if (templateEventLog.length === 0) {
@@ -204,16 +179,11 @@ export async function fetchRealityQuestionData({
   const questionParts = question.split("␟");
   console.log("questionParts:", questionParts);
 
-  const populatedJSON = RealitioQuestion.populatedJSONForTemplate(
-    templateText,
-    question,
-  );
+  const populatedJSON = RealitioQuestion.populatedJSONForTemplate(templateText, question);
   console.log("populatedJSON:", populatedJSON);
 
   const questionData = (
-    typeof populatedJSON === "string"
-      ? JSON.parse(populatedJSON)
-      : populatedJSON
+    typeof populatedJSON === "string" ? JSON.parse(populatedJSON) : populatedJSON
   ) as RealityQuestionData["questionData"];
   console.log("questionData:", questionData);
 
@@ -238,18 +208,13 @@ export interface RealityMetaEvidence {
 
 type RulingOptionsType = NonNullable<RealityMetaEvidence["rulingOptions"]>;
 
-export async function fetchRealityMetaEvidence(
-  params: RealityQuestionParams,
-): Promise<RealityMetaEvidence> {
+export async function fetchRealityMetaEvidence(params: RealityQuestionParams): Promise<RealityMetaEvidence> {
   const { questionData } = await fetchRealityQuestionData(params);
 
-  const erc1497OverridesMixin = questionData.title
-    ? { question: questionData.title }
-    : {};
+  const erc1497OverridesMixin = questionData.title ? { question: questionData.title } : {};
 
   const reservedAnswers: Record<string, string> = {
-    "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF":
-      "Answered Too Soon",
+    "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
   };
 
   const rulingOptions = (() => {

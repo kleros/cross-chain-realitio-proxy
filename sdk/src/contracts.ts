@@ -4,9 +4,7 @@ export const homeProxyAbi = [
   {
     inputs: [],
     name: "realitio",
-    outputs: [
-      { internalType: "contract IRealitio", name: "", type: "address" },
-    ],
+    outputs: [{ internalType: "contract IRealitio", name: "", type: "address" }],
     stateMutability: "view",
     type: "function",
   },
@@ -192,17 +190,8 @@ export const realitioAbi = [
   },
 ] as const satisfies Abi;
 
-export type HomeProxyContract = GetContractReturnType<
-  typeof homeProxyAbi,
-  PublicClient
->;
+export type HomeProxyContract = GetContractReturnType<typeof homeProxyAbi, PublicClient>;
 
-export type ForeignProxyContract = GetContractReturnType<
-  typeof foreignProxyAbi,
-  PublicClient
->;
+export type ForeignProxyContract = GetContractReturnType<typeof foreignProxyAbi, PublicClient>;
 
-export type RealitioContract = GetContractReturnType<
-  typeof realitioAbi,
-  PublicClient
->;
+export type RealitioContract = GetContractReturnType<typeof realitioAbi, PublicClient>;

@@ -16,7 +16,7 @@ const homeParameters = {
 async function deployHomeProxy({ deploy, from, parameters, foreignChainId, foreignProxy }) {
   const { realitio } = parameters;
   const foreignProxyAlias = utils.applyL1ToL2Alias(foreignProxy);
-  return await deploy(`RealitioHomeProxyZkSync`, {
+  return await deploy("RealitioHomeProxyZkSync", {
     from,
     args: [realitio, metadata, foreignProxy, foreignProxyAlias, foreignChainId],
     log: true,

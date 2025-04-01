@@ -1,20 +1,18 @@
-import { useEffect, useState } from 'react';
-import { fetchRealityQuestionData } from '@kleros/cross-chain-realitio-sdk';
-import type { RealityQuestionData } from '@kleros/cross-chain-realitio-sdk';
-import RealityLogo from '../assets/images/reality_eth_logo.png';
+import { fetchRealityQuestionData } from "@kleros/cross-chain-realitio-sdk";
+import type { RealityQuestionData } from "@kleros/cross-chain-realitio-sdk";
+import { useEffect, useState } from "react";
+import RealityLogo from "../assets/images/reality_eth_logo.png";
 
-console.log('evidence-display version', process.env.VERSION);
+console.log("evidence-display version", process.env.VERSION);
 
 export function RealitioDisplayInterface() {
   const [questionState, setQuestionState] = useState<RealityQuestionData | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (window.location.search[0] !== '?') return;
+      if (window.location.search[0] !== "?") return;
 
-      const params = Object.fromEntries(
-        new URLSearchParams(decodeURIComponent(window.location.search.substring(1)))
-      );
+      const params = Object.fromEntries(new URLSearchParams(decodeURIComponent(window.location.search.substring(1))));
 
       const {
         arbitrableContractAddress,
@@ -27,12 +25,8 @@ export function RealitioDisplayInterface() {
         jsonRpcUrl,
       } = params;
 
-      if (
-        !arbitrableContractAddress ||
-        !disputeID ||
-        !(arbitrableChainID || arbitratorChainID || chainID)
-      ) {
-        console.error('Evidence display is missing critical information.');
+      if (!arbitrableContractAddress || !disputeID || !(arbitrableChainID || arbitratorChainID || chainID)) {
+        console.error("Evidence display is missing critical information.");
         return;
       }
 
@@ -46,7 +40,7 @@ export function RealitioDisplayInterface() {
         });
         setQuestionState(data);
       } catch (error) {
-        console.error('Failed to fetch question data:', error);
+        console.error("Failed to fetch question data:", error);
       }
     };
 
@@ -57,9 +51,9 @@ export function RealitioDisplayInterface() {
 
   const { questionID, realitioAddress, questionData } = questionState;
   const chainID =
-    new URLSearchParams(window.location.search).get('chainID') ||
-    new URLSearchParams(window.location.search).get('arbitrableChainID') ||
-    new URLSearchParams(window.location.search).get('arbitratorChainID');
+    new URLSearchParams(window.location.search).get("chainID") ||
+    new URLSearchParams(window.location.search).get("arbitrableChainID") ||
+    new URLSearchParams(window.location.search).get("arbitratorChainID");
 
   return (
     <div className="bg-[#f0f4f8] p-4 font-roboto">
@@ -69,10 +63,9 @@ export function RealitioDisplayInterface() {
       <hr
         className="h-[3px] border-none bg-gradient-to-r from-[#24b3ec] via-[#24b3ec] to-[#dcfb6c]"
         style={{
-          backgroundSize: 'contain',
-          color: '#27b4ee',
-          background:
-            'linear-gradient(45deg, #24b3ec 0%, #24b3ec 93%, #b9f9fb  93%, #b9f9fb  95%, #dcfb6c 95%)',
+          backgroundSize: "contain",
+          color: "#27b4ee",
+          background: "linear-gradient(45deg, #24b3ec 0%, #24b3ec 93%, #b9f9fb  93%, #b9f9fb  95%, #dcfb6c 95%)",
         }}
       />
       <div className="my-4 text-lg leading-relaxed break-words">{questionData.title}</div>

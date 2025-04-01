@@ -1,16 +1,15 @@
+const { realityETHConfig } = require("@reality.eth/contracts");
 const { homeChains, gwei, metadata } = require("../shared");
 const { chiado, gnosis } = homeChains;
 
 const homeParameters = {
   [chiado.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10200/XDAI/RealityETH-3.0.json
-    realitio: "0x1E732a1C5e9181622DD5A931Ec6801889ce66185",
+    realitio: realityETHConfig(chiado.chainId, "XDAI", "3.2").address,
     // https://docs.gnosischain.com/developers/Usefulcontracts#chiado-bridge-contract-addresses
     homeAmb: "0x8448E15d0e706C0298dECA99F0b4744030e59d7d",
   },
   [gnosis.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/100/XDAI/RealityETH-3.0.json
-    realitio: "0xE78996A233895bE74a66F451f1019cA9734205cc",
+    realitio: realityETHConfig(gnosis.chainId, "XDAI", "3.0").address,
     // https://docs.gnosischain.com/developers/Usefulcontracts#gnosis-chain-bridge-contract-addresses
     homeAmb: "0x75Df5AF045d91108662D8080fD1FEFAd6aA0bb59",
   },

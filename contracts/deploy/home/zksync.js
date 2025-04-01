@@ -1,15 +1,14 @@
+const { realityETHConfig } = require("@reality.eth/contracts");
 const { utils } = require("zksync-ethers");
 const { homeChains, metadata } = require("../shared");
 const { zkSyncSepolia, zkSyncMainnet } = homeChains;
 
 const homeParameters = {
   [zkSyncSepolia.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/300/ETH/RealityETH-3.0.json
-    realitio: "0x4E346436e99fb7d6567A2bd024d8806Fc10d84D2",
+    realitio: realityETHConfig(zkSyncSepolia.chainId, "ETH", "3.0").address,
   },
   [zkSyncMainnet.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/324/ETH/RealityETH-3.0.json
-    realitio: "0xA8AC760332770FcF2056040B1f964750e4bEf808",
+    realitio: realityETHConfig(zkSyncMainnet.chainId, "ETH", "3.0").address,
   },
 };
 

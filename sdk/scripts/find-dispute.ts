@@ -4,7 +4,7 @@ import { foreignProxyAbi } from "../src/contracts";
 async function findDispute() {
   const foreignClient = createPublicClient({
     transport: http(
-      "https://sepolia.infura.io/v3/64130c1881694608a40ce82ea1b80f7a",
+      `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
     ),
   });
 

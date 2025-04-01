@@ -1,4 +1,5 @@
 const chains = require("./chains");
+const { generateMetadata } = require("./utils");
 
 const { mainnet, sepolia } = chains.foreignChains;
 
@@ -23,43 +24,11 @@ const courts = {
   },
 };
 
-const policies = {
-  default: "QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
-  noAnswerTooSoon: "QmaUr6hnSVxYD899xdcn2GUVtXVjXoSXKZbce3zFtGWw4H/Question_Resolution_Policy.pdf",
-  butter: "QmSv9ohhChMtyqwqsvfgeJtZQBWkwAboBc1n3UGvprfdd7/Conditional_Funding_Markets_-_Question_Resolution_Policy.pdf",
-  seer: "QmPmRkXFUmzP4rq2YfD3wNwL8bg3WDxkYuvTP9A9UZm9gJ/seer-markets-resolution-policy.pdf",
-  omen: "QmZM12kkguXFk2C94ykrKpambt4iUVKsVsxGxDEdLS68ws/omen-rules.pdf",
-  zodiac:
-    "QmXyo9M4Z2XY6Nw9UfuuUNzKXXNhvt24q6pejuN9RYWPMr/Reality_Module_Governance_Oracle-Question_Resolution_Policy.pdf",
-};
-
-function generatePolicyUri(policy = "default") {
-  const policyPath = policies[policy];
-  if (!policyPath) {
-    throw new Error(`Policy not found: ${policy}. Valid options are: ${Object.keys(policies).join(", ")}.`);
-  }
-  return `/ipfs/${policyPath}`; // for Kleros: https://multiformats.io/multiaddr/
-}
-
-function generateMetadata(policy = "default") {
-  const policyPath = policies[policy];
-  if (!policyPath) {
-    throw new Error(`Policy not found: ${policy}. Valid options are: ${Object.keys(policies).join(", ")}.`);
-  }
-  const tosUri = `ipfs://${policyPath}`; // URI format for Reality: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Example_URIs
-  return `{"tos":"${tosUri}", "foreignProxy":true}`;
-}
-
 const metadata = generateMetadata("default");
-const metadataButter = generateMetadata("butter");
 
 module.exports = {
   arbitrators,
   wNatives,
   courts,
-  policies,
-  generatePolicyUri,
-  generateMetadata,
   metadata,
-  metadataButter,
 };

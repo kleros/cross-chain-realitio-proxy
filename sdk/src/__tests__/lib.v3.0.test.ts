@@ -1,8 +1,9 @@
 import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
-import { http, type GetContractReturnType, type PublicClient, createPublicClient, getContract } from "viem";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { http, type PublicClient, type Transport, createPublicClient, getContract } from "viem";
+import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "../contracts";
 import { fetchRealityQuestionData } from "../lib";
+import { createMockClient, createMockContracts, createMockTransport } from "./test-helpers";
 
 // Mock viem
 vi.mock("viem", () => ({
@@ -11,10 +12,10 @@ vi.mock("viem", () => ({
   getContract: vi.fn(),
 }));
 
-// Mock RealitioQuestion
+// Mock RealitioQuestion for v3.0
 vi.mock("@reality.eth/reality-eth-lib/formatters/question.js", () => ({
   default: {
-    populatedJSONForTemplate: vi.fn().mockImplementation((template, question) => {
+    populatedJSONForTemplate: vi.fn().mockImplementation((_template, _question) => {
       // Mock implementation that returns a valid JSON string
       return JSON.stringify({
         title: "Title",
@@ -27,10 +28,10 @@ vi.mock("@reality.eth/reality-eth-lib/formatters/question.js", () => ({
   },
 }));
 
-describe("fetchRealityQuestionData", () => {
+describe("fetchRealityQuestionData (v3.0)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (http as any).mockReturnValue(() => {});
+    (http as unknown as Mock).mockReturnValue(() => {});
   });
 
   it("should fetch reality question data correctly", async () => {
@@ -41,64 +42,19 @@ describe("fetchRealityQuestionData", () => {
     const mockTemplateID = 2n; // Using template 2 (single-select)
     const mockQuestion = "Title␟Option 1|Option 2|Option 3␟category␟en_US";
 
-    // Mock contract instances
-    const mockForeignProxy = {
-      read: {
-        homeProxy: vi.fn().mockResolvedValue(mockHomeProxyAddress),
-        arbitrationCreatedBlock: vi.fn().mockResolvedValue(12345n),
-      },
-      getEvents: {
-        ArbitrationCreated: vi.fn().mockResolvedValue([
-          {
-            args: {
-              _disputeID: 114n,
-              _questionID: mockQuestionID,
-            },
-          },
-        ]),
-      },
-    };
-
-    const mockHomeProxy = {
-      read: {
-        realitio: vi.fn().mockResolvedValue(mockRealitioAddress),
-      },
-    };
-
-    const mockRealitio = {
-      read: {
-        templates: vi.fn().mockResolvedValue(12345n),
-      },
-      getEvents: {
-        LogNewQuestion: vi.fn().mockResolvedValue([
-          {
-            args: {
-              question_id: mockQuestionID,
-              template_id: mockTemplateID,
-              question: mockQuestion,
-            },
-          },
-        ]),
-      },
-    };
-
     // Setup mocks
-    const mockClient = {
-      account: undefined,
-      batch: undefined,
-      cacheTime: 0,
-      chain: null,
-      key: "mock",
-      name: "Mock Client",
-      pollingInterval: 4000,
-      request: vi.fn(),
-      transport: { type: "mock" },
-      type: "publicClient",
-      uid: "mock",
-      getChainId: vi.fn().mockResolvedValue(11155111n), // Sepolia chain ID
-    } as unknown as PublicClient;
-    (createPublicClient as any).mockReturnValue(mockClient);
-    (getContract as any).mockImplementation(({ address, abi }: { address: `0x${string}`; abi: any }) => {
+    const mockTransport = createMockTransport();
+    const mockClient = createMockClient(mockTransport);
+    const { mockForeignProxy, mockHomeProxy, mockRealitio } = createMockContracts(
+      mockQuestionID,
+      mockHomeProxyAddress,
+      mockRealitioAddress,
+      mockTemplateID,
+      mockQuestion
+    );
+
+    (createPublicClient as unknown as Mock).mockReturnValue(mockClient);
+    (getContract as unknown as Mock).mockImplementation(({ abi }: { abi: unknown }) => {
       if (abi === foreignProxyAbi) return mockForeignProxy;
       if (abi === homeProxyAbi) return mockHomeProxy;
       if (abi === realitioAbi) return mockRealitio;

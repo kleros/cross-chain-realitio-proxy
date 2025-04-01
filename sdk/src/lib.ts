@@ -12,10 +12,9 @@ async function getDefaultTemplates(realitioConfig: RealityConfig): Promise<strin
   if (realitioConfig.contract_version === "3.2") {
     console.log("Using Reality default template v3.2");
     return DEFAULT_TEMPLATES_V3_2;
-  } else {
-    console.log("Using Reality default template v3.0");
-    return DEFAULT_TEMPLATES_V3_0;
   }
+  console.log("Using Reality default template v3.0");
+  return DEFAULT_TEMPLATES_V3_0;
 }
 
 const isNil = (value: unknown): value is undefined | null => value === undefined || value === null;
@@ -37,6 +36,7 @@ export interface RealityQuestionData {
   realitioAddress: `0x${string}`;
   questionData: {
     title?: string;
+    description?: string;
     type: QuestionType;
     decimals?: number;
     outcomes?: string[];
@@ -44,6 +44,10 @@ export interface RealityQuestionData {
   rawQuestion: string;
   rawTemplate: string;
 }
+
+type MatchingKeys<T, U> = {
+  [K in keyof T & keyof U]: T[K];
+} & Pick<RealityQuestionData["questionData"], "type">;
 
 export async function fetchRealityQuestionData({
   disputeID,
@@ -182,9 +186,9 @@ export async function fetchRealityQuestionData({
   const populatedJSON = RealitioQuestion.populatedJSONForTemplate(templateText, question);
   console.log("populatedJSON:", populatedJSON);
 
-  const questionData = (
-    typeof populatedJSON === "string" ? JSON.parse(populatedJSON) : populatedJSON
-  ) as RealityQuestionData["questionData"];
+  // Cast questionData depending on the actual template used.
+  const parsedJSON = typeof populatedJSON === "string" ? JSON.parse(populatedJSON) : populatedJSON;
+  const questionData = parsedJSON as MatchingKeys<typeof parsedJSON, RealityQuestionData["questionData"]>;
   console.log("questionData:", questionData);
 
   return {
@@ -211,7 +215,14 @@ type RulingOptionsType = NonNullable<RealityMetaEvidence["rulingOptions"]>;
 export async function fetchRealityMetaEvidence(params: RealityQuestionParams): Promise<RealityMetaEvidence> {
   const { questionData } = await fetchRealityQuestionData(params);
 
-  const erc1497OverridesMixin = questionData.title ? { question: questionData.title } : {};
+  // Combine title and description into a formatted question string
+  const question = questionData.title
+    ? questionData.description
+      ? `${questionData.title}. ${questionData.description}`
+      : questionData.title
+    : questionData.description || "";
+
+  const erc1497OverridesMixin = question ? { question } : {};
 
   const reservedAnswers: Record<string, string> = {
     "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",

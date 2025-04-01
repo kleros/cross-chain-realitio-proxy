@@ -14,7 +14,8 @@
     "clean": "rm -rf dist evidence-display-v${npm_package_version}",
     "format": "biome format --write ./src",
     "lint": "biome lint ./src",
-    "check": "biome check --write ./src"
+    "check": "biome check --write ./src",
+    "example": "vite --open 'http://localhost:5173/?example=true&chainID=10200'"
   },
   "dependencies": {
     "@kleros/cross-chain-realitio-sdk": "workspace:*",

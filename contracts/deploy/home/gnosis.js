@@ -3,8 +3,8 @@ const { chiado, gnosis } = homeChains;
 
 const homeParameters = {
   [chiado.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10200/XDAI/RealityETH-3.0.json
-    realitio: "0x1E732a1C5e9181622DD5A931Ec6801889ce66185",
+    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/10200/XDAI/RealityETH-3.2.json
+    realitio: "0x012fb3aDce7D60672cF634e730927Fa5822b3cAb",
     // https://docs.gnosischain.com/developers/Usefulcontracts#chiado-bridge-contract-addresses
     homeAmb: "0x8448E15d0e706C0298dECA99F0b4744030e59d7d",
   },

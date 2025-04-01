@@ -1,7 +1,4 @@
-import {
-  fetchRealityMetaEvidence,
-  type RealityQuestionParams,
-} from "@kleros/cross-chain-realitio-sdk";
+import { type RealityQuestionParams, fetchRealityMetaEvidence } from "@kleros/cross-chain-realitio-sdk";
 
 console.log("dynamic-script version", process.env.VERSION);
 
@@ -22,9 +19,7 @@ export default async function getMetaEvidence() {
     const metaEvidence = await fetchRealityMetaEvidence(scriptParameters);
     return resolveScript(metaEvidence);
   } catch (error) {
-    return rejectScript(
-      error instanceof Error ? error.message : "Unknown error",
-    );
+    return rejectScript(error instanceof Error ? error.message : "Unknown error");
   }
 }
 

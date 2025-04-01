@@ -10,7 +10,7 @@ async function getL1MessageSentEvent(transactionHash, contractInterface, provide
   const eventLogs = receipt.logs.filter((log) => log.topics[0] === topicHash);
 
   if (eventLogs.length === 0) {
-    console.log(`No logs found for the specified topic.`);
+    console.log("No logs found for the specified topic.");
     return;
   }
 
@@ -37,10 +37,10 @@ function encodeWithSelector(selector, ...params) {
     if (param.type === "address") {
       // If the parameter type is address, directly append the value
       return param.value.slice(2);
-    } else {
-      // Otherwise, encode using defaultAbiCoder
-      return ethers.utils.defaultAbiCoder.encode([param.type], [param.value]).slice(2);
     }
+
+    // Otherwise, encode using defaultAbiCoder
+    return ethers.utils.defaultAbiCoder.encode([param.type], [param.value]).slice(2);
   });
 
   const encodedData = selector + encodedParams.join("");

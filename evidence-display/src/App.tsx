@@ -1,4 +1,4 @@
-import { RealitioDisplayInterface } from './containers/realitio';
+import { RealitioDisplayInterface } from "./containers/realitio";
 
 export function App() {
   return (

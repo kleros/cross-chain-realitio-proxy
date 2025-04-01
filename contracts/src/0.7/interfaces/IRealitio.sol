@@ -43,11 +43,7 @@ interface IRealitio {
      * @param requester The account that requested arbitration.
      * @param max_previous If specified, reverts if a bond higher than this was submitted after you sent your transaction.
      */
-    function notifyOfArbitrationRequest(
-        bytes32 question_id,
-        address requester,
-        uint256 max_previous
-    ) external;
+    function notifyOfArbitrationRequest(bytes32 question_id, address requester, uint256 max_previous) external;
 
     /**
      * @notice Cancel a previously-requested arbitration and extend the timeout

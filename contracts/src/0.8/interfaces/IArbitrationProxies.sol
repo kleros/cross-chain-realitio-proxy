@@ -193,4 +193,3 @@ interface IForeignArbitrationProxy {
      */
     function getDisputeFee(bytes32 _questionID) external view returns (uint256);
 }
-

@@ -18,13 +18,11 @@ describe("fetchRealityQuestionData (integration)", () => {
           questionID: expect.stringMatching(/^0x[a-fA-F0-9]{64}$/),
           realitioAddress: expect.stringMatching(/^0x[a-fA-F0-9]{40}$/),
           questionData: expect.objectContaining({
-            type: expect.stringMatching(
-              /^(bool|uint|single-select|multiple-select|datetime)$/,
-            ),
+            type: expect.stringMatching(/^(bool|uint|single-select|multiple-select|datetime)$/),
           }),
           rawQuestion: expect.any(String),
           rawTemplate: expect.stringContaining('"%s"'), // Templates always contain format specifiers
-        }),
+        })
       );
 
       // Log the actual result for manual verification

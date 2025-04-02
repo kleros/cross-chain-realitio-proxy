@@ -40,6 +40,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         Requested,
         Created,
         Ruled,
+        Relayed,
         Failed
     }
 
@@ -237,8 +238,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         uint256 deposit = arbitration.deposit;
 
-        delete arbitrationRequests[arbitrationID][_requester];
-
+        // Note that we don't nullify the status to allow the function to be called
+        // multiple times to avoid intentional blocking.
+        arbitration.deposit = 0;
         payable(_requester).safeSend(deposit, wNative);
 
         messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
@@ -412,14 +414,30 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         arbitration.answer = finalRuling;
         arbitration.status = Status.Ruled;
 
+        emit Ruling(arbitrator, _disputeID, finalRuling);
+    }
+
+    /**
+     * @notice Relays the ruling to home proxy.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     */
+    function relayRule(bytes32 _questionID, address _requester) external {
+        uint256 arbitrationID = uint256(_questionID);
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        // Note that we allow to relay multiple times to prevent intentional blocking.
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
+
         // Realitio ruling is shifted by 1 compared to Kleros.
-        uint256 realitioRuling = finalRuling != 0 ? finalRuling - 1 : REFUSE_TO_ARBITRATE_REALITIO;
+        uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
 
         bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(realitioRuling));
-        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
 
-        emit Ruling(arbitrator, _disputeID, finalRuling);
+        arbitration.status = Status.Relayed;
+
+        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
+        emit RulingRelayed(_questionID, bytes32(realitioRuling));
     }
 
     // ********************************* //

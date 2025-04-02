@@ -13,3 +13,14 @@
   font-family: "Roboto";
   src: url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap");
 }
+
+/* Reality.eth link styles */
+.reality-link {
+  color: #2093ff !important;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.reality-link:hover {
+  color: #1a75cc !important;
+}

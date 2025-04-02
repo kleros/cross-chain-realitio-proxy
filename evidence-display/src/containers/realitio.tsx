@@ -2,6 +2,7 @@ import { fetchRealityQuestionData } from "@kleros/cross-chain-realitio-sdk";
 import type { RealityQuestionData } from "@kleros/cross-chain-realitio-sdk";
 import { useEffect, useState } from "react";
 import RealityLogo from "../assets/images/reality_eth_logo.png";
+import { mockQuestionData } from "../mocks/question";
 
 console.log("evidence-display version", process.env.VERSION);
 
@@ -10,6 +11,14 @@ export function RealitioDisplayInterface() {
 
   useEffect(() => {
     const fetchData = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+
+      // Use mock data if example mode is enabled
+      if (searchParams.get("example") === "true") {
+        setQuestionState(mockQuestionData);
+        return;
+      }
+
       if (window.location.search[0] !== "?") return;
 
       const params = Object.fromEntries(new URLSearchParams(decodeURIComponent(window.location.search.substring(1))));
@@ -68,9 +77,10 @@ export function RealitioDisplayInterface() {
           background: "linear-gradient(45deg, #24b3ec 0%, #24b3ec 93%, #b9f9fb  93%, #b9f9fb  95%, #dcfb6c 95%)",
         }}
       />
-      <div className="my-4 text-lg leading-relaxed break-words">{questionData.title}</div>
+      <div className="my-4 text-xl leading-relaxed break-words">{questionData.title}</div>
+      <div className="my-4 text-lg leading-relaxed break-words">{questionData.description}</div>
       <a
-        className="text-[#2093ff]"
+        className="reality-link inline-block"
         href={`https://reality.eth.limo/app/index.html#!/network/${chainID}/question/${realitioAddress}-${questionID}`}
         target="_blank"
         rel="noopener noreferrer"

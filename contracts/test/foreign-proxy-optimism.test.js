@@ -275,7 +275,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress());
 
     let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(4, "Status should be Failed");
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
 
     const oldBalance = await getBalance(requester);
     await expect(foreignProxy.connect(other).handleFailedDisputeCreation(questionID, await requester.getAddress()))
@@ -290,12 +290,16 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(newBalance).to.equal(oldBalance + toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
 
     arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(0, "Status should be empty");
+    expect(arbitration[0]).to.equal(5, "Status should not change");
     expect(arbitration[1]).to.equal(0, "Deposit should be empty");
     expect(arbitration[2]).to.equal(0, "Dispute id should be empty");
 
     const request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
+
+    await expect(
+      foreignProxy.connect(other).handleFailedDisputeCreation(questionID, await requester.getAddress())
+    ).to.be.revertedWith("Failed TxToL1");
   });
 
   it("Should handle the ruling correctly", async () => {
@@ -311,13 +315,20 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await expect(arbitrator.giveRuling(2, 8))
       .to.emit(foreignProxy, "Ruling")
-      .withArgs(arbitrator.target, 2, 8)
+      .withArgs(arbitrator.target, 2, 8);
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer)
       .to.emit(homeProxy, "ArbitratorAnswered")
       .withArgs(questionID, arbAnswer);
 
-    const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
-    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
 
     let request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(4, "Status should be Ruled");
@@ -331,6 +342,10 @@ describe("Cross-chain arbitration with appeals", () => {
 
     request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(5, "Status should be Finished");
+
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed TxToL1"
+    );
   });
 
   it("Should correctly fund an appeal and fire the events", async () => {

@@ -65,6 +65,12 @@ typings/
 # TypeScript cache
 *.tsbuildinfo
 
+## Hardhat typechain bindings/types
+typechain
+typechain/**
+typechain-types
+typechain-types/**
+
 # Optional npm cache directory
 .npm
 

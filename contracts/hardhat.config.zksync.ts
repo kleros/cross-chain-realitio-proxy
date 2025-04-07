@@ -1,13 +1,15 @@
-require("dotenv/config");
-require("@nomicfoundation/hardhat-toolbox");
-require("@matterlabs/hardhat-zksync-deploy");
-require("@matterlabs/hardhat-zksync-solc");
-require("@matterlabs/hardhat-zksync-verify");
-require("hardhat-deploy");
-require("./tasks/update-deployments");
-// require("./tasks/generate-metaevidence");
+import "dotenv/config";
+import "@nomicfoundation/hardhat-toolbox";
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
+import "hardhat-deploy";
+import "./tasks/update-deployments";
+// import "./tasks/generate-metaevidence";
 
-module.exports = {
+import type { HardhatUserConfig } from "hardhat/config";
+
+const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
@@ -24,7 +26,7 @@ module.exports = {
   zksolc: {
     version: "1.5.11",
     settings: {
-      suppressedErrors: ["sendtransfer"]
+      suppressedErrors: ["sendtransfer"],
     },
   },
   paths: {
@@ -42,14 +44,14 @@ module.exports = {
       chainId: 11155111,
       url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
       // url: `http://127.0.0.1:8545`, // fork with `anvil --fork-url https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8545`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["foreign"],
       companionNetworks: {
         homeZksync: "zkSyncSepolia",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-sepolia.etherscan.io/api",
+          apiUrl: "https://api-sepolia.etherscan.io/api",
           apiKey: process.env.ETHERSCAN_API_KEY,
         },
       },
@@ -57,7 +59,7 @@ module.exports = {
     zkSyncSepolia: {
       chainId: 300,
       url: "https://sepolia.era.zksync.dev",
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       zksync: true,
       ethNetwork: "sepolia",
       tags: ["home"],
@@ -67,7 +69,7 @@ module.exports = {
       verifyURL: "https://block-explorer-api.sepolia.zksync.dev/api",
       verify: {
         etherscan: {
-          apiURL: "https://block-explorer-api.sepolia.zksync.dev/api",
+          apiUrl: "https://block-explorer-api.sepolia.zksync.dev/api",
         },
       },
     },
@@ -77,14 +79,14 @@ module.exports = {
     mainnet: {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["foreign"],
       companionNetworks: {
         homeZksync: "zkSyncMainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.etherscan.io/api",
+          apiUrl: "https://api.etherscan.io/api",
           apiKey: process.env.ETHERSCAN_API_KEY,
         },
       },
@@ -92,7 +94,7 @@ module.exports = {
     zkSyncMainnet: {
       chainId: 324,
       url: "https://mainnet.era.zksync.io",
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       zksync: true,
       ethNetwork: "mainnet",
       tags: ["home"],
@@ -102,7 +104,7 @@ module.exports = {
       verifyURL: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
       verify: {
         etherscan: {
-          apiURL: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
+          apiUrl: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
         },
       },
     },
@@ -118,3 +120,5 @@ module.exports = {
     },
   },
 };
+
+export default config;

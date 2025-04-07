@@ -11,7 +11,7 @@
     "clean-zksync": "yarn hardhat-zksync clean",
     "build-zksync": "yarn hardhat-zksync compile",
     "test-zksync": "TESTING=true yarn hardhat-zksync test",
-    "hardhat-zksync": "hardhat --config hardhat.config.zksync.js",
+    "hardhat-zksync": "hardhat --config hardhat.config.zksync.ts",
     "zksync:proof:staging": "yarn hardhat-zksync run ./scripts/execute_proof.js --network zkSyncSepolia",
     "zksync:proof:production": "yarn hardhat-zksync run ./scripts/execute_proof.js --network zkSyncMainnet",
     "etherscan-verify": "hardhat etherscan-verify",
@@ -87,6 +87,7 @@
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.20",
     "@types/mocha": "^9.1.1",
+    "@types/node": "^22.14.0",
     "chai": "^4.5.0",
     "ethers": "^6.13.5",
     "hardhat": "^2.22.18",
@@ -98,6 +99,9 @@
     "solhint-community": "^4.0.1",
     "solhint-plugin-prettier": "^0.1.0",
     "solidity-coverage": "^0.8.14",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.8.3",
     "zksync-ethers": "^6.15.4"
   },
   "dependencies": {

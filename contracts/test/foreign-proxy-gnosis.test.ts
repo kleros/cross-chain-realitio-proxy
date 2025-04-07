@@ -1,7 +1,15 @@
-const { ethers } = require("hardhat");
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
-const { expect } = require("chai");
-const { toBigInt, ZeroAddress, zeroPadValue, toBeHex } = ethers;
+import { ethers } from "hardhat";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import { toBigInt, ZeroAddress, zeroPadValue, toBeHex } from "ethers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { 
+  AutoAppealableArbitrator, 
+  RealitioForeignProxyGnosis, 
+  RealitioHomeProxyGnosis, 
+  MockRealitio, 
+  MockAMB 
+} from "../typechain-types";
 
 const arbitratorExtraData = "0x85";
 const arbitrationCost = 1000;
@@ -15,7 +23,7 @@ const appealTimeOut = 180;
 const winnerMultiplier = 3000;
 const loserMultiplier = 7000;
 const loserAppealPeriodMultiplier = 5000;
-const gasPrice = toBigInt(80000000);
+const gasPrice = toBigInt(80000000n);
 const MAX_ANSWER = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 const maxPrevious = 2001;
 
@@ -26,23 +34,29 @@ const foreignChainId = zeroPadValue(toBeHex(0), 32);
 const oneETH = ethers.parseEther("1");
 const ZERO_HASH = zeroPadValue(toBeHex(0), 32);
 
-let arbitrator;
-let homeProxy;
-let foreignProxy;
-let amb;
-let realitio;
+let arbitrator: AutoAppealableArbitrator;
+let homeProxy: RealitioHomeProxyGnosis;
+let foreignProxy: RealitioForeignProxyGnosis;
+let amb: MockAMB;
+let realitio: MockRealitio;
 
-let governor;
-let requester;
-let crowdfunder1;
-let crowdfunder2;
-let answerer;
-let other;
+let governor: HardhatEthersSigner;
+let requester: HardhatEthersSigner;
+let crowdfunder1: HardhatEthersSigner;
+let crowdfunder2: HardhatEthersSigner;
+let answerer: HardhatEthersSigner;
+let other: HardhatEthersSigner;
 
 describe("Cross-chain arbitration with appeals", () => {
   beforeEach("initialize the contract", async function () {
     [governor, requester, crowdfunder1, crowdfunder2, answerer, other] = await ethers.getSigners();
-    ({ amb, arbitrator, realitio, foreignProxy, homeProxy } = await deployContracts(governor));
+    ({ amb, arbitrator, realitio, foreignProxy, homeProxy } = await deployContracts(governor) as {
+      amb: MockAMB;
+      arbitrator: AutoAppealableArbitrator;
+      realitio: MockRealitio;
+      foreignProxy: RealitioForeignProxyGnosis;
+      homeProxy: RealitioHomeProxyGnosis;
+    });
 
     // Create disputes so the index in tests will not be a default value.
     await arbitrator.connect(other).createDispute(42, arbitratorExtraData, { value: arbitrationCost });
@@ -261,7 +275,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .connect(crowdfunder1)
       .fundAppeal(arbitrationID, 533, { gasPrice: gasPrice, value: appealCost }); // This value doesn't fund fully.
     tx = await txFundAppeal;
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    txFee = (await tx.wait())!.gasUsed * gasPrice;
 
     newBalance = await getBalance(crowdfunder1);
     expect(newBalance).to.equal(
@@ -286,7 +300,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .connect(crowdfunder1)
       .fundAppeal(arbitrationID, 533, { gasPrice: gasPrice, value: oneETH }); // Overpay to check that it's handled correctly.
     tx = await txFundAppeal;
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    txFee = (await tx.wait())!.gasUsed * gasPrice;
     newBalance = await getBalance(crowdfunder1);
     expect(newBalance).to.equal(
       oldBalance - toBigInt(3500) - txFee,
@@ -683,7 +697,7 @@ describe("Cross-chain arbitration with appeals", () => {
     ).to.be.revertedWith("Dispute already created");
   });
 
-  async function deployContracts(signer) {
+  async function deployContracts(signer: HardhatEthersSigner) {
     const Arbitrator = await ethers.getContractFactory("AutoAppealableArbitrator", signer);
     const arbitrator = await Arbitrator.deploy(String(arbitrationCost));
 
@@ -739,7 +753,7 @@ describe("Cross-chain arbitration with appeals", () => {
     };
   }
 
-  async function getBalance(account) {
+  async function getBalance(account: HardhatEthersSigner) {
     return account.provider.getBalance(await account.getAddress());
   }
 });

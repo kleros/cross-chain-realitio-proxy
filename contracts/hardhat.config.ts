@@ -1,13 +1,15 @@
-require("dotenv/config");
-require("@nomicfoundation/hardhat-toolbox");
-require("hardhat-deploy");
-require("hardhat-deploy-ethers");
-require("./tasks/generate-metaevidence");
-require("./tasks/relay-arbitrum");
-require("./tasks/find-dispute-id");
-require("./tasks/update-deployments");
+import "dotenv/config";
+import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
+import "./tasks/generate-metaevidence";
+import "./tasks/relay-arbitrum";
+import "./tasks/find-dispute-id";
+import "./tasks/update-deployments";
 
-module.exports = {
+import type { HardhatUserConfig } from "hardhat/config";
+
+const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
@@ -32,7 +34,7 @@ module.exports = {
       chainId: 11155111,
       url: `https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
       // url: `http://127.0.0.1:8545`, // fork with `anvil --fork-url https://sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8545`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["foreign"],
       companionNetworks: {
         homeGnosis: "chiado",
@@ -43,7 +45,7 @@ module.exports = {
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-sepolia.etherscan.io/api",
+          apiUrl: "https://api-sepolia.etherscan.io/api",
           apiKey: process.env.ETHERSCAN_API_KEY,
         },
       },
@@ -52,29 +54,29 @@ module.exports = {
       chainId: 10200,
       url: "https://rpc.chiado.gnosis.gateway.fm",
       // url: `http://127.0.0.1:8546`, // fork with `anvil --fork-url https://rpc.chiado.gnosis.gateway.fm --port 8546`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "sepolia",
       },
       verify: {
         etherscan: {
-          apiURL: "https://gnosis-chiado.blockscout.com/api",
+          apiUrl: "https://gnosis-chiado.blockscout.com/api",
         },
       },
     },
     unichainSepolia: {
       chainId: 1301,
-      url: `https://sepolia.unichain.org/`,
+      url: "https://sepolia.unichain.org/",
       // url: `http://127.0.0.1:8546`, // fork with `anvil --fork-url https://sepolia.unichain.org --port 8546`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "sepolia",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-sepolia.uniscan.xyz/api",
+          apiUrl: "https://api-sepolia.uniscan.xyz/api",
           apiKey: process.env.UNISCAN_API_KEY,
         },
       },
@@ -83,14 +85,14 @@ module.exports = {
       chainId: 11155420,
       url: `https://optimism-sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
       // url: `http://127.0.0.1:8547`, // fork with `anvil --fork-url https://optimism-sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8547`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "sepolia",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-sepolia-optimistic.etherscan.io/api",
+          apiUrl: "https://api-sepolia-optimistic.etherscan.io/api",
           apiKey: process.env.OPTIMISM_API_KEY,
         },
       },
@@ -99,30 +101,30 @@ module.exports = {
       chainId: 421614,
       url: `https://arbitrum-sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
       // url: `http://127.0.0.1:8548`, // fork with `anvil --fork-url https://arbitrum-sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8548`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "sepolia",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-sepolia.arbiscan.io/api",
+          apiUrl: "https://api-sepolia.arbiscan.io/api",
           apiKey: process.env.ARBISCAN_API_KEY,
         },
       },
     },
     amoy: {
       chainId: 80002,
-      url: `https://rpc-amoy.polygon.technology`,
+      url: "https://rpc-amoy.polygon.technology",
       // url: `http://127.0.0.1:8549`, // fork with `anvil --fork-url https://rpc-amoy.polygon.technology --port 8549`
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "sepolia",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-amoy.polygonscan.com/api",
+          apiUrl: "https://api-amoy.polygonscan.com/api",
           apiKey: process.env.POLYGONSCAN_API_KEY,
         },
       },
@@ -133,7 +135,7 @@ module.exports = {
     mainnet: {
       chainId: 1,
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["foreign"],
       companionNetworks: {
         homeGnosis: "gnosis",
@@ -146,7 +148,7 @@ module.exports = {
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.etherscan.io/api",
+          apiUrl: "https://api.etherscan.io/api",
           apiKey: process.env.ETHERSCAN_API_KEY,
         },
       },
@@ -154,29 +156,29 @@ module.exports = {
     gnosis: {
       chainId: 100,
       url: `https://gnosis-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.gnosisscan.io/api",
+          apiUrl: "https://api.gnosisscan.io/api",
           apiKey: process.env.GNOSISSCAN_API_KEY,
         },
       },
     },
     unichain: {
       chainId: 130,
-      url: `https://unichain-rpc.publicnode.com`,
-      accounts: [process.env.PRIVATE_KEY],
+      url: "https://unichain-rpc.publicnode.com",
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.uniscan.xyz/api",
+          apiUrl: "https://api.uniscan.xyz/api",
           apiKey: process.env.UNISCAN_API_KEY,
         },
       },
@@ -184,29 +186,29 @@ module.exports = {
     optimism: {
       chainId: 10,
       url: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api-optimistic.etherscan.io/api",
+          apiUrl: "https://api-optimistic.etherscan.io/api",
           apiKey: process.env.OPTIMISM_API_KEY,
         },
       },
     },
     redstone: {
       chainId: 690,
-      url: `https://rpc.redstonechain.com`,
-      accounts: [process.env.PRIVATE_KEY],
+      url: "https://rpc.redstonechain.com",
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.redstone.xyz/api",
+          apiUrl: "https://api.redstone.xyz/api",
           apiKey: process.env.REDSTONE_API_KEY,
         },
       },
@@ -214,14 +216,14 @@ module.exports = {
     base: {
       chainId: 8453,
       url: `https://base-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.basescan.org/api",
+          apiUrl: "https://api.basescan.org/api",
           apiKey: process.env.BASESCAN_API_KEY,
         },
       },
@@ -229,14 +231,14 @@ module.exports = {
     arbitrum: {
       chainId: 42161,
       url: `https://arbitrum-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.arbiscan.io/api",
+          apiUrl: "https://api.arbiscan.io/api",
           apiKey: process.env.ARBISCAN_API_KEY,
         },
       },
@@ -244,14 +246,14 @@ module.exports = {
     polygon: {
       chainId: 137,
       url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
         foreign: "mainnet",
       },
       verify: {
         etherscan: {
-          apiURL: "https://api.polygonscan.com/api",
+          apiUrl: "https://api.polygonscan.com/api",
           apiKey: process.env.POLYGONSCAN_API_KEY,
         },
       },
@@ -268,3 +270,5 @@ module.exports = {
     },
   },
 };
+
+export default config;

@@ -147,6 +147,49 @@ describe("Cross-chain arbitration with appeals", () => {
     );
   });
 
+  it("Should set correct values when requesting arbitration with custom parameters and fire the event", async () => {
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 5, 10, { value: arbitrationCost })
+    ).to.be.revertedWith("Deposit value too low");
+
+    const requesterAddress = await requester.getAddress();
+    await expect(foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 5, 10, { value: totalCost }))
+      .to.emit(mockInbox, "TicketSent")
+      .withArgs(
+        homeProxy.target,
+        0,
+        ticketSubmissionCost,
+        requesterAddress,
+        requesterAddress,
+        5,
+        10
+      )
+      .to.emit(foreignProxy, "RetryableTicketCreated")
+      .withArgs(0) // TicketID
+      .to.emit(foreignProxy, "ArbitrationRequested")
+      .withArgs(questionID, requesterAddress, maxPrevious);
+
+    const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
+    expect(arbitration[1]).to.equal(8500, "Deposit value stored incorrectly"); // Surplus (20000) + ArbCost (1000) - ArbitrumFee (10000 + 5*500).
+
+    // Inbox acts as foreignProxyAlias here so it passes onlyForeignProxyAlias require
+    await expect(mockInbox.connect(other).redeemTicket(0))
+      .to.emit(realitio, "MockNotifyOfArbitrationRequest")
+      .withArgs(questionID, requesterAddress)
+      .to.emit(homeProxy, "RequestNotified")
+      .withArgs(questionID, requesterAddress, maxPrevious);
+
+    const request = await homeProxy.requests(questionID, requesterAddress);
+    expect(request[0]).to.equal(2, "Incorrect status of the request in HomeProxy");
+    expect(request[1]).to.equal(ZERO_HASH, "Answer should be empty");
+
+    expect(await homeProxy.questionIDToRequester(questionID)).to.equal(
+      requesterAddress,
+      "Incorrect requester stored in home proxy"
+    );
+  });
+
   it("Should not allow to request arbitration 2nd time", async () => {
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
 
@@ -389,6 +432,69 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
   });
 
+  it("Should correctly handle failed dispute creation with custom parameters", async () => {
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
+    await mockInbox.connect(other).redeemTicket(0);
+
+    await expect(
+      foreignProxy
+        .connect(other)
+        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: totalCost })
+    ).to.be.revertedWith("Invalid arbitration status");
+
+    await arbitrator.setArbitrationPrice(8501); // Increase the cost so creation fails. 21000 was originally sent, 12500 taken as fee, so increased cost should be higher than 8500
+
+    await expect(homeProxy.handleNotifiedRequest(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress());
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+
+    const oldBalance = await getBalance(requester);
+    const senderAddress = await other.getAddress();
+  
+    await expect(
+      foreignProxy
+        .connect(other)
+        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: l2GasPrice })
+    )
+      .to.emit(foreignProxy, "RetryableTicketCreated")
+      .withArgs(1)
+      .to.emit(foreignProxy, "ArbitrationCanceled")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(mockInbox, "TicketSent")
+      .withArgs(
+        homeProxy.target,
+        0,
+        ticketSubmissionCost,
+        senderAddress,
+        senderAddress,
+        5,
+        10
+      );
+
+    await expect(mockInbox.connect(other).redeemTicket(1))
+      .to.emit(realitio, "MockCancelArbitrationRequest")
+      .withArgs(questionID)
+      .to.emit(homeProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress());
+
+    const newBalance = await getBalance(requester);
+    expect(newBalance).to.equal(
+      oldBalance + toBigInt(arbitrationCost + surplusAmount - l2GasPrice),
+      "Requester was not reimbursed correctly"
+    ); // 8500
+
+    arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+    expect(arbitration[1]).to.equal(0, "Deposit should be empty");
+    expect(arbitration[2]).to.equal(0, "Dispute id should be empty");
+
+    const request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
+  });
+
   it("Should correctly reimburse the overpay when handling failed dispute", async () => {
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
     await mockInbox.connect(other).redeemTicket(0);
@@ -440,6 +546,67 @@ describe("Cross-chain arbitration with appeals", () => {
       .to.emit(foreignProxy, "RetryableTicketCreated")
       .withArgs(1)
       .to.emit(mockInbox, "TicketSent")
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer);
+
+    await expect(mockInbox.connect(other).redeemTicket(1))
+      .to.emit(homeProxy, "ArbitratorAnswered")
+      .withArgs(questionID, arbAnswer);
+
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
+
+    let request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(4, "Status should be Ruled");
+    expect(request[1]).to.equal(arbAnswer, "Incorrect answer stored");
+
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
+      .to.emit(realitio, "MockFinalize")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitrationFinished")
+      .withArgs(questionID);
+
+    request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(5, "Status should be Finished");
+  });
+
+  it("Should handle the ruling correctly with custom parameters", async () => {
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
+    await mockInbox.connect(other).redeemTicket(0);
+
+    await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
+
+    const arbAnswer = zeroPadValue(toBeHex(7), 32);
+
+    await expect(
+      foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: l2GasPrice })
+    ).to.be.revertedWith("Dispute not resolved");
+
+    await expect(arbitrator.giveRuling(2, 8)).to.emit(foreignProxy, "Ruling").withArgs(arbitrator.target, 2, 8);
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress)).to.be.revertedWith(
+      "Arbitrator has not ruled yet"
+    );
+
+    const senderAddress = await other.getAddress();
+  
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: l2GasPrice }))
+      .to.emit(foreignProxy, "RetryableTicketCreated")
+      .withArgs(1)
+      .to.emit(mockInbox, "TicketSent")
+      .withArgs(
+        homeProxy.target,
+        0,
+        ticketSubmissionCost,
+        senderAddress,
+        senderAddress,
+        5,
+        10
+      )
       .to.emit(foreignProxy, "RulingRelayed")
       .withArgs(questionID, arbAnswer);
 

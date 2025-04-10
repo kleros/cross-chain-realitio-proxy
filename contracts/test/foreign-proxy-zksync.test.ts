@@ -142,6 +142,37 @@ describe("Cross-chain arbitration with appeals", () => {
     );
   });
 
+  it("Should set correct values when requesting arbitration with custom parameters and fire the event", async () => {
+    await foreignProxy.setHomeProxy(homeProxy.target);
+
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 6, 12, { value: arbitrationCost })
+    ).to.be.revertedWith("Deposit value too low");
+
+    await expect(foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 6, 12, { value: totalCost }))
+      .to.emit(realitio, "MockNotifyOfArbitrationRequest")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(homeProxy, "RequestNotified")
+      .withArgs(questionID, await requester.getAddress(), maxPrevious)
+      .to.emit(mockZkSync, "L2Request")
+      .withArgs(homeProxy.target, 0, 6, 12, await requester.getAddress())
+      .to.emit(foreignProxy, "ArbitrationRequested")
+      .withArgs(questionID, await requester.getAddress(), maxPrevious);
+
+    const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
+    expect(arbitration[1]).to.equal(1100, "Deposit value stored incorrectly");
+
+    const request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(2, "Incorrect status of the request in HomeProxy");
+    expect(request[1]).to.equal(ZERO_HASH, "Answer should be empty");
+
+    expect(await homeProxy.questionIDToRequester(questionID)).to.equal(
+      await requester.getAddress(),
+      "Incorrect requester stored in home proxy"
+    );
+  });
+
   it("Should not allow to request arbitration 2nd time", async () => {
     await foreignProxy.setHomeProxy(homeProxy.target);
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
@@ -446,6 +477,67 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
   });
 
+  it("Should correctly handle failed dispute creation with custom parameters", async () => {
+    await foreignProxy.setHomeProxy(homeProxy.target);
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
+
+    await expect(
+      foreignProxy
+        .connect(other)
+        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 6, 12, { value: l2GasPrice })
+    ).to.be.revertedWith("Invalid arbitration status");
+
+    await arbitrator.setArbitrationPrice(2000); // Increase the cost so creation fails.
+
+    const handleRequestPromise = await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
+    const handleRequestReceipt = await handleRequestPromise.wait();
+
+    await expect(handleRequestPromise)
+      .to.emit(homeProxy, "RequestAcknowledged")
+      .withArgs(questionID, await requester.getAddress());
+
+    const [l2Message] = getEmittedEvent("L1MessageSent", handleRequestReceipt, homeProxy.interface).args;
+
+    await expect(
+      foreignProxy.connect(other).consumeMessageFromL2(l2BlockNumber, messageIndex, l2TxNumberInBlock, l2Message, proof)
+    )
+      .to.emit(foreignProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress());
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+
+    const oldBalance = await getBalance(requester);
+
+    await expect(
+      foreignProxy
+        .connect(other)
+        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 6, 12, { value: l2GasPrice })
+    )
+      .to.emit(realitio, "MockCancelArbitrationRequest")
+      .withArgs(questionID)
+      .to.emit(homeProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(mockZkSync, "L2Request")
+      .withArgs(homeProxy.target, 0, 6, 12, await other.getAddress())
+      .to.emit(foreignProxy, "ArbitrationCanceled")
+      .withArgs(questionID, await requester.getAddress());
+
+    const newBalance = await getBalance(requester);
+    expect(newBalance).to.equal(
+      oldBalance + toBigInt(arbitrationCost + surplusAmount - l2GasPrice),
+      "Requester was not reimbursed correctly"
+    ); // 1100
+
+    arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+    expect(arbitration[1]).to.equal(0, "Deposit should be empty");
+    expect(arbitration[2]).to.equal(0, "Dispute id should be empty");
+
+    const request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
+  });
+
   it("Should correctly reimburse the overpay when handling failed dispute", async () => {
     await foreignProxy.setHomeProxy(homeProxy.target);
     await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
@@ -513,6 +605,61 @@ describe("Cross-chain arbitration with appeals", () => {
     await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress(), { value: l2GasPrice }))
       .to.emit(homeProxy, "ArbitratorAnswered")
       .withArgs(questionID, arbAnswer)
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer);
+
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
+
+    let request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(4, "Status should be Ruled");
+    expect(request[1]).to.equal(arbAnswer, "Incorrect answer stored");
+
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
+      .to.emit(realitio, "MockFinalize")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitrationFinished")
+      .withArgs(questionID);
+
+    request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(5, "Status should be Finished");
+  });
+
+  it("Should handle the ruling correctly with custom parameters", async () => {
+    await foreignProxy.setHomeProxy(homeProxy.target);
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: totalCost });
+
+    const handleRequestPromise = await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
+    const handleRequestReceipt = await handleRequestPromise.wait();
+
+    const [l2Message] = getEmittedEvent("L1MessageSent", handleRequestReceipt, homeProxy.interface).args;
+
+    await foreignProxy
+      .connect(other)
+      .consumeMessageFromL2(l2BlockNumber, messageIndex, l2TxNumberInBlock, l2Message, proof);
+    await expect(foreignProxy.rule(2, 8)).to.be.revertedWith("Only arbitrator allowed");
+
+    const arbAnswer = zeroPadValue(toBeHex(7), 32);
+
+    await expect(
+      foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 6, 12, { value: l2GasPrice })
+    ).to.be.revertedWith("Dispute not resolved");
+
+    await expect(arbitrator.giveRuling(2, 8)).to.emit(foreignProxy, "Ruling").withArgs(arbitrator.target, 2, 8);
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress)).to.be.revertedWith(
+      "Arbitrator has not ruled yet"
+    );
+
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 6, 12, { value: l2GasPrice }))
+      .to.emit(homeProxy, "ArbitratorAnswered")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(mockZkSync, "L2Request")
+      .withArgs(homeProxy.target, 0, 6, 12, await other.getAddress())
       .to.emit(foreignProxy, "RulingRelayed")
       .withArgs(questionID, arbAnswer);
 

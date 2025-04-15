@@ -159,41 +159,38 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
+     * This version of the function uses recommended bridging parameters.
+     * Note that the signature of this function can't be changed as it's required by Reality UI.
      * @param _questionID The ID of the question.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
         require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
-
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
+        _requestArbitration(arbitration, _questionID, _maxPrevious, [l2GasLimit, gasPriceBid]);
+    }
 
-        // Taken from here https://docs.arbitrum.io/for-devs/troubleshooting-building#what-is-a-retryable-tickets-submission-fee-how-can-i-calculate-it-what-happens-if-i-the-fee-i-provide-is-insufficient
-        uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
-        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
-        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-        require(msg.value >= arbitrationCost + arbitrumFee, "Deposit value too low");
+    /**
+     * @notice Requests arbitration for the given question and contested answer.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _gasPriceBid Gas price bid for tx on L2.
+     */
+    function requestArbitrationCustomParameters(
+        bytes32 _questionID,
+        uint256 _maxPrevious,
+        uint256 _l2GasLimit,
+        uint256 _gasPriceBid
+    ) external payable {
+        require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
+        require(arbitration.status == Status.None, "Arbitration already requested");
 
-        arbitration.status = Status.Requested;
-        arbitration.deposit = uint248(msg.value - arbitrumFee);
-
-        uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
-            homeProxy,
-            L2_CALL_VALUE,
-            maxSubmissionCost,
-            msg.sender, // excessFeeRefundAddress
-            msg.sender, // callValueRefundAddress
-            l2GasLimit,
-            gasPriceBid,
-            data
-        );
-
-        emit RetryableTicketCreated(ticketID);
-
-        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
+        _requestArbitration(arbitration, _questionID, _maxPrevious, [_l2GasLimit, _gasPriceBid]);
     }
 
     /**
@@ -263,43 +260,35 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Cancels the arbitration in case the dispute could not be created. Requires a small deposit to cover arbitrum fees.
+     * This version of the function uses recommended bridging parameters.
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable override {
-        uint256 arbitrationID = uint256(_questionID);
-        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
+        _handleFailedDisputeCreation(arbitration, _questionID, _requester, [l2GasLimit, gasPriceBid]);
+    }
 
-        uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
-        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
-        require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
-        uint256 deposit = arbitration.deposit;
+    /**
+     * @notice Cancels the arbitration in case the dispute could not be created. Requires a small deposit to cover arbitrum fees.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _gasPriceBid Gas price bid for tx on L2.
+     */
+    function handleFailedDisputeCreationCustomParameters(
+        bytes32 _questionID,
+        address _requester,
+        uint256 _l2GasLimit,
+        uint256 _gasPriceBid
+    ) external payable {
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
+        require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        // Note that we don't nullify the status to allow the function to be called
-        // multiple times to avoid intentional blocking.
-        arbitration.deposit = 0;
-        uint256 surplusValue = msg.value - arbitrumFee;
-        payable(msg.sender).safeSend(surplusValue, wNative);
-        payable(_requester).safeSend(deposit, wNative);
-
-        uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
-            homeProxy,
-            L2_CALL_VALUE,
-            maxSubmissionCost,
-            msg.sender, // excessFeeRefundAddress
-            msg.sender, // callValueRefundAddress
-            l2GasLimit,
-            gasPriceBid,
-            data
-        );
-
-        emit RetryableTicketCreated(ticketID);
-
-        emit ArbitrationCanceled(_questionID, _requester);
+        _handleFailedDisputeCreation(arbitration, _questionID, _requester, [_l2GasLimit, _gasPriceBid]);
     }
 
     // ********************************* //
@@ -473,42 +462,37 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Relays the ruling to home proxy. Requires a small deposit to cover arbitrum fees.
+     * This version of the function uses recommended bridging parameters.
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
     function relayRule(bytes32 _questionID, address _requester) external payable {
-        uint256 arbitrationID = uint256(_questionID);
-        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
         // Note that we allow to relay multiple times to prevent intentional blocking.
         require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
-        // Realitio ruling is shifted by 1 compared to Kleros.
-        uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
+        _relayRule(arbitration, _questionID, _requester, [l2GasLimit, gasPriceBid]);
+    }
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
+    /**
+     * @notice Relays the ruling to home proxy. Requires a small deposit to cover arbitrum fees.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _gasPriceBid Gas price bid for tx on L2.
+     */
+    function relayRuleCustomParameters(
+        bytes32 _questionID,
+        address _requester,
+        uint256 _l2GasLimit,
+        uint256 _gasPriceBid
+    ) external payable {
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
+        // Note that we allow to relay multiple times to prevent intentional blocking.
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
-        uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
-        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
-        require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
-
-        arbitration.status = Status.Relayed;
-
-        uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
-            homeProxy,
-            L2_CALL_VALUE,
-            maxSubmissionCost,
-            msg.sender, // excessFeeRefundAddress
-            msg.sender, // callValueRefundAddress
-            l2GasLimit,
-            gasPriceBid,
-            data
-        );
-
-        emit RetryableTicketCreated(ticketID);
-        emit RulingRelayed(_questionID, bytes32(realitioRuling));
-
-        if (msg.value - arbitrumFee > 0) payable(msg.sender).safeSend(msg.value - arbitrumFee, wNative); // Sending extra value back to contributor.
+        _relayRule(arbitration, _questionID, _requester, [_l2GasLimit, _gasPriceBid]);
     }
 
     /* External Views */
@@ -691,6 +675,121 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
+    }
+
+    // ****************************** //
+    // *    Internal and private    * //
+    // ****************************** //
+
+    function _requestArbitration(
+        ArbitrationRequest storage _arbitration,
+        bytes32 _questionID,
+        uint256 _maxPrevious,
+        uint256[2] memory _parameters
+    ) internal {
+        // Note some local variables were removed to avoid `stack too deep` error.
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
+
+        // Taken from here https://docs.arbitrum.io/for-devs/troubleshooting-building#what-is-a-retryable-tickets-submission-fee-how-can-i-calculate-it-what-happens-if-i-the-fee-i-provide-is-insufficient
+        uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
+        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
+        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
+        require(msg.value >= arbitrationCost + arbitrumFee, "Deposit value too low");
+
+        _arbitration.status = Status.Requested;
+        _arbitration.deposit = uint248(msg.value - arbitrumFee);
+
+        uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
+            homeProxy,
+            L2_CALL_VALUE,
+            maxSubmissionCost,
+            msg.sender, // excessFeeRefundAddress
+            msg.sender, // callValueRefundAddress
+            _parameters[0], // l2GasLimit
+            _parameters[1], // gasPriceBid
+            data
+        );
+
+        emit RetryableTicketCreated(ticketID);
+
+        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
+    }
+
+    function _handleFailedDisputeCreation(
+        ArbitrationRequest storage _arbitration,
+        bytes32 _questionID,
+        address _requester,
+        uint256[2] memory _parameters
+    ) internal {
+        // Note some local variables were removed to avoid `stack too deep` error.
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
+
+        uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
+        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
+        require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
+        uint256 deposit = _arbitration.deposit;
+
+        // Note that we don't nullify the status to allow the function to be called
+        // multiple times to avoid intentional blocking.
+        _arbitration.deposit = 0;
+        payable(msg.sender).safeSend(msg.value - arbitrumFee, wNative);
+        payable(_requester).safeSend(deposit, wNative);
+
+        uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
+            homeProxy,
+            L2_CALL_VALUE,
+            maxSubmissionCost,
+            msg.sender, // excessFeeRefundAddress
+            msg.sender, // callValueRefundAddress
+            _parameters[0], // l2GasLimit
+            _parameters[1], // gasPriceBid
+            data
+        );
+
+        emit RetryableTicketCreated(ticketID);
+
+        emit ArbitrationCanceled(_questionID, _requester);
+    }
+
+    function _relayRule(
+        ArbitrationRequest storage _arbitration,
+        bytes32 _questionID,
+        address _requester,
+        uint256[2] memory _parameters
+    ) internal {
+        // Note some local variables were removed to avoid `stack too deep` error.
+
+        // Realitio ruling is shifted by 1 compared to Kleros.
+        uint256 realitioRuling = _arbitration.answer != 0 ? _arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
+
+        uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
+        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
+        require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
+
+        _arbitration.status = Status.Relayed;
+
+        uint256 ticketID = inbox.createRetryableTicket{value: arbitrumFee}(
+            homeProxy,
+            L2_CALL_VALUE,
+            maxSubmissionCost,
+            msg.sender, // excessFeeRefundAddress
+            msg.sender, // callValueRefundAddress
+            _parameters[0], // l2GasLimit
+            _parameters[1], // gasPriceBid
+            data
+        );
+
+        emit RetryableTicketCreated(ticketID);
+        emit RulingRelayed(_questionID, bytes32(realitioRuling));
+
+        if (msg.value - arbitrumFee > 0) payable(msg.sender).safeSend(msg.value - arbitrumFee, wNative); // Sending extra value back to contributor.
     }
 
     /**

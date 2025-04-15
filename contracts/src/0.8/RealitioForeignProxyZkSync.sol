@@ -159,37 +159,30 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
+     * This version of the function uses recommended bridging parameters.
+     * Note that the signature of this function can't be changed as it's required by Reality UI.
      * @param _questionID The ID of the question.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
-        require(homeProxy != address(0), "Home proxy is not set");
-        require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
+        _requestArbitration(_questionID, _maxPrevious, [l2GasLimit, l2GasPerPubdataByteLimit]);
+    }
 
-        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
-        require(arbitration.status == Status.None, "Arbitration already requested");
-
-        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-        uint256 zkGasFee = getZkGasFee();
-        require(msg.value >= arbitrationCost + zkGasFee, "Deposit value too low");
-
-        arbitration.status = Status.Requested;
-        arbitration.deposit = uint248(msg.value - zkGasFee);
-
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-
-        zkSyncAddress.requestL2Transaction{value: zkGasFee}(
-            homeProxy,
-            L2_CALL_VALUE,
-            data,
-            l2GasLimit,
-            l2GasPerPubdataByteLimit,
-            new bytes[](0),
-            msg.sender
-        );
-
-        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
+    /**
+     * @notice Requests arbitration for the given question and contested answer.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
+     */
+    function requestArbitrationCustomParameters(
+        bytes32 _questionID,
+        uint256 _maxPrevious,
+        uint256 _l2GasLimit,
+        uint256 _l2GasPerPubdataByteLimit
+    ) external payable {
+        _requestArbitration(_questionID, _maxPrevious, [_l2GasLimit, _l2GasPerPubdataByteLimit]);
     }
 
     /**
@@ -291,37 +284,29 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Cancels the arbitration in case the dispute could not be created. Requires a small deposit to cover zk fees.
+     * This version of the function uses recommended bridging parameters.
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable override {
-        uint256 arbitrationID = uint256(_questionID);
-        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
-        require(arbitration.status == Status.Failed, "Invalid arbitration status");
-        uint256 zkGasFee = getZkGasFee();
-        require(msg.value >= zkGasFee, "Should cover the zk fee");
-        uint256 deposit = arbitration.deposit;
+        _handleFailedDisputeCreation(_questionID, _requester, [l2GasLimit, l2GasPerPubdataByteLimit]);
+    }
 
-        // Note that we don't nullify the status to allow the function to be called
-        // multiple times to avoid intentional blocking.
-        arbitration.deposit = 0;
-        uint256 surplusValue = msg.value - zkGasFee;
-        payable(msg.sender).safeSend(surplusValue, wNative);
-        payable(_requester).safeSend(deposit, wNative);
-
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-        zkSyncAddress.requestL2Transaction{value: zkGasFee}(
-            homeProxy,
-            L2_CALL_VALUE,
-            data,
-            l2GasLimit,
-            l2GasPerPubdataByteLimit,
-            new bytes[](0),
-            msg.sender
-        );
-
-        emit ArbitrationCanceled(_questionID, _requester);
+    /**
+     * @notice Cancels the arbitration in case the dispute could not be created. Requires a small deposit to cover zk fees.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
+     */
+    function handleFailedDisputeCreationCustomParameters(
+        bytes32 _questionID,
+        address _requester,
+        uint256 _l2GasLimit,
+        uint256 _l2GasPerPubdataByteLimit
+    ) external payable {
+        _handleFailedDisputeCreation(_questionID, _requester, [_l2GasLimit, _l2GasPerPubdataByteLimit]);
     }
 
     // ********************************* //
@@ -495,38 +480,29 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Relays the ruling to home proxy. Requires a small deposit to cover zk fees.
+     * This version of the function uses recommended bridging parameters.
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
     function relayRule(bytes32 _questionID, address _requester) external payable {
-        uint256 arbitrationID = uint256(_questionID);
-        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
-        // Note that we allow to relay multiple times to prevent intentional blocking.
-        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
+        _relayRule(_questionID, _requester, [l2GasLimit, l2GasPerPubdataByteLimit]);
+    }
 
-        uint256 zkGasFee = getZkGasFee();
-        require(msg.value >= zkGasFee, "Should cover the zk fee");
-
-        arbitration.status = Status.Relayed;
-
-        // Realitio ruling is shifted by 1 compared to Kleros.
-        uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
-
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
-
-        zkSyncAddress.requestL2Transaction{value: zkGasFee}(
-            homeProxy,
-            L2_CALL_VALUE,
-            data,
-            l2GasLimit,
-            l2GasPerPubdataByteLimit,
-            new bytes[](0),
-            msg.sender
-        );
-        emit RulingRelayed(_questionID, bytes32(realitioRuling));
-
-        if (msg.value - zkGasFee > 0) payable(msg.sender).safeSend(msg.value - zkGasFee, wNative); // Sending extra value back to contributor.
+    /**
+     * @notice Relays the ruling to home proxy. Requires a small deposit to cover zk fees.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
+     */
+    function relayRuleCustomParameters(
+        bytes32 _questionID,
+        address _requester,
+        uint256 _l2GasLimit,
+        uint256 _l2GasPerPubdataByteLimit
+    ) external payable {
+        _relayRule(_questionID, _requester, [_l2GasLimit, _l2GasPerPubdataByteLimit]);
     }
 
     /* External Views */
@@ -709,6 +685,105 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
+    }
+
+    // ****************************** //
+    // *    Internal and private    * //
+    // ****************************** //
+
+    function _requestArbitration(bytes32 _questionID, uint256 _maxPrevious, uint256[2] memory _parameters) internal {
+        require(homeProxy != address(0), "Home proxy is not set");
+        require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
+
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
+        require(arbitration.status == Status.None, "Arbitration already requested");
+
+        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
+        uint256 zkGasFee = getZkGasFee();
+        require(msg.value >= arbitrationCost + zkGasFee, "Deposit value too low");
+
+        arbitration.status = Status.Requested;
+        arbitration.deposit = uint248(msg.value - zkGasFee);
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
+
+        zkSyncAddress.requestL2Transaction{value: zkGasFee}(
+            homeProxy,
+            L2_CALL_VALUE,
+            data,
+            _parameters[0], // l2GasLimit
+            _parameters[1], // l2GasPerPubdataByteLimit
+            new bytes[](0),
+            msg.sender
+        );
+
+        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
+    }
+
+    function _handleFailedDisputeCreation(
+        bytes32 _questionID,
+        address _requester,
+        uint256[2] memory _parameters
+    ) internal {
+        uint256 arbitrationID = uint256(_questionID);
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        require(arbitration.status == Status.Failed, "Invalid arbitration status");
+        uint256 zkGasFee = getZkGasFee();
+        require(msg.value >= zkGasFee, "Should cover the zk fee");
+        uint256 deposit = arbitration.deposit;
+
+        // Note that we don't nullify the status to allow the function to be called
+        // multiple times to avoid intentional blocking.
+        arbitration.deposit = 0;
+        uint256 surplusValue = msg.value - zkGasFee;
+        payable(msg.sender).safeSend(surplusValue, wNative);
+        payable(_requester).safeSend(deposit, wNative);
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
+        zkSyncAddress.requestL2Transaction{value: zkGasFee}(
+            homeProxy,
+            L2_CALL_VALUE,
+            data,
+            _parameters[0], // l2GasLimit
+            _parameters[1], // l2GasPerPubdataByteLimit
+            new bytes[](0),
+            msg.sender
+        );
+
+        emit ArbitrationCanceled(_questionID, _requester);
+    }
+
+    function _relayRule(bytes32 _questionID, address _requester, uint256[2] memory _parameters) internal {
+        uint256 arbitrationID = uint256(_questionID);
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        // Note that we allow to relay multiple times to prevent intentional blocking.
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
+
+        uint256 zkGasFee = getZkGasFee();
+        require(msg.value >= zkGasFee, "Should cover the zk fee");
+
+        arbitration.status = Status.Relayed;
+
+        // Realitio ruling is shifted by 1 compared to Kleros.
+        uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
+
+        zkSyncAddress.requestL2Transaction{value: zkGasFee}(
+            homeProxy,
+            L2_CALL_VALUE,
+            data,
+            _parameters[0], // l2GasLimit
+            _parameters[1], // l2GasPerPubdataByteLimit
+            new bytes[](0),
+            msg.sender
+        );
+        emit RulingRelayed(_questionID, bytes32(realitioRuling));
+
+        if (msg.value - zkGasFee > 0) payable(msg.sender).safeSend(msg.value - zkGasFee, wNative); // Sending extra value back to contributor.
     }
 
     /**

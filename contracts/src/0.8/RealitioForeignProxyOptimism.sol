@@ -40,6 +40,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         Requested,
         Created,
         Ruled,
+        Relayed,
         Failed
     }
 
@@ -133,26 +134,28 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
     /**
      * @notice Requests arbitration for the given question and contested answer.
+     * This version of the function uses recommended bridging parameters.
+     * Note that the signature of this function can't be changed as it's required by Reality UI.
      * @param _questionID The ID of the question.
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
-        require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
+        _requestArbitration(_questionID, _maxPrevious, MIN_GAS_LIMIT);
+    }
 
-        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
-        require(arbitration.status == Status.None, "Arbitration already requested");
-
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
-        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-
-        require(msg.value >= arbitrationCost, "Deposit value too low");
-
-        arbitration.status = Status.Requested;
-        arbitration.deposit = uint248(msg.value);
-
-        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
-        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
+    /**
+     * @notice Requests arbitration for the given question and contested answer.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
+     * @param _gasLimit Gas limit for the L2 transaction.
+     */
+    function requestArbitrationCustomParameters(
+        bytes32 _questionID,
+        uint256 _maxPrevious,
+        uint32 _gasLimit
+    ) external payable {
+        _requestArbitration(_questionID, _maxPrevious, _gasLimit);
     }
 
     /**
@@ -223,26 +226,28 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
     }
 
     /**
-     * @notice Cancels the arbitration in case the dispute could not be created. Requires a small deposit to cover Optimism fees.
+     * @notice Cancels the arbitration in case the dispute could not be created.
+     * This version of the function uses recommended bridging parameters.
      * @param _questionID The ID of the question.
      * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable override {
-        uint256 arbitrationID = uint256(_questionID);
-        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
-        require(arbitration.status == Status.Failed, "Invalid arbitration status");
+        _handleFailedDisputeCreation(_questionID, _requester, MIN_GAS_LIMIT);
+    }
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-
-        uint256 deposit = arbitration.deposit;
-
-        delete arbitrationRequests[arbitrationID][_requester];
-
-        payable(_requester).safeSend(deposit, wNative);
-
-        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
-        emit ArbitrationCanceled(_questionID, _requester);
+    /**
+     * @notice Cancels the arbitration in case the dispute could not be created.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     * @param _gasLimit Gas limit for the L2 transaction.
+     */
+    function handleFailedDisputeCreationCustomParameters(
+        bytes32 _questionID,
+        address _requester,
+        uint32 _gasLimit
+    ) external payable {
+        _handleFailedDisputeCreation(_questionID, _requester, _gasLimit);
     }
 
     // ********************************* //
@@ -412,14 +417,28 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         arbitration.answer = finalRuling;
         arbitration.status = Status.Ruled;
 
-        // Realitio ruling is shifted by 1 compared to Kleros.
-        uint256 realitioRuling = finalRuling != 0 ? finalRuling - 1 : REFUSE_TO_ARBITRATE_REALITIO;
-
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, bytes32(arbitrationID), bytes32(realitioRuling));
-        messenger.sendMessage(homeProxy, data, MIN_GAS_LIMIT);
-
         emit Ruling(arbitrator, _disputeID, finalRuling);
+    }
+
+    /**
+     * @notice Relays the ruling to home proxy.
+     * This version of the function uses recommended bridging parameters.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     */
+    function relayRule(bytes32 _questionID, address _requester) external {
+        _relayRule(_questionID, _requester, MIN_GAS_LIMIT);
+    }
+
+    /**
+     * @notice Relays the ruling to home proxy.
+     * This function is to be used if the bridging with default parameters fail.
+     * @param _questionID The ID of the question.
+     * @param _requester The address of the arbitration requester.
+     * @param _gasLimit Gas limit for the L2 transaction.
+     */
+    function relayRuleCustomParameters(bytes32 _questionID, address _requester, uint32 _gasLimit) external {
+        _relayRule(_questionID, _requester, _gasLimit);
     }
 
     // ********************************* //
@@ -604,5 +623,65 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
      */
     function externalIDtoLocalID(uint256 _externalDisputeID) external view override returns (uint256) {
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
+    }
+
+    // **************************** //
+    // *         Internal         * //
+    // **************************** //
+
+    function _requestArbitration(bytes32 _questionID, uint256 _maxPrevious, uint32 _gasLimit) internal {
+        require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
+
+        ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
+        require(arbitration.status == Status.None, "Arbitration already requested");
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
+        uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
+
+        require(msg.value >= arbitrationCost, "Deposit value too low");
+
+        arbitration.status = Status.Requested;
+        arbitration.deposit = uint248(msg.value);
+
+        messenger.sendMessage(homeProxy, data, _gasLimit);
+        emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
+    }
+
+    function _handleFailedDisputeCreation(bytes32 _questionID, address _requester, uint32 _gasLimit) internal {
+        uint256 arbitrationID = uint256(_questionID);
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        require(arbitration.status == Status.Failed, "Invalid arbitration status");
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
+
+        uint256 deposit = arbitration.deposit;
+
+        // Note that we don't nullify the status to allow the function to be called
+        // multiple times to avoid intentional blocking.
+        arbitration.deposit = 0;
+        payable(_requester).safeSend(deposit, wNative);
+
+        messenger.sendMessage(homeProxy, data, _gasLimit);
+        emit ArbitrationCanceled(_questionID, _requester);
+    }
+
+    function _relayRule(bytes32 _questionID, address _requester, uint32 _gasLimit) internal {
+        uint256 arbitrationID = uint256(_questionID);
+        ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
+        // Note that we allow to relay multiple times to prevent intentional blocking.
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
+
+        // Realitio ruling is shifted by 1 compared to Kleros.
+        uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
+
+        arbitration.status = Status.Relayed;
+
+        messenger.sendMessage(homeProxy, data, _gasLimit);
+        emit RulingRelayed(_questionID, bytes32(realitioRuling));
     }
 }

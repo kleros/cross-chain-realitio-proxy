@@ -1,4 +1,3 @@
-const { realityETHConfig } = require("@reality.eth/contracts");
 const { HOME_CHAIN_IDS } = require("./shared");
 const arbitrumProxy = require("./home/arbitrum.js");
 const gnosisProxy = require("./home/gnosis.js");

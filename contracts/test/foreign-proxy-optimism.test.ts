@@ -1,7 +1,15 @@
-const { ethers } = require("hardhat");
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
-const { expect } = require("chai");
-const { toBigInt, ZeroAddress, zeroPadValue, toBeHex } = ethers;
+import { ethers } from "hardhat";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+import { expect } from "chai";
+import { toBigInt, ZeroAddress, zeroPadValue, toBeHex } from "ethers";
+import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { 
+  AutoAppealableArbitrator, 
+  RealitioForeignProxyOptimism, 
+  MockRealitioHomeProxyOptimism, 
+  MockRealitio, 
+  MockCrossDomainMessenger
+} from "../typechain-types";
 
 const arbitratorExtraData = "0x85";
 const arbitrationCost = 1000;
@@ -15,7 +23,7 @@ const appealTimeOut = 180;
 const winnerMultiplier = 3000;
 const loserMultiplier = 7000;
 const loserAppealPeriodMultiplier = 5000;
-const gasPrice = toBigInt(80000000);
+const gasPrice = toBigInt(80000000n);
 const MAX_ANSWER = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 const maxPrevious = 2001;
 const messenger = "0x4200000000000000000000000000000000000007";
@@ -27,18 +35,18 @@ const oneETH = ethers.parseEther("1");
 
 const ZERO_HASH = zeroPadValue(toBeHex(0), 32);
 
-let arbitrator;
-let homeProxy;
-let foreignProxy;
-let realitio;
-let mockMessenger;
+let arbitrator: AutoAppealableArbitrator;
+let homeProxy: MockRealitioHomeProxyOptimism;
+let foreignProxy: RealitioForeignProxyOptimism;
+let realitio: MockRealitio;
+let mockMessenger: MockCrossDomainMessenger;
 
-let governor;
-let requester;
-let crowdfunder1;
-let crowdfunder2;
-let answerer;
-let other;
+let governor: HardhatEthersSigner;
+let requester: HardhatEthersSigner;
+let crowdfunder1: HardhatEthersSigner;
+let crowdfunder2: HardhatEthersSigner;
+let answerer: HardhatEthersSigner;
+let other: HardhatEthersSigner;
 
 describe("Cross-chain arbitration with appeals", () => {
   beforeEach("initialize the contract", async function () {
@@ -85,6 +93,38 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await expect(
       foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost })
+    )
+      .to.emit(realitio, "MockNotifyOfArbitrationRequest")
+      .withArgs(questionID, requesterAddress)
+      .to.emit(homeProxy, "RequestNotified")
+      .withArgs(questionID, requesterAddress, maxPrevious)
+      .to.emit(foreignProxy, "ArbitrationRequested")
+      .withArgs(questionID, requesterAddress, maxPrevious);
+
+    const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+
+    expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
+    expect(arbitration[1]).to.equal(1000, "Deposit value stored incorrectly");
+
+    const request = await homeProxy.requests(questionID, requesterAddress);
+    expect(request[0]).to.equal(2, "Incorrect status of the request in HomeProxy");
+    expect(request[1]).to.equal(ZERO_HASH, "Answer should be empty");
+
+    expect(await homeProxy.questionIDToRequester(questionID)).to.equal(
+      requesterAddress,
+      "Incorrect requester stored in home proxy"
+    );
+  });
+
+  it("Should set correct values when requesting arbitration with custom parameters and fire the event", async () => {
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 1500000, { value: 100 })
+    ).to.be.revertedWith("Deposit value too low");
+
+    const requesterAddress = await requester.getAddress();
+
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 1500000, { value: arbitrationCost })
     )
       .to.emit(realitio, "MockNotifyOfArbitrationRequest")
       .withArgs(questionID, requesterAddress)
@@ -275,7 +315,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress());
 
     let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(4, "Status should be Failed");
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
 
     const oldBalance = await getBalance(requester);
     await expect(foreignProxy.connect(other).handleFailedDisputeCreation(questionID, await requester.getAddress()))
@@ -290,12 +330,56 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(newBalance).to.equal(oldBalance + toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
 
     arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(0, "Status should be empty");
+    expect(arbitration[0]).to.equal(5, "Status should not change");
     expect(arbitration[1]).to.equal(0, "Deposit should be empty");
     expect(arbitration[2]).to.equal(0, "Dispute id should be empty");
 
     const request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
+
+    await expect(
+      foreignProxy.connect(other).handleFailedDisputeCreation(questionID, await requester.getAddress())
+    ).to.be.revertedWith("Failed TxToL1");
+  });
+
+  it("Should correctly handle failed dispute creation with custom parameters", async () => {
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
+
+    await expect(
+      foreignProxy.connect(other).handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 1500000)
+    ).to.be.revertedWith("Invalid arbitration status");
+
+    await arbitrator.setArbitrationPrice(8501);
+    await expect(homeProxy.handleNotifiedRequest(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress());
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+
+    const oldBalance = await getBalance(requester);
+    await expect(foreignProxy.connect(other).handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 1500000))
+      .to.emit(foreignProxy, "ArbitrationCanceled")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(realitio, "MockCancelArbitrationRequest")
+      .withArgs(questionID)
+      .to.emit(homeProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress());
+
+    const newBalance = await requester.provider.getBalance(await requester.getAddress());
+    expect(newBalance).to.equal(oldBalance + toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
+
+    arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should not change");
+    expect(arbitration[1]).to.equal(0, "Deposit should be empty");
+    expect(arbitration[2]).to.equal(0, "Dispute id should be empty");
+
+    const request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(0, "Status should be nullified in home proxy");
+
+    await expect(
+      foreignProxy.connect(other).handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 1500000)
+    ).to.be.revertedWith("Failed TxToL1");
   });
 
   it("Should handle the ruling correctly", async () => {
@@ -309,15 +393,26 @@ describe("Cross-chain arbitration with appeals", () => {
       "Arbitrator has not ruled yet"
     );
 
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Dispute not resolved"
+    );
+  
     await expect(arbitrator.giveRuling(2, 8))
       .to.emit(foreignProxy, "Ruling")
-      .withArgs(arbitrator.target, 2, 8)
+      .withArgs(arbitrator.target, 2, 8);
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer)
       .to.emit(homeProxy, "ArbitratorAnswered")
       .withArgs(questionID, arbAnswer);
 
-    const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
-    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
-    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
 
     let request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(4, "Status should be Ruled");
@@ -331,6 +426,60 @@ describe("Cross-chain arbitration with appeals", () => {
 
     request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(5, "Status should be Finished");
+
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed TxToL1"
+    );
+  });
+
+  it("Should handle the ruling correctly using custom parameters for relayRule", async () => {
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
+
+    await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
+
+    const arbAnswer = zeroPadValue(toBeHex(7), 32);
+    
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress)).to.be.revertedWith(
+      "Arbitrator has not ruled yet"
+    );
+
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 10000)).to.be.revertedWith(
+      "Dispute not resolved"
+    );
+
+    await expect(arbitrator.giveRuling(2, 8))
+      .to.emit(foreignProxy, "Ruling")
+      .withArgs(arbitrator.target, 2, 8);
+
+    let arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 10000))
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitratorAnswered")
+      .withArgs(questionID, arbAnswer);
+
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
+
+    let request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(4, "Status should be Ruled");
+    expect(request[1]).to.equal(arbAnswer, "Incorrect answer stored");
+
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
+      .to.emit(realitio, "MockFinalize")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitrationFinished")
+      .withArgs(questionID);
+
+    request = await homeProxy.requests(questionID, await requester.getAddress());
+    expect(request[0]).to.equal(5, "Status should be Finished");
+
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 10000)).to.be.revertedWith(
+      "Failed TxToL1"
+    );
   });
 
   it("Should correctly fund an appeal and fire the events", async () => {
@@ -364,7 +513,7 @@ describe("Cross-chain arbitration with appeals", () => {
       value: appealCost,
     }); // This value doesn't fund fully.
     tx = await txFundAppeal;
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    txFee = (await tx.wait())!.gasUsed * gasPrice;
 
     newBalance = await getBalance(crowdfunder1);
     expect(newBalance).to.equal(
@@ -389,7 +538,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .connect(crowdfunder1)
       .fundAppeal(arbitrationID, 533, { gasPrice: gasPrice, value: oneETH }); // Overpay to check that it's handled correctly.
     tx = await txFundAppeal;
-    txFee = (await tx.wait()).gasUsed * gasPrice;
+    txFee = (await tx.wait())!.gasUsed * gasPrice;
     newBalance = await getBalance(crowdfunder1);
     expect(newBalance).to.equal(
       oldBalance - toBigInt(3500) - txFee,
@@ -478,7 +627,7 @@ describe("Cross-chain arbitration with appeals", () => {
       gasPrice: gasPrice,
       value: arbitrationCost,
     });
-    const txFee = (await tx.wait()).gasUsed * gasPrice;
+    const txFee = (await tx.wait())!.gasUsed * gasPrice;
 
     const newBalance = await getBalance(requester);
     expect(newBalance).to.equal(
@@ -800,7 +949,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(arbitration[3]).to.equal(50, "The answer should be 50");
   });
 
-  async function deployContracts(signer) {
+  async function deployContracts(signer: HardhatEthersSigner) {
     const Arbitrator = await ethers.getContractFactory("AutoAppealableArbitrator", signer);
 
     const arbitrator = await Arbitrator.deploy(String(arbitrationCost));
@@ -856,7 +1005,7 @@ describe("Cross-chain arbitration with appeals", () => {
     };
   }
 
-  async function getBalance(account) {
+  async function getBalance(account: HardhatEthersSigner) {
     return account.provider.getBalance(await account.getAddress());
   }
 });

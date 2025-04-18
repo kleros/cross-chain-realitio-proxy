@@ -12,7 +12,6 @@ const homeParameters = {
     fxChild: "0xE5930336866d0388f0f745A2d9207C7781047C0f",
   },
   [polygon.chainId]: {
-    // https://github.com/RealityETH/reality-eth-monorepo/blob/main/packages/contracts/chains/deployments/137/MATIC/RealityETH-3.0.json
     realitio: realityETHConfig(polygon.chainId, "MATIC", "3.0").address,
     // https://docs.polygon.technology/pos/how-to/bridging/l1-l2-communication/state-transfer/#prerequisites
     fxChild: "0x8397259c983751DAf40400790063935a11afa28a",

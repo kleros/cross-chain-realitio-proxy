@@ -30,4 +30,7 @@ export async function generateMetaEvidence(params: RealityQuestionParams) {
   return fetchRealityMetaEvidence(params);
 }
 
+globalThis.getMetaEvidence       = getMetaEvidence;
+globalThis.generateMetaEvidence  = generateMetaEvidence;
+
 export type { RealityQuestionParams };

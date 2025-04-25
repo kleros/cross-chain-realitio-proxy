@@ -1,12 +1,17 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import inject from "@rollup/plugin-inject";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  esbuild: {
+    charset: "ascii",
+  },
   build: {
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
-      formats: ["es"],
+      formats: ["iife"],
+      name: "index",
       fileName: "index",
     },
     rollupOptions: {
@@ -15,6 +20,11 @@ export default defineConfig({
         manualChunks: undefined,
         inlineDynamicImports: true,
       },
+      plugins: [
+        inject({
+          Buffer: ["buffer", "Buffer"],
+        }),
+      ],
     },
     target: "esnext",
     sourcemap: false,

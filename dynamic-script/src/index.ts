@@ -1,5 +1,8 @@
 import { type RealityQuestionParams, fetchRealityMetaEvidence } from "@kleros/cross-chain-realitio-sdk";
 
+import { Buffer } from "buffer";
+(globalThis as any).Buffer = Buffer;
+
 console.log("dynamic-script version", process.env.VERSION);
 
 interface ScriptParameters {
@@ -26,5 +29,8 @@ export default async function getMetaEvidence() {
 export async function generateMetaEvidence(params: RealityQuestionParams) {
   return fetchRealityMetaEvidence(params);
 }
+
+globalThis.getMetaEvidence       = getMetaEvidence;
+globalThis.generateMetaEvidence  = generateMetaEvidence;
 
 export type { RealityQuestionParams };

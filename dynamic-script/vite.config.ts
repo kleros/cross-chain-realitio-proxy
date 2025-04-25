@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
+import inject from "@rollup/plugin-inject";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -15,6 +16,11 @@ export default defineConfig({
         manualChunks: undefined,
         inlineDynamicImports: true,
       },
+      plugins: [
+        inject({
+          Buffer: ["buffer", "Buffer"],
+        }),
+      ],
     },
     target: "esnext",
     sourcemap: false,

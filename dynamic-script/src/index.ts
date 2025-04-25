@@ -1,5 +1,8 @@
 import { type RealityQuestionParams, fetchRealityMetaEvidence } from "@kleros/cross-chain-realitio-sdk";
 
+import { Buffer } from "buffer";
+(globalThis as any).Buffer = Buffer;
+
 console.log("dynamic-script version", process.env.VERSION);
 
 interface ScriptParameters {

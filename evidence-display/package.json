@@ -1,6 +1,6 @@
 {
   "name": "@kleros/cross-chain-realitio-evidence-display",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Evidence display for cross-chain Reality.eth integration",
   "type": "module",
   "main": "index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@kleros/cross-chain-realitio-dynamic-script",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Dynamic script for cross-chain Reality.eth integration",
   "author": "Kleros",
   "license": "MIT",

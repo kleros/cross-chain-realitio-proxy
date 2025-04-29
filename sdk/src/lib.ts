@@ -9,7 +9,7 @@ const DEFAULT_TEMPLATES_V3_0 = Object.values(templates3_0);
 const DEFAULT_TEMPLATES_V3_2 = Object.values(templates3_2);
 
 async function getDefaultTemplates(realitioConfig: RealityConfig): Promise<string[]> {
-  if (realitioConfig.contract_version === "3.2") {
+  if (realitioConfig.version_number === "3.2") {
     console.log("Using Reality default template v3.2");
     return DEFAULT_TEMPLATES_V3_2;
   }

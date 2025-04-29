@@ -1,9 +1,12 @@
 import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
+import * as dotenv from "dotenv";
 import { http, type PublicClient, type Transport, createPublicClient, getContract } from "viem";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "../contracts";
 import { fetchRealityQuestionData } from "../lib";
 import { createMockClient, createMockContracts, createMockTransport } from "./test-helpers";
+
+dotenv.config();
 
 // Mock viem
 vi.mock("viem", () => ({
@@ -65,7 +68,7 @@ describe("fetchRealityQuestionData (v3.0)", () => {
     const result = await fetchRealityQuestionData({
       disputeID: "114",
       arbitrableContractAddress: "0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE",
-      arbitratorJsonRpcUrl: "https://1rpc.io/sepolia",
+      arbitratorJsonRpcUrl: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
       arbitrableJsonRpcUrl: "https://sepolia.unichain.org/",
     });
 

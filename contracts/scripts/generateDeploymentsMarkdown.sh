@@ -15,8 +15,8 @@ function get_policy_from_metaevidence() {
 function get_policy_name() {
     policy_path=$1
     clean_path=${policy_path#"https://cdn.kleros.link/ipfs/"}
-    key=$(grep "\"$clean_path\"" "$SCRIPT_DIR/../deploy/shared/consts.js" | head -n1 | cut -d: -f1 | tr -d ' ')
-    [ -z "$key" ] && echo "custom" || echo "$key"
+    key=$(jq -r "to_entries | map(select(.value == \"$clean_path\")) | .[0].key // \"custom\"" "$SCRIPT_DIR/../policies.json")
+    echo "$key"
 }
 
 function generate() { #deploymentDir #homeExplorerUrl #foreignExplorerUrl

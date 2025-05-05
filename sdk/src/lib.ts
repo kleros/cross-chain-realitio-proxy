@@ -1,6 +1,21 @@
+import { type RealityConfig, configForAddress } from "@reality.eth/contracts";
+import { content as templates3_0 } from "@reality.eth/contracts/config/templates.json";
+import { content as templates3_2 } from "@reality.eth/contracts/config/templates_3.2.json";
 import RealitioQuestion from "@reality.eth/reality-eth-lib/formatters/question.js";
 import { http, createPublicClient, getContract } from "viem";
-import { REALITY_STARTS_AT, foreignProxyAbi, homeProxyAbi, realitioAbi } from "./contracts";
+import { foreignProxyAbi, homeProxyAbi, realitioAbi } from "./contracts";
+
+const DEFAULT_TEMPLATES_V3_0 = Object.values(templates3_0);
+const DEFAULT_TEMPLATES_V3_2 = Object.values(templates3_2);
+
+async function getDefaultTemplates(realitioConfig: RealityConfig): Promise<string[]> {
+  if (realitioConfig.version_number === "3.2") {
+    console.log("Using Reality default template v3.2");
+    return DEFAULT_TEMPLATES_V3_2;
+  }
+  console.log("Using Reality default template v3.0");
+  return DEFAULT_TEMPLATES_V3_0;
+}
 
 const isNil = (value: unknown): value is undefined | null => value === undefined || value === null;
 
@@ -14,18 +29,25 @@ export interface RealityQuestionParams {
   jsonRpcUrl?: string;
 }
 
+export type QuestionType = "bool" | "uint" | "single-select" | "multiple-select" | "datetime" | "hash";
+
 export interface RealityQuestionData {
   questionID: `0x${string}`;
   realitioAddress: `0x${string}`;
   questionData: {
     title?: string;
-    type: "bool" | "uint" | "single-select" | "multiple-select" | "datetime";
+    description?: string;
+    type: QuestionType;
     decimals?: number;
     outcomes?: string[];
   };
   rawQuestion: string;
   rawTemplate: string;
 }
+
+type MatchingKeys<T, U> = {
+  [K in keyof T & keyof U]: T[K];
+} & Pick<RealityQuestionData["questionData"], "type">;
 
 export async function fetchRealityQuestionData({
   disputeID,
@@ -70,6 +92,10 @@ export async function fetchRealityQuestionData({
   const realitioAddress = await homeProxy.read.realitio();
   console.log("Realitio address:", realitioAddress);
 
+  const realitioChainId = await homeClient.getChainId();
+  const realitioConfig = configForAddress(realitioAddress, realitioChainId);
+  console.log("Realitio config:", realitioConfig);
+
   console.log("Getting realitio contract...");
   const realitio = getContract({
     address: realitioAddress,
@@ -109,11 +135,7 @@ export async function fetchRealityQuestionData({
       question_id: questionID,
     },
     {
-      fromBlock: BigInt(
-        Object.keys(REALITY_STARTS_AT).includes(realitioAddress.toLowerCase())
-          ? REALITY_STARTS_AT[realitioAddress.toLowerCase() as keyof typeof REALITY_STARTS_AT]
-          : 0
-      ),
+      fromBlock: BigInt(realitioConfig.block),
       toBlock: "latest",
     }
   );
@@ -134,16 +156,11 @@ export async function fetchRealityQuestionData({
   }
 
   let templateText: string;
-  if (template_id < 5n) {
-    // first 5 templates are part of reality.eth spec, hardcode for faster loading
-    templateText = [
-      '{"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "uint", "decimals": 18, "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "single-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "multiple-select", "outcomes": [%s], "category": "%s", "lang": "%s"}',
-      '{"title": "%s", "type": "datetime", "category": "%s", "lang": "%s"}',
-    ][Number(template_id)];
+  const defaultTemplates = await getDefaultTemplates(realitioConfig);
+  if (template_id < defaultTemplates.length) {
+    templateText = defaultTemplates[Number(template_id)];
   } else {
+    console.log("Using custom template ID:", template_id);
     const templateCreationBlock = await realitio.read.templates([template_id]);
     const templateEventLog = await realitio.getEvents.LogNewTemplate(
       {
@@ -169,9 +186,9 @@ export async function fetchRealityQuestionData({
   const populatedJSON = RealitioQuestion.populatedJSONForTemplate(templateText, question);
   console.log("populatedJSON:", populatedJSON);
 
-  const questionData = (
-    typeof populatedJSON === "string" ? JSON.parse(populatedJSON) : populatedJSON
-  ) as RealityQuestionData["questionData"];
+  // Cast questionData depending on the actual template used.
+  const parsedJSON = typeof populatedJSON === "string" ? JSON.parse(populatedJSON) : populatedJSON;
+  const questionData = parsedJSON as MatchingKeys<typeof parsedJSON, RealityQuestionData["questionData"]>;
   console.log("questionData:", questionData);
 
   return {
@@ -186,7 +203,7 @@ export async function fetchRealityQuestionData({
 export interface RealityMetaEvidence {
   question?: string;
   rulingOptions?: {
-    type: "single-select" | "uint" | "datetime" | "multiple-select";
+    type: QuestionType;
     titles?: string[];
     precision?: number;
     reserved: Record<string, string>;
@@ -198,7 +215,14 @@ type RulingOptionsType = NonNullable<RealityMetaEvidence["rulingOptions"]>;
 export async function fetchRealityMetaEvidence(params: RealityQuestionParams): Promise<RealityMetaEvidence> {
   const { questionData } = await fetchRealityQuestionData(params);
 
-  const erc1497OverridesMixin = questionData.title ? { question: questionData.title } : {};
+  // Combine title and description into a formatted question string
+  const question = questionData.title
+    ? questionData.description
+      ? `${questionData.title}. ${questionData.description}`
+      : questionData.title
+    : questionData.description || "";
+
+  const erc1497OverridesMixin = question ? { question } : {};
 
   const reservedAnswers: Record<string, string> = {
     "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF": "Answered Too Soon",
@@ -233,6 +257,11 @@ export async function fetchRealityMetaEvidence(params: RealityQuestionParams): P
       case "datetime":
         return {
           type: "datetime" as const,
+          reserved: reservedAnswers,
+        } satisfies RulingOptionsType;
+      case "hash":
+        return {
+          type: "hash" as const,
           reserved: reservedAnswers,
         } satisfies RulingOptionsType;
       default:

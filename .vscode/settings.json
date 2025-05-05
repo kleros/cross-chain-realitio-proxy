@@ -7,5 +7,11 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "always",
     "quickfix.biome": "always"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
   }
 }

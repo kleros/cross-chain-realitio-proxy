@@ -1,6 +1,6 @@
 {
   "name": "@kleros/cross-chain-realitio-evidence-display",
-  "version": "0.5.0",
+  "version": "0.6.1",
   "description": "Evidence display for cross-chain Reality.eth integration",
   "type": "module",
   "main": "index.js",
@@ -14,7 +14,8 @@
     "clean": "rm -rf dist evidence-display-v${npm_package_version}",
     "format": "biome format --write ./src",
     "lint": "biome lint ./src",
-    "check": "biome check --write ./src"
+    "check": "biome check --write ./src",
+    "example": "vite --open 'http://localhost:5173/?example=true&chainID=10200'"
   },
   "dependencies": {
     "@kleros/cross-chain-realitio-sdk": "workspace:*",

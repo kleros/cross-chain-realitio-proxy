@@ -73,6 +73,7 @@ Refresh the list of deployed contracts by running `./scripts/populateReadme.sh`.
 
 | Version | Name | Home Proxy | Foreign Proxy | CourtID | MinJurors | Reality | Policy | Comment |
 |---------|------|------------|---------------|---------|-----------|---------|---------|---------|
+| v1.3.0 | [Chiado default](deployments/chiado/RealitioProxy-v1.3.0.json#L6) | [0x87f58F..e2EAf9](https://gnosis-chiado.blockscout.com/address/0x87f58F0dCF3c99BA2F3eB0604e5c335893e2EAf9) | [0x781Bfb..904aE0](https://sepolia.etherscan.io/address/0x781Bfb3A7179e27D78c6d18bCc54A2af61904aE0) | 3 | 1 | [RealityUnverified](https://gnosis-chiado.blockscout.com/address/0x012fb3aDce7D60672cF634e730927Fa5822b3cAb) | [default](https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf) |  |
 | v1.1.0 | [Default](deployments/chiado/RealitioProxy-v1.1.0.json#L6) | [0xE62094..FffeD7](https://gnosis-chiado.blockscout.com/address/0xE620947519E8102aa625BBB4669fE317c9FffeD7) | [0x5d7cB7..969D42](https://sepolia.etherscan.io/address/0x5d7cB72B31C080CF2de5f57fd38DedBeaf969D42) | 0 | 0 | [RealityUnverified](https://gnosis-chiado.blockscout.com/address/0x1E732a1C5e9181622DD5A931Ec6801889ce66185) | [default](https://cdn.kleros.link/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf) | :warning: bad metadata |
 
 

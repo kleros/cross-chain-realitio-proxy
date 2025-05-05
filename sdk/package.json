@@ -19,11 +19,13 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@reality.eth/reality-eth-lib": "^3.0.1",
+    "@reality.eth/contracts": "^3.2.2",
+    "@reality.eth/reality-eth-lib": "^3.4.2",
     "viem": "^2.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
+    "dotenv": "^16.5.0",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^1.4.0"

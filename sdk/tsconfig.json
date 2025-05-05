@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
     "module": "ESNext",
-    "lib": ["ES2020", "DOM"],
     "moduleResolution": "bundler",
     "strict": true,
     "skipLibCheck": true,

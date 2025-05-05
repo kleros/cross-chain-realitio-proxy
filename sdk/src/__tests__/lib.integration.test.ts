@@ -1,5 +1,8 @@
+import * as dotenv from "dotenv";
 import { describe, expect, it } from "vitest";
 import { fetchRealityQuestionData } from "../lib";
+
+dotenv.config();
 
 describe("fetchRealityQuestionData (integration)", () => {
   // Mark test as integration test and increase timeout since we're making real network calls
@@ -8,7 +11,7 @@ describe("fetchRealityQuestionData (integration)", () => {
       const result = await fetchRealityQuestionData({
         disputeID: "114",
         arbitrableContractAddress: "0x807f4D900E0c5B63Ed87a5C97f2B3482d82649eE",
-        arbitratorJsonRpcUrl: "https://1rpc.io/sepolia",
+        arbitratorJsonRpcUrl: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
         arbitrableJsonRpcUrl: "https://sepolia.unichain.org/",
       });
 

@@ -4,10 +4,10 @@
   "title": "A reality.eth question",
   "description": "A reality.eth question has been raised to arbitration.",
   "question": "Give an answer to the question.",
-  "evidenceDisplayInterfaceURI": "/ipfs/QmSKx7zsJUFr86gpCci9JpMeKA36jhambezL23jFfoXxGD/index.html",
-  "dynamicScriptURI": "/ipfs/QmaG5RFGXp5gbu4EeA2nidFa1ks4qnFNDrET9WpDetKpXr",
+  "evidenceDisplayInterfaceURI": "/ipfs/QmWzhQjP778Wt78bPFHjDsW5jCeTQ82bhxryrtJEbEq2fq/index.html",
+  "dynamicScriptURI": "/ipfs/QmP7AfDnaKmrgsbyvWUvmqhmBFdAkp1d9JYCmGFQzCdgfx",
   "fileURI": "/ipfs/QmNV5NWwCudYKfiHuhdWxccrPyxs4DnbLGQace2oMKHkZv/Question_Resolution_Policy.pdf",
-  "arbitrableChainID": "10200",
+  "arbitrableChainID": "11155111",
   "arbitratorChainID": "11155111",
   "dynamicScriptRequiredParams": [
     "disputeID",

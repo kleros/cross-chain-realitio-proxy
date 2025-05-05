@@ -62,6 +62,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(await foreignProxy.arbitrator()).to.equal(arbitrator.target);
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
     expect(await foreignProxy.fxChildTunnel()).to.equal(homeProxy.target);
+    expect(await foreignProxy.wNative()).to.equal(other);
     expect(await homeProxy.metadata()).to.equal(metadata);
     expect(await homeProxy.foreignChainId()).to.equal(zeroPadValue(toBeHex(5), 32));
     expect(await homeProxy.foreignProxy()).to.equal(foreignProxy.target);
@@ -703,6 +704,7 @@ describe("Cross-chain arbitration with appeals", () => {
     const HomeProxy = await ethers.getContractFactory("MockRealitioHomeProxyPolygon", signer);
 
     const foreignProxy = await ForeignProxy.deploy(
+      other, // Use other address as placeholder for wNative
       arbitrator.target,
       arbitratorExtraData,
       metaEvidence,

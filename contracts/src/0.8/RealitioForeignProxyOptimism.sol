@@ -66,7 +66,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
-    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
+    address public immutable wNative; // Address of wrapped version of the chain's native currency. WETH-like.
 
     // contract for L1 -> L2 communication
     ICrossDomainMessenger public immutable messenger;
@@ -171,6 +171,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
+        // Arbitration cost can possibly change between when the request has been made and received, so evaluate once more.
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         if (arbitration.deposit >= arbitrationCost) {
             try
@@ -338,7 +339,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
-        require(arbitration.status == Status.Ruled, "Dispute not resolved");
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
         // Allow to reimburse if funding of the round was unsuccessful.
         if (!round.hasPaid[_answer]) {
             reward = round.contributions[_beneficiary][_answer];
@@ -580,7 +581,7 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
     ) external view override returns (uint256 sum) {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
-        if (arbitration.status < Status.Ruled) return sum;
+        if (!(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed)) return sum;
 
         uint256 finalAnswer = arbitration.answer;
         uint256 noOfRounds = arbitration.rounds.length;
@@ -660,6 +661,8 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
 
         // Note that we don't nullify the status to allow the function to be called
         // multiple times to avoid intentional blocking.
+        // Also note that since the status is not nullified the requester must use a different address
+        // to make a new request for the same question.
         arbitration.deposit = 0;
         payable(_requester).safeSend(deposit, wNative);
 

@@ -9,6 +9,7 @@ import {RealitioForeignProxyPolygon} from "../../RealitioForeignProxyPolygon.sol
  */
 contract MockRealitioForeignProxyPolygon is RealitioForeignProxyPolygon {
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -19,6 +20,7 @@ contract MockRealitioForeignProxyPolygon is RealitioForeignProxyPolygon {
         address _fxRoot
     )
         RealitioForeignProxyPolygon(
+            _wNative,
             _arbitrator,
             _arbitratorExtraData,
             _metaEvidence,

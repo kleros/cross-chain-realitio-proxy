@@ -23,6 +23,7 @@ async function deployForeignProxy({
   homeNetworkName,
   homeChainId,
   homeProxy,
+  wNative,
   arbitrator,
   courts,
   multipliers,
@@ -35,7 +36,7 @@ async function deployForeignProxy({
   return await deploy("RealitioForeignProxyGnosis", {
     contract: "src/0.8/RealitioForeignProxyGnosis.sol:RealitioForeignProxyGnosis",
     from,
-    args: [arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, homeChainId, foreignAmb],
+    args: [wNative, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, homeProxy, homeChainId, foreignAmb],
     log: true,
     gas: 8000000,
   });

@@ -74,8 +74,8 @@ contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
     constructor(IRealitio _realitio, string memory _metadata, address _foreignProxy, uint256 _foreignChainId) {
         realitio = _realitio;
         metadata = _metadata;
-        foreignChainId = bytes32(_foreignChainId);
         foreignProxy = _foreignProxy;
+        foreignChainId = bytes32(_foreignChainId);
     }
 
     /**

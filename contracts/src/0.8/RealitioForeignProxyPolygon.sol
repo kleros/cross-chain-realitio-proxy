@@ -13,12 +13,14 @@ pragma solidity 0.8.25;
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import {FxBaseRootTunnel} from "./interfaces/polygon/FxBaseRootTunnel.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
 contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolver, FxBaseRootTunnel {
+    using SafeSend for address payable;
     /* Constants */
 
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
@@ -58,6 +60,8 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
+    address public immutable wNative; // Address of wrapped version of the chain's native currency. WETH-like.
+
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
 
@@ -70,6 +74,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
     mapping(uint256 => DisputeDetails) public disputeIDToDisputeDetails; // Maps external dispute ids to local arbitration ID and requester who was able to complete the arbitration request.
     mapping(uint256 => bool) public arbitrationIDToDisputeExists; // Whether a dispute has already been created for the given arbitration ID or not.
     mapping(uint256 => address) public arbitrationIDToRequester; // Maps arbitration ID to the requester who was able to complete the arbitration request.
+    mapping(uint256 => uint256) public arbitrationCreatedBlock; // Block of dispute creation.
 
     /**
      * @dev This is applied to functions called via the internal function
@@ -86,6 +91,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -96,6 +102,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
      * @param _fxRoot Address of the FxRoot contract of the Polygon bridge.
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -105,6 +112,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         address _checkpointManager,
         address _fxRoot
     ) FxBaseRootTunnel(_checkpointManager, _fxRoot) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -154,6 +162,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
+        // Arbitration cost can possibly change between when the request has been made and received, so evaluate once more.
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         if (arbitration.deposit >= arbitrationCost) {
             try
@@ -165,6 +174,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
 
                 arbitrationIDToDisputeExists[arbitrationID] = true;
                 arbitrationIDToRequester[arbitrationID] = _requester;
+                arbitrationCreatedBlock[disputeID] = block.number;
 
                 // At this point, arbitration.deposit is guaranteed to be greater than or equal to the arbitration cost.
                 uint256 remainder = arbitration.deposit - arbitrationCost;
@@ -175,7 +185,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder);
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -202,7 +212,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -224,7 +234,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
 
         delete arbitrationRequests[arbitrationID][_requester];
 
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
         _sendMessageToChild(data);
         emit ArbitrationCanceled(_questionID, _requester);
@@ -296,7 +306,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -336,7 +346,7 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }

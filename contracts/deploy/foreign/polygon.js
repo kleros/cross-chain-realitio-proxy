@@ -24,6 +24,7 @@ async function deployForeignProxy({
   parameters,
   homeNetworkName,
   homeProxy,
+  wNative,
   arbitrator,
   courts,
   multipliers,
@@ -33,7 +34,7 @@ async function deployForeignProxy({
   const arbitratorExtraData = encodeExtraData(courts.oracle, numberOfJurors);
   const deployed = await deploy("RealitioForeignProxyPolygon", {
     from,
-    args: [arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, checkpointManager, fxRoot],
+    args: [wNative, arbitrator, arbitratorExtraData, metaEvidence, ...multipliers, checkpointManager, fxRoot],
     log: true,
     gas: 8000000,
   });

@@ -73,6 +73,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
     expect(await foreignProxy.homeProxy()).to.equal(homeProxy.target);
     expect(await foreignProxy.homeChainId()).to.equal(homeChainId);
+    expect(await foreignProxy.wNative()).to.equal(other);
     expect(await homeProxy.metadata()).to.equal(metadata);
 
     // 0 - winner, 1 - loser, 2 - loserAppealPeriod.
@@ -725,6 +726,7 @@ describe("Cross-chain arbitration with appeals", () => {
     });
 
     const foreignProxy = await ForeignProxy.deploy(
+      other, // Use other address as placeholder for wNative
       arbitrator.target,
       arbitratorExtraData,
       metaEvidence,

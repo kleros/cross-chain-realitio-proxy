@@ -13,12 +13,15 @@ pragma solidity 0.8.25;
 import {IDisputeResolver, IArbitrator} from "@kleros/dispute-resolver-interface-contract-0.8/contracts/IDisputeResolver.sol";
 import {IAMB} from "./interfaces/gnosis/IAMB.sol";
 import {IForeignArbitrationProxy, IHomeArbitrationProxy} from "./interfaces/IArbitrationProxies.sol";
+import {SafeSend} from "./libraries/SafeSend.sol";
 
 /**
  * @title Arbitration proxy for Realitio on Ethereum side (A.K.A. the Foreign Chain).
  * @dev This contract is meant to be deployed to the Ethereum chains where Kleros is deployed.
  */
 contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolver {
+    using SafeSend for address payable;
+
     /* Constants */
     uint256 public constant NUMBER_OF_CHOICES_FOR_ARBITRATOR = type(uint256).max; // The number of choices for the arbitrator.
     uint256 public constant REFUSE_TO_ARBITRATE_REALITIO = type(uint256).max; // Constant that represents "Refuse to rule" in realitio format.
@@ -57,6 +60,8 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
+    address public immutable wNative; // Address of wrapped version of the chain's native currency. WETH-like.
+
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
 
@@ -86,6 +91,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Creates an arbitration proxy on the foreign chain.
+     * @param _wNative The address of the wrapped version of the native currency.
      * @param _arbitrator Arbitrator contract address.
      * @param _arbitratorExtraData The extra data used to raise a dispute in the arbitrator.
      * @param _metaEvidence The URI of the meta evidence file.
@@ -97,6 +103,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
      * @param _amb ArbitraryMessageBridge contract address.
      */
     constructor(
+        address _wNative,
         IArbitrator _arbitrator,
         bytes memory _arbitratorExtraData,
         string memory _metaEvidence,
@@ -107,6 +114,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
         uint256 _homeChainId,
         IAMB _amb
     ) {
+        wNative = _wNative;
         arbitrator = _arbitrator;
         arbitratorExtraData = _arbitratorExtraData;
         winnerMultiplier = _winnerMultiplier;
@@ -162,6 +170,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Requested, "Invalid arbitration status");
 
+        // Arbitration cost can possibly change between when the request has been made and received, so evaluate once more.
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
 
         if (arbitration.deposit >= arbitrationCost) {
@@ -185,7 +194,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
                 arbitration.rounds.push();
 
                 if (remainder > 0) {
-                    payable(_requester).send(remainder);
+                    payable(_requester).safeSend(remainder, wNative);
                 }
 
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
@@ -212,7 +221,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
@@ -229,7 +238,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
         uint256 deposit = arbitration.deposit;
 
         delete arbitrationRequests[arbitrationID][_requester];
-        payable(_requester).send(deposit);
+        payable(_requester).safeSend(deposit, wNative);
 
         bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
@@ -304,7 +313,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
             arbitrator.appeal{value: appealCost}(disputeID, arbitratorExtraData);
         }
 
-        if (msg.value - contribution > 0) payable(msg.sender).send(msg.value - contribution); // Sending extra value back to contributor. It is the user's responsibility to accept ETH.
+        if (msg.value - contribution > 0) payable(msg.sender).safeSend(msg.value - contribution, wNative); // Sending extra value back to contributor.
         return round.hasPaid[_answer];
     }
 
@@ -344,7 +353,7 @@ contract RealitioForeignProxyGnosis is IForeignArbitrationProxy, IDisputeResolve
 
         if (reward != 0) {
             round.contributions[_beneficiary][_answer] = 0;
-            _beneficiary.send(reward); // It is the user's responsibility to accept ETH.
+            _beneficiary.safeSend(reward, wNative);
             emit Withdrawal(_arbitrationID, _round, _answer, _beneficiary, reward);
         }
     }

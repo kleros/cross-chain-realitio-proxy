@@ -1,5 +1,5 @@
-const hardhatConfig = require("../../hardhat.config.js");
-const zkSyncConfig = require("../../hardhat.config.zksync.js");
+const hardhatConfig = require("../../hardhat.config.ts").default;
+const zkSyncConfig = require("../../hardhat.config.zksync.ts").default;
 
 // Deep merge rather than spread which is a shallow merge
 function deepMerge(target, source) {

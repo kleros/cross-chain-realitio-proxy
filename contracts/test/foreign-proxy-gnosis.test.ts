@@ -73,6 +73,7 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(await foreignProxy.arbitratorExtraData()).to.equal(arbitratorExtraData);
     expect(await foreignProxy.homeProxy()).to.equal(homeProxy.target);
     expect(await foreignProxy.homeChainId()).to.equal(homeChainId);
+    expect(await foreignProxy.wNative()).to.equal(other);
     expect(await homeProxy.metadata()).to.equal(metadata);
 
     // 0 - winner, 1 - loser, 2 - loserAppealPeriod.
@@ -103,6 +104,30 @@ describe("Cross-chain arbitration with appeals", () => {
 
     await expect(
       foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost })
+    ).to.be.revertedWith("Arbitration already requested");
+  });
+
+  it("Should set correct values when requesting arbitration with custom parameters and fire the event", async () => {
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 500, { value: arbitrationCost - 1 })
+    ).to.be.revertedWith("Deposit value too low");
+
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 500, { value: arbitrationCost })
+    )
+      .to.emit(realitio, "MockNotifyOfArbitrationRequest")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(homeProxy, "RequestNotified")
+      .withArgs(questionID, await requester.getAddress(), maxPrevious)
+      .to.emit(foreignProxy, "ArbitrationRequested")
+      .withArgs(questionID, await requester.getAddress(), maxPrevious);
+
+    const arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
+    expect(arbitration[1]).to.equal(1000, "Deposit value stored incorrectly");
+
+    await expect(
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 500, { value: arbitrationCost })
     ).to.be.revertedWith("Arbitration already requested");
   });
 
@@ -204,7 +229,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress());
 
     let arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(4, "Status should be Failed");
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
 
     await expect(foreignProxy.handleFailedDisputeCreation(questionID, await requester.getAddress()))
       .to.emit(realitio, "MockCancelArbitrationRequest")
@@ -218,8 +243,53 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(newBalance).to.equal(oldBalance + toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
 
     arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(0, "Status should be empty");
+    expect(arbitration[0]).to.equal(5, "Status should not change");
     expect(arbitration[1]).to.equal(0, "Deposit should be empty");
+
+    // Home proxy won't allow to send msg 2nd time but foreign proxy checks should pass.
+    await expect(
+      foreignProxy.connect(other).handleFailedDisputeCreation(questionID, await requester.getAddress())
+    ).to.be.revertedWith("Failed to call contract");
+  });
+
+  it("Should correctly handle failed dispute creation with custom parameters", async () => {
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
+
+    const oldBalance = await getBalance(requester);
+    await expect(foreignProxy.handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 1000)).to.be.revertedWith(
+      "Invalid arbitration status"
+    );
+
+    await arbitrator.setArbitrationPrice(2000); // Increase the cost so creation fails.
+
+    await expect(homeProxy.handleNotifiedRequest(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(homeProxy, "RequestAcknowledged")
+      .withArgs(questionID, await requester.getAddress());
+
+    let arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
+
+    await expect(foreignProxy.handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 1000))
+      .to.emit(realitio, "MockCancelArbitrationRequest")
+      .withArgs(questionID)
+      .to.emit(homeProxy, "ArbitrationFailed")
+      .withArgs(questionID, await requester.getAddress())
+      .to.emit(foreignProxy, "ArbitrationCanceled")
+      .withArgs(questionID, await requester.getAddress());
+
+    const newBalance = await getBalance(requester);
+    expect(newBalance).to.equal(oldBalance + toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
+
+    arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(5, "Status should not change");
+    expect(arbitration[1]).to.equal(0, "Deposit should be empty");
+
+    // Home proxy won't allow to send msg 2nd time but foreign proxy checks should pass.
+    await expect(
+      foreignProxy.connect(other).handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 1000)
+    ).to.be.revertedWith("Failed to call contract");
   });
 
   it("Should handle the ruling correctly", async () => {
@@ -230,21 +300,78 @@ describe("Cross-chain arbitration with appeals", () => {
 
     const arbAnswer = zeroPadValue(toBeHex(7), 32);
 
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Dispute not resolved"
+    );
+
     await expect(arbitrator.giveRuling(2, 8))
-      .to.emit(homeProxy, "ArbitratorAnswered")
-      .withArgs(questionID, arbAnswer)
       .to.emit(foreignProxy, "Ruling")
       .withArgs(arbitrator.target, 2, 8);
 
-    const arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    let arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
     expect(arbitration[0]).to.equal(3, "Status should be Ruled");
     expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitratorAnswered")
+      .withArgs(questionID, arbAnswer);
+
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
 
     await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
       .to.emit(realitio, "MockFinalize")
       .withArgs(questionID, arbAnswer)
       .to.emit(homeProxy, "ArbitrationFinished")
       .withArgs(questionID);
+
+    // Home proxy won't allow to send msg 2nd time but foreign proxy checks should pass.
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed to call contract"
+    );
+  });
+
+  it("Should handle the ruling correctly using custom parameters", async () => {
+    await foreignProxy.connect(requester).requestArbitration(questionID, maxPrevious, { value: arbitrationCost });
+
+    await homeProxy.handleNotifiedRequest(questionID, await requester.getAddress());
+    await expect(foreignProxy.rule(2, 8)).to.be.revertedWith("Only arbitrator allowed");
+
+    const arbAnswer = zeroPadValue(toBeHex(7), 32);
+
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 1000)).to.be.revertedWith(
+      "Dispute not resolved"
+    );
+
+    await expect(arbitrator.giveRuling(2, 8))
+      .to.emit(foreignProxy, "Ruling")
+      .withArgs(arbitrator.target, 2, 8);
+
+    let arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    expect(arbitration[0]).to.equal(3, "Status should be Ruled");
+    expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 1000))
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitratorAnswered")
+      .withArgs(questionID, arbAnswer);
+
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
+
+    await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
+      .to.emit(realitio, "MockFinalize")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitrationFinished")
+      .withArgs(questionID);
+
+    // Home proxy won't allow to send msg 2nd time but foreign proxy checks should pass.
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 1000)).to.be.revertedWith(
+      "Failed to call contract"
+    );
   });
 
   it("Should correctly fund an appeal and fire the events", async () => {
@@ -478,6 +605,8 @@ describe("Cross-chain arbitration with appeals", () => {
       "The balance of the requester should stay the same (withdraw 0 round from winning ruling)"
     );
 
+    // Relay the ruling to check that withdrawals are still possible.
+    await foreignProxy.connect(other).relayRule(questionID, await requester.getAddress());
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, crowdfunder1Address, 0, 50);
 
     newBalance1 = await getBalance(crowdfunder1);
@@ -725,6 +854,7 @@ describe("Cross-chain arbitration with appeals", () => {
     });
 
     const foreignProxy = await ForeignProxy.deploy(
+      other, // Use other address as placeholder for wNative
       arbitrator.target,
       arbitratorExtraData,
       metaEvidence,

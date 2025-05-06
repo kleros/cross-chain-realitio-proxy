@@ -960,6 +960,10 @@ describe("Cross-chain arbitration with appeals", () => {
     oldBalance2 = await getBalance(crowdfunder2);
 
     // Withdraw 0 round.
+
+    // Relay the ruling to check that withdrawals are still possible.
+    await foreignProxy.connect(other).relayRule(questionID, await requester.getAddress(), { value: l2GasPrice });
+  
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, requesterAddress, 0, 50);
 
     newBalance = await getBalance(requester);

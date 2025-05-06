@@ -234,6 +234,10 @@ contract RealitioHomeProxyZkSync is IHomeArbitrationProxy {
         emit ArbitrationFinished(_questionID);
     }
 
+    /**
+     * @notice Sends a message to L1.
+     * @param _data The data sent.
+     */
     function sendToL1(bytes memory _data) internal virtual {
         L1_MESSENGER_CONTRACT.sendToL1(_data);
     }

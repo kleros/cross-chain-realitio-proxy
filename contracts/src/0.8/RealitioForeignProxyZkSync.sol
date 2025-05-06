@@ -64,10 +64,10 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
-    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     address public deployer = msg.sender; // Deployer address. It will be set to 0 after setting HomeProxy.
     address public homeProxy; // Proxy on L2.
 
+    address public immutable wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
     bytes public arbitratorExtraData; // The extra data used to raise a dispute in the arbitrator.
 
@@ -397,7 +397,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
-        require(arbitration.status == Status.Ruled, "Dispute not resolved");
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
         // Allow to reimburse if funding of the round was unsuccessful.
         if (!round.hasPaid[_answer]) {
             reward = round.contributions[_beneficiary][_answer];
@@ -642,7 +642,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
     ) external view override returns (uint256 sum) {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
-        if (arbitration.status < Status.Ruled) return sum;
+        if (!(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed)) return sum;
 
         uint256 finalAnswer = arbitration.answer;
         uint256 noOfRounds = arbitration.rounds.length;
@@ -699,7 +699,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         require(arbitration.status == Status.None, "Arbitration already requested");
 
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
-        uint256 zkGasFee = getZkGasFee();
+        uint256 zkGasFee = getZkGasFee(_parameters[0], _parameters[1]); // l2GasLimit and l2GasPerPubdataByteLimit respectively.
         require(msg.value >= arbitrationCost + zkGasFee, "Deposit value too low");
 
         arbitration.status = Status.Requested;
@@ -729,12 +729,14 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
-        uint256 zkGasFee = getZkGasFee();
+        uint256 zkGasFee = getZkGasFee(_parameters[0], _parameters[1]); // l2GasLimit and l2GasPerPubdataByteLimit respectively.
         require(msg.value >= zkGasFee, "Should cover the zk fee");
         uint256 deposit = arbitration.deposit;
 
         // Note that we don't nullify the status to allow the function to be called
         // multiple times to avoid intentional blocking.
+        // Also note that since the status is not nullified the requester must use a different address
+        // to make a new request for the same question.
         arbitration.deposit = 0;
         uint256 surplusValue = msg.value - zkGasFee;
         payable(msg.sender).safeSend(surplusValue, wNative);
@@ -761,7 +763,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         // Note that we allow to relay multiple times to prevent intentional blocking.
         require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
-        uint256 zkGasFee = getZkGasFee();
+        uint256 zkGasFee = getZkGasFee(_parameters[0], _parameters[1]); // l2GasLimit and l2GasPerPubdataByteLimit respectively.
         require(msg.value >= zkGasFee, "Should cover the zk fee");
 
         arbitration.status = Status.Relayed;
@@ -788,10 +790,15 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Gets the required fee for sending tx to L2.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
      * @return zkGasFee Required fee.
      */
-    function getZkGasFee() private view returns (uint256 zkGasFee) {
+    function getZkGasFee(
+        uint256 _l2GasLimit,
+        uint256 _l2GasPerPubdataByteLimit
+    ) private view returns (uint256 zkGasFee) {
         uint256 gasPrice = tx.gasprice;
-        zkGasFee = zkSyncAddress.l2TransactionBaseCost(gasPrice, l2GasLimit, l2GasPerPubdataByteLimit);
+        zkGasFee = zkSyncAddress.l2TransactionBaseCost(gasPrice, _l2GasLimit, _l2GasPerPubdataByteLimit);
     }
 }

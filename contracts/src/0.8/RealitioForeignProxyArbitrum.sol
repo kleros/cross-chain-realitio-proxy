@@ -65,7 +65,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256[] fundedAnswers; // Stores the answer choices that are fully funded.
     }
 
-    address public wNative; // Address of wrapped version of the chain's native currency. WETH-like.
+    address public immutable wNative; // Address of wrapped version of the chain's native currency. WETH-like.
     address public immutable homeProxy; // Proxy on L2.
 
     IArbitrator public immutable arbitrator; // The address of the arbitrator. TRUSTED.
@@ -379,7 +379,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
         Round storage round = arbitration.rounds[_round];
-        require(arbitration.status == Status.Ruled, "Dispute not resolved");
+        require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
         // Allow to reimburse if funding of the round was unsuccessful.
         if (!round.hasPaid[_answer]) {
             reward = round.contributions[_beneficiary][_answer];
@@ -632,7 +632,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
     ) external view override returns (uint256 sum) {
         address requester = arbitrationIDToRequester[_arbitrationID];
         ArbitrationRequest storage arbitration = arbitrationRequests[_arbitrationID][requester];
-        if (arbitration.status < Status.Ruled) return sum;
+        if (!(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed)) return sum;
 
         uint256 finalAnswer = arbitration.answer;
         uint256 noOfRounds = arbitration.rounds.length;
@@ -735,6 +735,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
         // Note that we don't nullify the status to allow the function to be called
         // multiple times to avoid intentional blocking.
+        // Also note that since the status is not nullified the requester must use a different address
+        // to make a new request for the same question.
         _arbitration.deposit = 0;
         payable(msg.sender).safeSend(msg.value - arbitrumFee, wNative);
         payable(_requester).safeSend(deposit, wNative);

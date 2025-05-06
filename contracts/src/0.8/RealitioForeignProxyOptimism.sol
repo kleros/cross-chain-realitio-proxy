@@ -636,14 +636,15 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
 
         require(msg.value >= arbitrationCost, "Deposit value too low");
 
         arbitration.status = Status.Requested;
         arbitration.deposit = uint248(msg.value);
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationRequest.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, msg.sender, _maxPrevious);
 
         messenger.sendMessage(homeProxy, data, _gasLimit);
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
@@ -654,9 +655,6 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
-        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
-
         uint256 deposit = arbitration.deposit;
 
         // Note that we don't nullify the status to allow the function to be called
@@ -665,6 +663,9 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         // to make a new request for the same question.
         arbitration.deposit = 0;
         payable(_requester).safeSend(deposit, wNative);
+
+        bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationFailure.selector;
+        bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
 
         messenger.sendMessage(homeProxy, data, _gasLimit);
         emit ArbitrationCanceled(_questionID, _requester);
@@ -676,13 +677,13 @@ contract RealitioForeignProxyOptimism is IForeignArbitrationProxy, IDisputeResol
         // Note that we allow to relay multiple times to prevent intentional blocking.
         require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
+        arbitration.status = Status.Relayed;
+
         // Realitio ruling is shifted by 1 compared to Kleros.
         uint256 realitioRuling = arbitration.answer != 0 ? arbitration.answer - 1 : REFUSE_TO_ARBITRATE_REALITIO;
 
         bytes4 methodSelector = IHomeArbitrationProxy.receiveArbitrationAnswer.selector;
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
-
-        arbitration.status = Status.Relayed;
 
         messenger.sendMessage(homeProxy, data, _gasLimit);
         emit RulingRelayed(_questionID, bytes32(realitioRuling));

@@ -197,7 +197,7 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress());
 
     let arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(4, "Status should be Failed");
+    expect(arbitration[0]).to.equal(5, "Status should be Failed");
 
     await expect(foreignProxy.handleFailedDisputeCreation(questionID, await requester.getAddress()))
       .to.emit(realitio, "MockCancelArbitrationRequest")
@@ -211,8 +211,13 @@ describe("Cross-chain arbitration with appeals", () => {
     expect(newBalance).to.equal(oldBalance + toBigInt(arbitrationCost), "Requester was not reimbursed correctly");
 
     arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
-    expect(arbitration[0]).to.equal(0, "Status should be empty");
+    expect(arbitration[0]).to.equal(5, "Status should not change");
     expect(arbitration[1]).to.equal(0, "Deposit should be empty");
+
+    // Home proxy won't allow to send msg 2nd time but foreign proxy checks should pass.
+    await expect(
+      foreignProxy.handleFailedDisputeCreation(questionID, await requester.getAddress())
+    ).to.be.revertedWith("Failed to call contract");
   });
 
   it("Should handle the ruling correctly", async () => {
@@ -223,21 +228,37 @@ describe("Cross-chain arbitration with appeals", () => {
 
     const arbAnswer = zeroPadValue(toBeHex(7), 32);
 
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Dispute not resolved"
+    );
+
     await expect(arbitrator.giveRuling(2, 8))
-      .to.emit(homeProxy, "ArbitratorAnswered")
-      .withArgs(questionID, arbAnswer)
       .to.emit(foreignProxy, "Ruling")
       .withArgs(arbitrator.target, 2, 8);
 
-    const arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
+    let arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
     expect(arbitration[0]).to.equal(3, "Status should be Ruled");
     expect(arbitration[3]).to.equal(8, "Stored answer is incorrect");
+
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress()))
+      .to.emit(foreignProxy, "RulingRelayed")
+      .withArgs(questionID, arbAnswer)
+      .to.emit(homeProxy, "ArbitratorAnswered")
+      .withArgs(questionID, arbAnswer);
+    
+    arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
+    expect(arbitration[0]).to.equal(4, "Status should be Relayed");
 
     await expect(homeProxy.reportArbitrationAnswer(questionID, ZERO_HASH, ZERO_HASH, ZeroAddress))
       .to.emit(realitio, "MockFinalize")
       .withArgs(questionID, arbAnswer)
       .to.emit(homeProxy, "ArbitrationFinished")
       .withArgs(questionID);
+
+    // Home proxy won't allow to send msg 2nd time but foreign proxy checks should pass.
+    await expect(foreignProxy.connect(other).relayRule(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed to call contract"
+    );    
   });
 
   it("Should correctly fund an appeal and fire the events", async () => {
@@ -463,6 +484,8 @@ describe("Cross-chain arbitration with appeals", () => {
     newBalance = await getBalance(requester);
     expect(newBalance).to.equal(oldBalance, "The balance of the requester should stay the same (withdraw 0 round)");
 
+    // Relay the ruling to check that withdrawals are still possible.
+    await foreignProxy.connect(other).relayRule(questionID, await requester.getAddress());
     await foreignProxy.withdrawFeesAndRewards(arbitrationID, requesterAddress, 0, 5);
 
     newBalance = await getBalance(requester);

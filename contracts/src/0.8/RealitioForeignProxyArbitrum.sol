@@ -694,7 +694,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
 
         // Taken from here https://docs.arbitrum.io/for-devs/troubleshooting-building#what-is-a-retryable-tickets-submission-fee-how-can-i-calculate-it-what-happens-if-i-the-fee-i-provide-is-insufficient
         uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
-        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
+        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost, _parameters[0], _parameters[1]); // l2GasLimit and gasPriceBid respectively.
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
         require(msg.value >= arbitrationCost + arbitrumFee, "Deposit value too low");
 
@@ -729,7 +729,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, _requester);
 
         uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
-        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
+        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost, _parameters[0], _parameters[1]); // l2GasLimit and gasPriceBid respectively.
         require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
         uint256 deposit = _arbitration.deposit;
 
@@ -772,7 +772,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         bytes memory data = abi.encodeWithSelector(methodSelector, _questionID, bytes32(realitioRuling));
 
         uint256 maxSubmissionCost = inbox.calculateRetryableSubmissionFee(data.length, BLOCK_BASE_FEE);
-        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost);
+        uint256 arbitrumFee = arbitrumGasFee(maxSubmissionCost, _parameters[0], _parameters[1]); // l2GasLimit and gasPriceBid respectively.
         require(msg.value >= arbitrumFee, "Should cover arbitrum fee");
 
         _arbitration.status = Status.Relayed;
@@ -801,9 +801,15 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * is greater than or equal to maxSubmissionCost + l2CallValue + gasLimit * maxFeePerGas.
      * https://docs.arbitrum.io/how-arbitrum-works/l1-to-l2-messaging
      * @param _maxSubmissionCost Cost to calculate a retryable ticket on L1.
+     * @param _l2GasLimit Gas limit for tx on L2.
+     * @param _gasPriceBid Gas price bid for tx on L2.
      * @return arbitrumFee Total arbitrum fee required to pass a message L1->L2.
      */
-    function arbitrumGasFee(uint256 _maxSubmissionCost) private view returns (uint256 arbitrumFee) {
-        arbitrumFee = _maxSubmissionCost + L2_CALL_VALUE + l2GasLimit * gasPriceBid;
+    function arbitrumGasFee(
+        uint256 _maxSubmissionCost,
+        uint256 _l2GasLimit,
+        uint256 _gasPriceBid
+    ) private view returns (uint256 arbitrumFee) {
+        arbitrumFee = _maxSubmissionCost + L2_CALL_VALUE + _l2GasLimit * _gasPriceBid;
     }
 }

@@ -171,7 +171,7 @@ describe("Cross-chain arbitration with appeals", () => {
 
     const arbitration = await foreignProxy.arbitrationRequests(arbitrationID, await requester.getAddress());
     expect(arbitration[0]).to.equal(1, "Incorrect status of the arbitration after creating a request");
-    expect(arbitration[1]).to.equal(8500, "Deposit value stored incorrectly"); // Surplus (20000) + ArbCost (1000) - ArbitrumFee (10000 + 5*500).
+    expect(arbitration[1]).to.equal(10950, "Deposit value stored incorrectly"); // Surplus (20000) + ArbCost (1000) - ArbitrumFee (10000 + 5*10).
 
     // Inbox acts as foreignProxyAlias here so it passes onlyForeignProxyAlias require
     await expect(mockInbox.connect(other).redeemTicket(0))

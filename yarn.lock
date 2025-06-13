@@ -3225,7 +3225,7 @@ __metadata:
     "@nomicfoundation/hardhat-toolbox": ^5.0.0
     "@nomicfoundation/hardhat-verify": ^2.0.12
     "@nomicfoundation/ignition-core": ^0.15.9
-    "@reality.eth/contracts": ^3.2.2
+    "@reality.eth/contracts": ^3.2.8
     "@typechain/ethers-v6": ^0.5.1
     "@typechain/hardhat": ^9.1.0
     "@types/chai": ^4.3.20
@@ -3301,8 +3301,8 @@ __metadata:
   resolution: "@kleros/cross-chain-realitio-sdk@workspace:sdk"
   dependencies:
     "@biomejs/biome": ^1.9.4
-    "@reality.eth/contracts": ^3.2.2
-    "@reality.eth/reality-eth-lib": ^3.4.2
+    "@reality.eth/contracts": ^3.2.8
+    "@reality.eth/reality-eth-lib": ^3.4.9
     dotenv: ^16.5.0
     tsup: ^8.0.0
     typescript: ^5.0.0
@@ -4058,29 +4058,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reality.eth/contracts@npm:^3.2.1":
-  version: 3.2.1
-  resolution: "@reality.eth/contracts@npm:3.2.1"
+"@reality.eth/contracts@npm:^3.2.8":
+  version: 3.2.8
+  resolution: "@reality.eth/contracts@npm:3.2.8"
   dependencies:
     ethers: ^5.8.0
-  checksum: 68224de8c7c282c05a81493544375cbbdfe4af6323457a5fe7db1933f037597e044fe5343dce8b3892ce4affa715b49a3613d44b16864d0f39fda48260e6a675
+  checksum: 731ecf2027a7315abebde99db242a76177d6e8a8600932c4962cab8356a00158288fa933bd155c5ce1dd46b54b86747dd58d258e6627b330b36340ef838add0d
   languageName: node
   linkType: hard
 
-"@reality.eth/contracts@npm:^3.2.2":
-  version: 3.2.2
-  resolution: "@reality.eth/contracts@npm:3.2.2"
+"@reality.eth/reality-eth-lib@npm:^3.4.9":
+  version: 3.4.9
+  resolution: "@reality.eth/reality-eth-lib@npm:3.4.9"
   dependencies:
-    ethers: ^5.8.0
-  checksum: 38a54119af1f019143f7a43d2b348949370bfed20f940924ca725eb416ec45f85b691cf4bf245e4a1ea0c07ad1fcd2914da23ff6f7c03155e9eaa433f2c4a737
-  languageName: node
-  linkType: hard
-
-"@reality.eth/reality-eth-lib@npm:^3.4.2":
-  version: 3.4.2
-  resolution: "@reality.eth/reality-eth-lib@npm:3.4.2"
-  dependencies:
-    "@reality.eth/contracts": ^3.2.1
+    "@reality.eth/contracts": ^3.2.8
     bignumber.js: ^7.2.1
     bn.js: ^5.2.1
     ethereumjs-abi: ^0.6.5
@@ -4088,7 +4079,7 @@ __metadata:
     isomorphic-dompurify: ^0.23.0
     marked: ^4.1.1
     sprintf-js: ^1.1.1
-  checksum: 4406e086458224a288031203e2fea90627bb958bfcb1b4972e7096e74be07203162e3627008e94c49383ed056e5b4c8546555fa319a6655ac5c05936642b8a5e
+  checksum: 98adf501340ed9f54f407b5da68bd5ed2bcf52a4429ec8936d5bd0f82a10ac06aa4d32cb7f0a5b7d8b7b016146b015492671a8598cc8b9d5b5d6d9117bd83c3c
   languageName: node
   linkType: hard
 

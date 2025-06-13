@@ -19,8 +19,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@reality.eth/contracts": "^3.2.2",
-    "@reality.eth/reality-eth-lib": "^3.4.2",
+    "@reality.eth/contracts": "^3.2.8",
+    "@reality.eth/reality-eth-lib": "^3.4.9",
     "viem": "^2.0.0"
   },
   "devDependencies": {

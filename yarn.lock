@@ -3225,7 +3225,7 @@ __metadata:
     "@nomicfoundation/hardhat-toolbox": ^5.0.0
     "@nomicfoundation/hardhat-verify": ^2.0.12
     "@nomicfoundation/ignition-core": ^0.15.9
-    "@reality.eth/contracts": ^3.2.8
+    "@reality.eth/contracts": ^3.2.13
     "@typechain/ethers-v6": ^0.5.1
     "@typechain/hardhat": ^9.1.0
     "@types/chai": ^4.3.20
@@ -3301,8 +3301,8 @@ __metadata:
   resolution: "@kleros/cross-chain-realitio-sdk@workspace:sdk"
   dependencies:
     "@biomejs/biome": ^1.9.4
-    "@reality.eth/contracts": ^3.2.8
-    "@reality.eth/reality-eth-lib": ^3.4.9
+    "@reality.eth/contracts": ^3.2.13
+    "@reality.eth/reality-eth-lib": ^3.4.15
     dotenv: ^16.5.0
     tsup: ^8.0.0
     typescript: ^5.0.0
@@ -4058,20 +4058,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@reality.eth/contracts@npm:^3.2.8":
-  version: 3.2.8
-  resolution: "@reality.eth/contracts@npm:3.2.8"
+"@reality.eth/contracts@npm:^3.2.13":
+  version: 3.2.13
+  resolution: "@reality.eth/contracts@npm:3.2.13"
   dependencies:
     ethers: ^5.8.0
-  checksum: 731ecf2027a7315abebde99db242a76177d6e8a8600932c4962cab8356a00158288fa933bd155c5ce1dd46b54b86747dd58d258e6627b330b36340ef838add0d
+  checksum: cb11f0745debc986aae996e12be9822321348046d53da22f50c8aa50d94d25eceb8d0ad014f0f31d765040e4260912be7b083a9465e9405a6a8359f5391c3385
   languageName: node
   linkType: hard
 
-"@reality.eth/reality-eth-lib@npm:^3.4.9":
-  version: 3.4.9
-  resolution: "@reality.eth/reality-eth-lib@npm:3.4.9"
+"@reality.eth/reality-eth-lib@npm:^3.4.15":
+  version: 3.4.15
+  resolution: "@reality.eth/reality-eth-lib@npm:3.4.15"
   dependencies:
-    "@reality.eth/contracts": ^3.2.8
+    "@reality.eth/contracts": ^3.2.13
     bignumber.js: ^7.2.1
     bn.js: ^5.2.1
     ethereumjs-abi: ^0.6.5
@@ -4079,7 +4079,7 @@ __metadata:
     isomorphic-dompurify: ^0.23.0
     marked: ^4.1.1
     sprintf-js: ^1.1.1
-  checksum: 98adf501340ed9f54f407b5da68bd5ed2bcf52a4429ec8936d5bd0f82a10ac06aa4d32cb7f0a5b7d8b7b016146b015492671a8598cc8b9d5b5d6d9117bd83c3c
+  checksum: ce1c2bd41483bec9bb72f6544efeeec2c3d7ec605f3d58b7002df397fb2016ab22e2841b18538d5524c43c0c8d3ebc45529fe0efbeb170640746fe6c9fe928bb
   languageName: node
   linkType: hard
 

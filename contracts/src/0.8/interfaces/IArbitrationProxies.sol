@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 
 import {IArbitrable} from "@kleros/erc-792/contracts/IArbitrable.sol";
 import {IEvidence} from "@kleros/erc-792/contracts/erc-1497/IEvidence.sol";
+import {IRealitio} from "./IRealitio.sol";
 
 interface IHomeArbitrationProxy {
     /**
@@ -116,6 +117,12 @@ interface IHomeArbitrationProxy {
      *  @dev Template_hashes won't be used by this home proxy. 
      */
     function metadata() external view returns (string calldata);
+
+    /**
+     * @notice Returns the address of Reality instance.
+     * @return Realitio address.
+     */
+    function realitio() external view returns (IRealitio);
 }
 
 interface IForeignArbitrationProxy {
@@ -192,4 +199,17 @@ interface IForeignArbitrationProxy {
      * @return The fee to create a dispute.
      */
     function getDisputeFee(bytes32 _questionID) external view returns (uint256);
+
+    /**
+     * @notice Returns the address of the home proxy.
+     * @return Home proxy address.
+     */
+    function homeProxy() external view returns (address);
+
+    /**
+     * @notice Returns the creation block of the dispute.
+     * @param _disputeID the ID of the dispute.
+     * @return Block number of dispute creation.
+     */
+    function arbitrationCreatedBlock(uint256 _disputeID) external view returns (uint256);
 }

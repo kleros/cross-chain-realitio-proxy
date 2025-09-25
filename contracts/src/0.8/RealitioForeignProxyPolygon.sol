@@ -618,6 +618,13 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         return disputeIDToDisputeDetails[_externalDisputeID].arbitrationID;
     }
 
+    /**  
+     * @notice Returns the address of the home proxy.
+     * @return Home proxy address.
+     */
+    function homeProxy() external view override returns (address) {
+        return fxChildTunnel;
+    }
     // **************************** //
     // *         Internal         * //
     // **************************** //

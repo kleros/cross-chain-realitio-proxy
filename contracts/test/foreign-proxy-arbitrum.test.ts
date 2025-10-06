@@ -149,17 +149,18 @@ describe("Cross-chain arbitration with appeals", () => {
 
   it("Should set correct values when requesting arbitration with custom parameters and fire the event", async () => {
     await expect(
-      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 5, 10, { value: arbitrationCost })
+      foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 5, 10, crowdfunder1, { value: arbitrationCost })
     ).to.be.revertedWith("Deposit value too low");
 
     const requesterAddress = await requester.getAddress();
-    await expect(foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 5, 10, { value: totalCost }))
+    const refundAddress = await crowdfunder1.getAddress();
+    await expect(foreignProxy.connect(requester).requestArbitrationCustomParameters(questionID, maxPrevious, 5, 10, crowdfunder1, { value: totalCost }))
       .to.emit(mockInbox, "TicketSent")
       .withArgs(
         homeProxy.target,
         0,
         ticketSubmissionCost,
-        requesterAddress,
+        refundAddress,
         requesterAddress,
         5,
         10
@@ -255,6 +256,10 @@ describe("Cross-chain arbitration with appeals", () => {
       .withArgs(questionID, await requester.getAddress(), 2)
       .to.emit(foreignProxy, "Dispute")
       .withArgs(arbitrator.target, 2, 0, 0);
+
+    await expect(homeProxy.connect(other).handleNotifiedRequest(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed TxToL1"
+    );
 
     const request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(3, "Incorrect status of the request in HomeProxy");
@@ -439,7 +444,7 @@ describe("Cross-chain arbitration with appeals", () => {
     await expect(
       foreignProxy
         .connect(other)
-        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: totalCost })
+        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 5, 10, crowdfunder1, { value: totalCost })
     ).to.be.revertedWith("Invalid arbitration status");
 
     await arbitrator.setArbitrationPrice(8501); // Increase the cost so creation fails. 21000 was originally sent, 12500 taken as fee, so increased cost should be higher than 8500
@@ -453,11 +458,12 @@ describe("Cross-chain arbitration with appeals", () => {
 
     const oldBalance = await getBalance(requester);
     const senderAddress = await other.getAddress();
+    const refundAddress = await crowdfunder1.getAddress();
   
     await expect(
       foreignProxy
         .connect(other)
-        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: l2GasPrice })
+        .handleFailedDisputeCreationCustomParameters(questionID, await requester.getAddress(), 5, 10, crowdfunder1, { value: l2GasPrice })
     )
       .to.emit(foreignProxy, "RetryableTicketCreated")
       .withArgs(1)
@@ -468,7 +474,7 @@ describe("Cross-chain arbitration with appeals", () => {
         homeProxy.target,
         0,
         ticketSubmissionCost,
-        senderAddress,
+        refundAddress,
         senderAddress,
         5,
         10
@@ -579,7 +585,7 @@ describe("Cross-chain arbitration with appeals", () => {
     const arbAnswer = zeroPadValue(toBeHex(7), 32);
 
     await expect(
-      foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: l2GasPrice })
+      foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 5, 10, crowdfunder1, { value: l2GasPrice })
     ).to.be.revertedWith("Dispute not resolved");
 
     await expect(arbitrator.giveRuling(2, 8)).to.emit(foreignProxy, "Ruling").withArgs(arbitrator.target, 2, 8);
@@ -593,8 +599,9 @@ describe("Cross-chain arbitration with appeals", () => {
     );
 
     const senderAddress = await other.getAddress();
+    const refundAddress = await crowdfunder1.getAddress();
   
-    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 5, 10, { value: l2GasPrice }))
+    await expect(foreignProxy.connect(other).relayRuleCustomParameters(questionID, await requester.getAddress(), 5, 10, crowdfunder1, { value: l2GasPrice }))
       .to.emit(foreignProxy, "RetryableTicketCreated")
       .withArgs(1)
       .to.emit(mockInbox, "TicketSent")
@@ -602,7 +609,7 @@ describe("Cross-chain arbitration with appeals", () => {
         homeProxy.target,
         0,
         ticketSubmissionCost,
-        senderAddress,
+        refundAddress,
         senderAddress,
         5,
         10

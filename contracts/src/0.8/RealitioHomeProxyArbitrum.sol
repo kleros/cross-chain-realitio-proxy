@@ -123,7 +123,7 @@ contract RealitioHomeProxyArbitrum is IHomeArbitrationProxy {
      */
     function handleNotifiedRequest(bytes32 _questionID, address _requester) external override {
         Request storage request = requests[_questionID][_requester];
-        require(request.status == Status.Notified, "Invalid request status");
+        require(request.status == Status.Notified || request.status == Status.AwaitingRuling, "Invalid request status");
 
         request.status = Status.AwaitingRuling;
 

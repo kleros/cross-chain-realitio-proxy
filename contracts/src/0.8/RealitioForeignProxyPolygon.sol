@@ -285,10 +285,15 @@ contract RealitioForeignProxyPolygon is IForeignArbitrationProxy, IDisputeResolv
         uint256 totalCost = appealCost + ((appealCost * multiplier) / MULTIPLIER_DIVISOR);
 
         // Take up to the amount necessary to fund the current round at the current costs.
-        uint256 contribution = totalCost - (round.paidFees[_answer]) > msg.value
-            ? msg.value
-            : totalCost - (round.paidFees[_answer]);
-        emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
+        uint256 contribution;
+        if (totalCost <= round.paidFees[_answer]) {
+            contribution = 0;
+        } else {
+            contribution = totalCost - (round.paidFees[_answer]) > msg.value
+                ? msg.value
+                : totalCost - (round.paidFees[_answer]);
+            emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
+        }
 
         round.contributions[msg.sender][_answer] += contribution;
         round.paidFees[_answer] += contribution;

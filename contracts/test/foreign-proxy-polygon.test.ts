@@ -117,6 +117,10 @@ describe("Cross-chain arbitration with appeals", () => {
       .to.emit(homeProxy, "RequestAcknowledged")
       .withArgs(questionID, await requester.getAddress());
 
+    await expect(homeProxy.connect(other).handleNotifiedRequest(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed to call contract"
+    );
+
     const arbitration = await foreignProxy.arbitrationRequests(0, await requester.getAddress());
     expect(arbitration[0]).to.equal(2, "Incorrect status of the arbitration after acknowledging arbitration");
     expect(arbitration[1]).to.equal(0, "Deposit value should be empty");

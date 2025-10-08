@@ -165,7 +165,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      */
     function requestArbitration(bytes32 _questionID, uint256 _maxPrevious) external payable override {
-        _requestArbitration(_questionID, _maxPrevious, [l2GasLimit, l2GasPerPubdataByteLimit]);
+        _requestArbitration(_questionID, _maxPrevious, [l2GasLimit, l2GasPerPubdataByteLimit], msg.sender);
     }
 
     /**
@@ -175,14 +175,16 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
      */
     function requestArbitrationCustomParameters(
         bytes32 _questionID,
         uint256 _maxPrevious,
         uint256 _l2GasLimit,
-        uint256 _l2GasPerPubdataByteLimit
+        uint256 _l2GasPerPubdataByteLimit,
+        address _excessFeeRefundAddress
     ) external payable {
-        _requestArbitration(_questionID, _maxPrevious, [_l2GasLimit, _l2GasPerPubdataByteLimit]);
+        _requestArbitration(_questionID, _maxPrevious, [_l2GasLimit, _l2GasPerPubdataByteLimit], _excessFeeRefundAddress);
     }
 
     /**
@@ -289,7 +291,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _requester The address of the arbitration requester.
      */
     function handleFailedDisputeCreation(bytes32 _questionID, address _requester) external payable override {
-        _handleFailedDisputeCreation(_questionID, _requester, [l2GasLimit, l2GasPerPubdataByteLimit]);
+        _handleFailedDisputeCreation(_questionID, _requester, [l2GasLimit, l2GasPerPubdataByteLimit], msg.sender);
     }
 
     /**
@@ -299,14 +301,16 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _requester The address of the arbitration requester.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
      */
     function handleFailedDisputeCreationCustomParameters(
         bytes32 _questionID,
         address _requester,
         uint256 _l2GasLimit,
-        uint256 _l2GasPerPubdataByteLimit
+        uint256 _l2GasPerPubdataByteLimit,
+        address _excessFeeRefundAddress
     ) external payable {
-        _handleFailedDisputeCreation(_questionID, _requester, [_l2GasLimit, _l2GasPerPubdataByteLimit]);
+        _handleFailedDisputeCreation(_questionID, _requester, [_l2GasLimit, _l2GasPerPubdataByteLimit], _excessFeeRefundAddress);
     }
 
     // ********************************* //
@@ -353,10 +357,15 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 totalCost = appealCost + ((appealCost * multiplier) / MULTIPLIER_DIVISOR);
 
         // Take up to the amount necessary to fund the current round at the current costs.
-        uint256 contribution = totalCost - (round.paidFees[_answer]) > msg.value
-            ? msg.value
-            : totalCost - (round.paidFees[_answer]);
-        emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
+        uint256 contribution;
+        if (totalCost <= round.paidFees[_answer]) {
+            contribution = 0;
+        } else {
+            contribution = totalCost - (round.paidFees[_answer]) > msg.value
+                ? msg.value
+                : totalCost - (round.paidFees[_answer]);
+            emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
+        }
 
         round.contributions[msg.sender][_answer] += contribution;
         round.paidFees[_answer] += contribution;
@@ -485,7 +494,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _requester The address of the arbitration requester.
      */
     function relayRule(bytes32 _questionID, address _requester) external payable {
-        _relayRule(_questionID, _requester, [l2GasLimit, l2GasPerPubdataByteLimit]);
+        _relayRule(_questionID, _requester, [l2GasLimit, l2GasPerPubdataByteLimit], msg.sender);
     }
 
     /**
@@ -495,14 +504,16 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _requester The address of the arbitration requester.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
      */
     function relayRuleCustomParameters(
         bytes32 _questionID,
         address _requester,
         uint256 _l2GasLimit,
-        uint256 _l2GasPerPubdataByteLimit
+        uint256 _l2GasPerPubdataByteLimit,
+        address _excessFeeRefundAddress
     ) external payable {
-        _relayRule(_questionID, _requester, [_l2GasLimit, _l2GasPerPubdataByteLimit]);
+        _relayRule(_questionID, _requester, [_l2GasLimit, _l2GasPerPubdataByteLimit], _excessFeeRefundAddress);
     }
 
     /* External Views */
@@ -691,7 +702,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
     // *    Internal and private    * //
     // ****************************** //
 
-    function _requestArbitration(bytes32 _questionID, uint256 _maxPrevious, uint256[2] memory _parameters) internal {
+    function _requestArbitration(bytes32 _questionID, uint256 _maxPrevious, uint256[2] memory _parameters, address _excessFeeRefundAddress) internal {
         require(homeProxy != address(0), "Home proxy is not set");
         require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
 
@@ -715,7 +726,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
             _parameters[0], // l2GasLimit
             _parameters[1], // l2GasPerPubdataByteLimit
             new bytes[](0),
-            msg.sender
+            _excessFeeRefundAddress
         );
 
         emit ArbitrationRequested(_questionID, msg.sender, _maxPrevious);
@@ -724,7 +735,8 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
     function _handleFailedDisputeCreation(
         bytes32 _questionID,
         address _requester,
-        uint256[2] memory _parameters
+        uint256[2] memory _parameters,
+        address _excessFeeRefundAddress
     ) internal {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
@@ -751,13 +763,13 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
             _parameters[0], // l2GasLimit
             _parameters[1], // l2GasPerPubdataByteLimit
             new bytes[](0),
-            msg.sender
+            _excessFeeRefundAddress
         );
 
         emit ArbitrationCanceled(_questionID, _requester);
     }
 
-    function _relayRule(bytes32 _questionID, address _requester, uint256[2] memory _parameters) internal {
+    function _relayRule(bytes32 _questionID, address _requester, uint256[2] memory _parameters, address _excessFeeRefundAddress) internal {
         uint256 arbitrationID = uint256(_questionID);
         ArbitrationRequest storage arbitration = arbitrationRequests[arbitrationID][_requester];
         // Note that we allow to relay multiple times to prevent intentional blocking.
@@ -781,7 +793,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
             _parameters[0], // l2GasLimit
             _parameters[1], // l2GasPerPubdataByteLimit
             new bytes[](0),
-            msg.sender
+            _excessFeeRefundAddress
         );
         emit RulingRelayed(_questionID, bytes32(realitioRuling));
 

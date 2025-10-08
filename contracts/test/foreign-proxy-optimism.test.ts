@@ -196,6 +196,10 @@ describe("Cross-chain arbitration with appeals", () => {
       .to.emit(foreignProxy, "Dispute")
       .withArgs(arbitrator.target, 2, 0, 0);
 
+    await expect(homeProxy.connect(other).handleNotifiedRequest(questionID, await requester.getAddress())).to.be.revertedWith(
+      "Failed TxToL1"
+    );
+
     const request = await homeProxy.requests(questionID, await requester.getAddress());
     expect(request[0]).to.equal(3, "Incorrect status of the request in HomeProxy");
 

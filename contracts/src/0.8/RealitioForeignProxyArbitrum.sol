@@ -169,7 +169,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
-        _requestArbitration(arbitration, _questionID, _maxPrevious, [l2GasLimit, gasPriceBid]);
+        _requestArbitration(arbitration, _questionID, _maxPrevious, [l2GasLimit, gasPriceBid], msg.sender);
     }
 
     /**
@@ -179,18 +179,20 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _gasPriceBid Gas price bid for tx on L2.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
      */
     function requestArbitrationCustomParameters(
         bytes32 _questionID,
         uint256 _maxPrevious,
         uint256 _l2GasLimit,
-        uint256 _gasPriceBid
+        uint256 _gasPriceBid,
+        address _excessFeeRefundAddress
     ) external payable {
         require(!arbitrationIDToDisputeExists[uint256(_questionID)], "Dispute already created");
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][msg.sender];
         require(arbitration.status == Status.None, "Arbitration already requested");
 
-        _requestArbitration(arbitration, _questionID, _maxPrevious, [_l2GasLimit, _gasPriceBid]);
+        _requestArbitration(arbitration, _questionID, _maxPrevious, [_l2GasLimit, _gasPriceBid], _excessFeeRefundAddress);
     }
 
     /**
@@ -268,7 +270,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        _handleFailedDisputeCreation(arbitration, _questionID, _requester, [l2GasLimit, gasPriceBid]);
+        _handleFailedDisputeCreation(arbitration, _questionID, _requester, [l2GasLimit, gasPriceBid], msg.sender);
     }
 
     /**
@@ -278,17 +280,19 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _requester The address of the arbitration requester.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _gasPriceBid Gas price bid for tx on L2.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
      */
     function handleFailedDisputeCreationCustomParameters(
         bytes32 _questionID,
         address _requester,
         uint256 _l2GasLimit,
-        uint256 _gasPriceBid
+        uint256 _gasPriceBid,
+        address _excessFeeRefundAddress
     ) external payable {
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
         require(arbitration.status == Status.Failed, "Invalid arbitration status");
 
-        _handleFailedDisputeCreation(arbitration, _questionID, _requester, [_l2GasLimit, _gasPriceBid]);
+        _handleFailedDisputeCreation(arbitration, _questionID, _requester, [_l2GasLimit, _gasPriceBid], _excessFeeRefundAddress);
     }
 
     // ********************************* //
@@ -335,10 +339,15 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         uint256 totalCost = appealCost + ((appealCost * multiplier) / MULTIPLIER_DIVISOR);
 
         // Take up to the amount necessary to fund the current round at the current costs.
-        uint256 contribution = totalCost - (round.paidFees[_answer]) > msg.value
-            ? msg.value
-            : totalCost - (round.paidFees[_answer]);
-        emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
+        uint256 contribution;
+        if (totalCost <= round.paidFees[_answer]) {
+            contribution = 0;
+        } else {
+            contribution = totalCost - (round.paidFees[_answer]) > msg.value
+                ? msg.value
+                : totalCost - (round.paidFees[_answer]);
+            emit Contribution(_arbitrationID, lastRoundID, _answer, msg.sender, contribution);
+        }
 
         round.contributions[msg.sender][_answer] += contribution;
         round.paidFees[_answer] += contribution;
@@ -471,7 +480,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         // Note that we allow to relay multiple times to prevent intentional blocking.
         require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
-        _relayRule(arbitration, _questionID, _requester, [l2GasLimit, gasPriceBid]);
+        _relayRule(arbitration, _questionID, _requester, [l2GasLimit, gasPriceBid], msg.sender);
     }
 
     /**
@@ -481,18 +490,20 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
      * @param _requester The address of the arbitration requester.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _gasPriceBid Gas price bid for tx on L2.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
      */
     function relayRuleCustomParameters(
         bytes32 _questionID,
         address _requester,
         uint256 _l2GasLimit,
-        uint256 _gasPriceBid
+        uint256 _gasPriceBid,
+        address _excessFeeRefundAddress
     ) external payable {
         ArbitrationRequest storage arbitration = arbitrationRequests[uint256(_questionID)][_requester];
         // Note that we allow to relay multiple times to prevent intentional blocking.
         require(arbitration.status == Status.Ruled || arbitration.status == Status.Relayed, "Dispute not resolved");
 
-        _relayRule(arbitration, _questionID, _requester, [_l2GasLimit, _gasPriceBid]);
+        _relayRule(arbitration, _questionID, _requester, [_l2GasLimit, _gasPriceBid], _excessFeeRefundAddress);
     }
 
     /* External Views */
@@ -685,7 +696,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage _arbitration,
         bytes32 _questionID,
         uint256 _maxPrevious,
-        uint256[2] memory _parameters
+        uint256[2] memory _parameters,
+        address _excessFeeRefundAddress
     ) internal {
         // Note some local variables were removed to avoid `stack too deep` error.
 
@@ -705,7 +717,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
             homeProxy,
             L2_CALL_VALUE,
             maxSubmissionCost,
-            msg.sender, // excessFeeRefundAddress
+            _excessFeeRefundAddress,
             msg.sender, // callValueRefundAddress
             _parameters[0], // l2GasLimit
             _parameters[1], // gasPriceBid
@@ -721,7 +733,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage _arbitration,
         bytes32 _questionID,
         address _requester,
-        uint256[2] memory _parameters
+        uint256[2] memory _parameters,
+        address _excessFeeRefundAddress
     ) internal {
         // Note some local variables were removed to avoid `stack too deep` error.
 
@@ -745,7 +758,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
             homeProxy,
             L2_CALL_VALUE,
             maxSubmissionCost,
-            msg.sender, // excessFeeRefundAddress
+            _excessFeeRefundAddress,
             msg.sender, // callValueRefundAddress
             _parameters[0], // l2GasLimit
             _parameters[1], // gasPriceBid
@@ -761,7 +774,8 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
         ArbitrationRequest storage _arbitration,
         bytes32 _questionID,
         address _requester,
-        uint256[2] memory _parameters
+        uint256[2] memory _parameters,
+        address _excessFeeRefundAddress
     ) internal {
         // Note some local variables were removed to avoid `stack too deep` error.
 
@@ -781,7 +795,7 @@ contract RealitioForeignProxyArbitrum is IForeignArbitrationProxy, IDisputeResol
             homeProxy,
             L2_CALL_VALUE,
             maxSubmissionCost,
-            msg.sender, // excessFeeRefundAddress
+            _excessFeeRefundAddress,
             msg.sender, // callValueRefundAddress
             _parameters[0], // l2GasLimit
             _parameters[1], // gasPriceBid

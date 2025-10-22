@@ -175,7 +175,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _maxPrevious The maximum value of the current bond for the question. The arbitration request will get rejected if the current bond is greater than _maxPrevious. If set to 0, _maxPrevious is ignored.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
-     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds. Note that refund address should be EOA and not smart contract or EIP-7702 address, otherwise it will be aliased on L2.
      */
     function requestArbitrationCustomParameters(
         bytes32 _questionID,
@@ -301,7 +301,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _requester The address of the arbitration requester.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
-     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds. Note that refund address should be EOA and not smart contract or EIP-7702 address, otherwise it will be aliased on L2.
      */
     function handleFailedDisputeCreationCustomParameters(
         bytes32 _questionID,
@@ -504,7 +504,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
      * @param _requester The address of the arbitration requester.
      * @param _l2GasLimit Gas limit for tx on L2.
      * @param _l2GasPerPubdataByteLimit L2 gas price for each published L1 calldata byte.
-     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds.
+     * @param _excessFeeRefundAddress The address on L2 to receive gas refunds. Note that refund address should be EOA and not smart contract or EIP-7702 address, otherwise it will be aliased on L2.
      */
     function relayRuleCustomParameters(
         bytes32 _questionID,

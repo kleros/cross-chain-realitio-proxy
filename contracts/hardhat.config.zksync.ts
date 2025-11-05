@@ -5,7 +5,6 @@ import "@matterlabs/hardhat-zksync-solc";
 import "@matterlabs/hardhat-zksync-verify";
 import "hardhat-deploy";
 import "./tasks/update-deployments";
-// import "./tasks/generate-metaevidence";
 
 import type { HardhatUserConfig } from "hardhat/config";
 

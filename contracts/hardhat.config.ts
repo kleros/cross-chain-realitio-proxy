@@ -283,7 +283,7 @@ const config: HardhatUserConfig = {
         chainId: 137,
         urls: {
           apiURL: "https://api.etherscan.io/v2/api?chainid=137",
-          browserURL: "https://base.blockscout.com"
+          browserURL: "https://polygonscan.com/"
         }
       },
     ]

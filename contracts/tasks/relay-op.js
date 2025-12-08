@@ -14,7 +14,7 @@ const {
   walletActionsL1,
   walletActionsL2,
 } = require("viem/op-stack");
-const { mainnet, sepolia, base, optimism, optimismSepolia, unichain, unichainSepolia, redstone } = require("viem/chains");
+const { mainnet, sepolia, base, optimism, optimismSepolia, unichain, unichainSepolia, redstone, baseSepolia } = require("viem/chains");
 
 // https://docs.optimism.io/app-developers/tutorials/bridging/cross-dom-solidity#interact-with-the-l2-greeter
 
@@ -29,6 +29,7 @@ task("relay-op", "Relays a withdrawal on OP Stack")
     const PRIVATE_KEY = rawPk.startsWith("0x") ? rawPk : `0x${rawPk}`;
     const CHAIN_MAP = {
       8453: { l2: base, l1: mainnet, l1NetworkName: "mainnet" },
+      84532: { l2: baseSepolia, l1: sepolia, l1NetworkName: "sepolia" },
       690: { l2: redstone, l1: mainnet, l1NetworkName: "mainnet" },
       10: { l2: optimism, l1: mainnet, l1NetworkName: "mainnet" },
       130: { l2: unichain, l1: mainnet, l1NetworkName: "mainnet" },

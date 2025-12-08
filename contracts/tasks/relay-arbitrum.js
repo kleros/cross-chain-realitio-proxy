@@ -1,5 +1,5 @@
-const { providers, Wallet } = require("ethers");
-const { L2TransactionReceipt, L2ToL1MessageStatus } = require("@arbitrum/sdk");
+const { providers, Wallet } = require("ethers5");
+const { ChildTransactionReceipt, ChildToParentMessageStatus } = require('@arbitrum/sdk');
 const { task } = require("hardhat/config");
 
 /**
@@ -8,7 +8,10 @@ const { task } = require("hardhat/config");
 
 const walletPrivateKey = process.env.PRIVATE_KEY;
 
-task("exec", "Execute msg on L1")
+// https://docs.arbitrum.io/build-decentralized-apps/cross-chain-messaging
+// https://github.com/OffchainLabs/arbitrum-tutorials/blob/master/packages/outbox-execute/scripts/exec.js
+
+task("relay-arbitrum", "Execute msg on L1")
   .addParam("txhash", "Hash of txn that triggered and L2 to L1 message")
   .setAction(async (taskArgs, hre) => {
     const { txhash } = taskArgs;
@@ -38,19 +41,19 @@ task("exec", "Execute msg on L1")
      * First, let's find the Arbitrum txn from the txn hash provided
      */
     const receipt = await l2Provider.getTransactionReceipt(txhash);
-    const l2Receipt = new L2TransactionReceipt(receipt);
+    const l2Receipt = new ChildTransactionReceipt(receipt);
 
     /**
      * Note that in principle, a single transaction could trigger any number of outgoing messages; the common case will be there's only one.
      * For the sake of this script, we assume there's only one / just grad the first one.
      */
-    const messages = await l2Receipt.getL2ToL1Messages(l1Wallet);
+    const messages = await l2Receipt.getChildToParentMessages(l1Wallet);
     const l2ToL1Msg = messages[0];
 
     /**
      * Check if already executed
      */
-    if ((await l2ToL1Msg.status(l2Provider)) === L2ToL1MessageStatus.EXECUTED) {
+    if ((await l2ToL1Msg.status(l2Provider)) === ChildToParentMessageStatus.EXECUTED) {
       console.log("Message already executed! Nothing else to do here");
       process.exit(1);
     }

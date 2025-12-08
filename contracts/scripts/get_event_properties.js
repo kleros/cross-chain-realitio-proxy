@@ -26,7 +26,7 @@ async function getL1MessageSentEvent(transactionHash, contractInterface, provide
 }
 
 function getFunctionSelector(functionSignature) {
-  const hash = ethers.utils.id(functionSignature);
+  const hash = ethers.id(functionSignature);
   const selector = hash.slice(0, 10); // 0x + first 4 bytes
 
   return selector;
@@ -40,7 +40,7 @@ function encodeWithSelector(selector, ...params) {
     }
 
     // Otherwise, encode using defaultAbiCoder
-    return ethers.utils.defaultAbiCoder.encode([param.type], [param.value]).slice(2);
+    return ethers.AbiCoder.defaultAbiCoder().encode([param.type], [param.value]).slice(2);
   });
 
   const encodedData = selector + encodedParams.join("");

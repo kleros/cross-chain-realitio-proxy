@@ -1,6 +1,6 @@
 const { realityETHConfig } = require("@reality.eth/contracts");
 const { homeChains, generateMetadata } = require("../shared");
-const { unichain, optimism, redstone, unichainSepolia, optimismSepolia, base } = homeChains;
+const { unichain, optimism, redstone, unichainSepolia, optimismSepolia, base, baseSepolia } = homeChains;
 
 // CrossDomainMessenger precompile is identical for all OP L2s
 // Redstone Messenger - https://redstone.xyz/docs/contract-addresses
@@ -12,6 +12,10 @@ const homeParameters = {
   [unichainSepolia.chainId]: {
     realitio: realityETHConfig(unichainSepolia.chainId, "ETH", "3.0").address,
     variant: "Unichain",
+  },
+  [baseSepolia.chainId]: {
+    realitio: "0x86b653Dc9aa6d7311109276925927087573f91CB",
+    variant: "Base",
   },
   [optimismSepolia.chainId]: {
     realitio: realityETHConfig(optimismSepolia.chainId, "ETH", "3.0").address,

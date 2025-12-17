@@ -4,6 +4,7 @@ import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import "./tasks/generate-metaevidence";
 import "./tasks/relay-arbitrum";
+import "./tasks/relay-op";
 import "./tasks/find-dispute-id";
 import "./tasks/update-deployments";
 
@@ -42,6 +43,7 @@ const config: HardhatUserConfig = {
         homeUnichain: "unichainSepolia",
         homeOptimism: "optimismSepolia",
         homeArbitrum: "arbitrumSepolia",
+        homeBase: "baseSepolia",
         homePolygon: "amoy",
       },
       verify: {
@@ -84,7 +86,7 @@ const config: HardhatUserConfig = {
     },
     optimismSepolia: {
       chainId: 11155420,
-      url: `https://optimism-sepolia.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      url: `https://opt-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
       // url: `http://127.0.0.1:8547`, // fork with `anvil --fork-url https://optimism-sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8547`
       accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
@@ -96,6 +98,16 @@ const config: HardhatUserConfig = {
           apiUrl: "https://api-sepolia-optimistic.etherscan.io/api",
           apiKey: process.env.OPTIMISM_API_KEY,
         },
+      },
+    },
+    baseSepolia: {
+      chainId: 84532,
+      url: `https://base-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      // url: `http://127.0.0.1:8547`, // fork with `anvil --fork-url https://optimism-sepolia.infura.io/v3/${process.env.INFURA_API_KEY} --port 8547`
+      accounts: [process.env.PRIVATE_KEY as string],
+      tags: ["home"],
+      companionNetworks: {
+        foreign: "sepolia",
       },
     },
     arbitrumSepolia: {
@@ -149,7 +161,7 @@ const config: HardhatUserConfig = {
       },
       verify: {
         etherscan: {
-          apiUrl: "https://api.etherscan.io/api",
+          apiUrl: "https://api.etherscan.io/v2/api?chainid=1",
           apiKey: process.env.ETHERSCAN_API_KEY,
         },
       },
@@ -186,7 +198,7 @@ const config: HardhatUserConfig = {
     },
     optimism: {
       chainId: 10,
-      url: `https://optimism-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      url: `https://opt-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
@@ -216,7 +228,7 @@ const config: HardhatUserConfig = {
     },
     base: {
       chainId: 8453,
-      url: `https://base-mainnet.infura.io/v3/${process.env.INFURA_API_KEY}`,
+      url: `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
       accounts: [process.env.PRIVATE_KEY as string],
       tags: ["home"],
       companionNetworks: {
@@ -254,11 +266,56 @@ const config: HardhatUserConfig = {
       },
       verify: {
         etherscan: {
-          apiUrl: "https://api.polygonscan.com/api",
+          apiUrl: "https://api.etherscan.io/v2/api?chainid=137",
           apiKey: process.env.POLYGONSCAN_API_KEY,
         },
       },
     },
+  },
+  etherscan: {
+    apiKey: {
+      // These are separate from Ethereum's etherscan API key
+      optimisticEthereum: process.env.OPTIMISM_API_KEY!,
+      mainnet: process.env.ETHERSCAN_API_KEY!,
+      polygon: process.env.ETHERSCAN_API_KEY!,
+      base: process.env.ETHERSCAN_API_KEY!,
+      baseSepolia: process.env.ETHERSCAN_API_KEY!,
+      sepolia: process.env.ETHERSCAN_API_KEY!
+    },
+     customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=8453",
+          browserURL: "https://basescan.org/"
+        }
+      },
+      {
+        network: "baseSepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=84532",
+          browserURL: "https://sepolia.basescan.org/"
+        }
+      },
+      {
+        network: "sepolia",
+        chainId: 11155111,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=11155111",
+          browserURL: "https://sepolia.etherscan.io/"
+        }
+      },
+      {
+        network: "polygon",
+        chainId: 137,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=137",
+          browserURL: "https://polygonscan.com/"
+        }
+      },
+    ]
   },
   namedAccounts: {
     deployer: {

@@ -52,6 +52,7 @@ task("relay-op", "Relays a withdrawal on OP Stack")
 
     const l1Wallet = createWalletClient({
       account,
+      chain: chain.l1,
       transport: http(l1RpcUrl),
     }).extend(walletActionsL1());
 
@@ -63,6 +64,7 @@ task("relay-op", "Relays a withdrawal on OP Stack")
 
     const l2Wallet = createWalletClient({
       account,
+      chain: chain.l2,
       transport: http(l2RpcUrl),
     }).extend(walletActionsL2());
 

@@ -12,7 +12,7 @@
   "dependencies": {
     "@kleros/contract-deployments": "^0.3.2",
     "@kleros/cross-chain-realitio-contracts": "^1.0.0",
-    "aws-sdk": "^2.730.0",
+    "aws-sdk": "^2.1693.0",
     "core-js": "^3.0.0",
     "dayjs": "^1.8.33",
     "deepmerge": "^4.2.2",

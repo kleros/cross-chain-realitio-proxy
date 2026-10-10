@@ -44,7 +44,7 @@ async function executeProof() {
 
   const l2Receipt = await l2Provider.getTransactionReceipt(txHash);
   console.log(l2Receipt);
-  const logIndex = l2Receipt.l2ToL1Logs[0].logIndex;
+  const logIndex = 0; // getLogProof expects the log index within this transaction, not the block.
   console.log(`L2 transaction included in block ${l2Receipt.blockNumber} with log index ${logIndex}`);
   const { l1BatchNumber, l1BatchTxIndex } = l2Receipt;
   console.log("L1 Index for Tx in block :>> ", l1BatchTxIndex);

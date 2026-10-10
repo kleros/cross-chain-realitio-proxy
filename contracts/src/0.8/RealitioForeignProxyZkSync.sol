@@ -30,6 +30,9 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
     uint256 public constant MULTIPLIER_DIVISOR = 10000; // Divisor parameter for multipliers.
     uint256 public constant L2_CALL_VALUE = 0; // Amount of ETH to pass with the call to L2. Used as msg.value for the transaction.
     uint256 public constant META_EVIDENCE_ID = 0; // The ID of the MetaEvidence for disputes.
+    // A call that runs out of gas k frames deep leaves the caller at most 1 - (63/64)^k of its gas (EIP-150). 8 covers
+    // k <= 8: KlerosLiquid opens 1 frame, KlerosCore v2 up to 6. 64 would already fail behind a single proxy (k = 2).
+    uint256 public constant MIN_GAS_LEFT_DIVISOR = 8; // A failed `createDispute` must leave more than 1/8 of the gas.
 
     /* Storage */
 
@@ -220,6 +223,8 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
 
     /**
      * @notice Receives the acknowledgement of the arbitration request for the given question and requester. TRUSTED.
+     * @dev Reverts instead of marking the request Failed when `createDispute` fails for lack of gas (see
+     * `MIN_GAS_LEFT_DIVISOR`), so that the bridge message stays deliverable.
      * @param _questionID The ID of the question.
      * @param _requester The requester.
      */
@@ -232,6 +237,7 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
         uint256 arbitrationCost = arbitrator.arbitrationCost(arbitratorExtraData);
 
         if (arbitration.deposit >= arbitrationCost) {
+            uint256 gasBefore = gasleft(); // For the out-of-gas check in the catch.
             try
                 arbitrator.createDispute{value: arbitrationCost}(NUMBER_OF_CHOICES_FOR_ARBITRATOR, arbitratorExtraData)
             returns (uint256 disputeID) {
@@ -258,6 +264,13 @@ contract RealitioForeignProxyZkSync is IForeignArbitrationProxy, IDisputeResolve
                 emit ArbitrationCreated(_questionID, _requester, disputeID);
                 emit Dispute(arbitrator, disputeID, META_EVIDENCE_ID, arbitrationID);
             } catch {
+                // Anyone can call `consumeMessageFromL2` with the gas of their choice, and it marks the message
+                // processed before calling this function, then reverts if the call fails. If `createDispute` failed for
+                // lack of gas, revert instead of recording a failure the arbitrator never made: this undoes the mark,
+                // so the message can be consumed again. A genuine failure returns its unused gas and still ends Failed.
+                // One that burns all its gas cannot be told apart from a starved call and reverts too, so the request
+                // stays Requested.
+                require(gasleft() > gasBefore / MIN_GAS_LEFT_DIVISOR, "Not enough gas to create dispute");
                 arbitration.status = Status.Failed;
                 emit ArbitrationFailed(_questionID, _requester);
             }

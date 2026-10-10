@@ -25,7 +25,7 @@ async function executeProof() {
   }
 
   const blockNumber = l1MessageSentEvent.blockNumber;
-  const homeProxy = `0x${BigInt(l1MessageSentEvent.address).toString(16)}`;
+  const homeProxy = ethers.AbiCoder.defaultAbiCoder().decode(["address"], l1MessageSentEvent.address)[0];
   const msgHash = l1MessageSentEvent.msgHash;
   const eventData = await getCalldata(txHash, l2Provider);
   const homeProxyContract = new ethers.Contract(homeProxy, RealitioHomeArbitrationProxy.abi, l2Provider);

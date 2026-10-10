@@ -109,6 +109,13 @@ const config: HardhatUserConfig = {
       companionNetworks: {
         foreign: "sepolia",
       },
+      verify: {
+        etherscan: {
+          // hardhat-deploy appends /api; use Blockscout's Etherscan-compatible API.
+          apiUrl: "https://base-sepolia.blockscout.com",
+          apiKey: "unused", // Required by the task; this endpoint accepts keyless requests.
+        },
+      },
     },
     arbitrumSepolia: {
       chainId: 421614,

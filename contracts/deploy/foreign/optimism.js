@@ -8,6 +8,12 @@ const foreignParameters = {
     foreignBridge: "0x448A37330A60494E666F6DD60aD48d930AEbA381",
     variant: "Unichain",
   },
+  baseSepolia: {
+    numberOfJurors: 1,
+    // https://docs.base.org/base-chain/network-information/base-contracts
+    foreignBridge: "0xC34855F4De64F1840e5686e64278da901e261f20",
+    variant: "Base",
+  },
   optimismSepolia: {
     numberOfJurors: 1,
     // https://docs.optimism.io/chain/addresses
@@ -34,7 +40,7 @@ const foreignParameters = {
   },
   base: {
     numberOfJurors: 15,
-    // https://docs.base.org/docs/base-contracts#l1-contract-addresses
+    // https://docs.base.org/base-chain/network-information/base-contracts
     foreignBridge: "0x866E82a600A1414e583f7F13623F1aC5d58b0Afa",
     variant: "Base",
   },
